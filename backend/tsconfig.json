@@ -1,21 +1,21 @@
 {
-    "compilerOptions": {
-        "target": "es2022",
-        "module": "commonjs",
-        "moduleResolution": "node", 
-        "outDir": "./dist", //Compiled JS files
-        "rootDir": "./src", //Our ts source files
-        "strict": true,
-        "noImplicitAny": true,
-        "strictNullChecks": true, 
-        "esModuleInterop": true,
-        "skipLibCheck": true, //Skip type checking of node modules.
-        "forceConsistentCasingInFileNames": true,
-        "baseUrl": ".",
-        "paths": {
-            "*": ["node_modules/*", "src/types/*"]
-        }
-    },
-    "include": ["src/**/*"],
-    "exclude": ["node_modules", "**/*.spec.ts"] 
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist", //Compiled JS files
+    "rootDir": "./src", //Our ts source files
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true, //Skip type checking of node modules.
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*", "src/types/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
 }
