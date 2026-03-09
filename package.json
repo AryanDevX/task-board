@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "check-format": "prettier --check .",
-    "test": "jest"
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "test": "npm test --prefix backend"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",
