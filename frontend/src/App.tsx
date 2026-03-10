@@ -1,9 +1,4 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  // Navigate,
-} from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
@@ -15,11 +10,11 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        //Login route
+        {/* Login route */}
         <Route path="/login" element={<Login />} />
-        //Register new user:
+        {/* Register new user: */}
         <Route path="/register" element={<Register />} />
-        //Dashboard route:
+        {/* Dashboard route: */}
         <Route
           path="/dashboard"
           element={
@@ -28,7 +23,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        //Dynamic Project Route for different projects
+        {/* Dynamic Project Route for different projects */}
         <Route path="/project/:id" element={<ProjectDetail />} />
         {/* Any other path: */}
         <Route path="*" element={<Navigate to="/login" replace />} />

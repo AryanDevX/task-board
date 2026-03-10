@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 //Extending FormElements by usernameInput and passwordInput and specifying their types.
 interface FormElements extends HTMLFormControlsCollection {
@@ -10,7 +11,7 @@ interface FormElements extends HTMLFormControlsCollection {
 
 export const Login = () => {
   const navigate = useNavigate();
-
+  const { dispatch } = useAuth();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -30,14 +31,23 @@ export const Login = () => {
           'User not found in the database. Please register first.',
         );
       }
+      const fakeUserProfile = {
+        id: 'Rohit1414',
+        name: username,
+        email: 'rohit@email.com',
+        avatar: null,
+        role: 'Global Admin' as const,
+      };
+      dispatch({
+        type: 'LOGIN',
+        payload: { user: fakeUserProfile, token: 'fake-jwt-token' },
+      });
       navigate('/dashboard');
     } catch (err: any) {
       setErrorMessage(err.message || 'Invalid credentials.');
     } finally {
       setIsLoading(false);
     }
-
-    console.log(username, ' is trying to login.');
   };
   return (
     <div className="login-box">
