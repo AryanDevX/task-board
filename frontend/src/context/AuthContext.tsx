@@ -1,4 +1,9 @@
-import React, { createContext, useReducer, useContext, type ReactNode } from 'react';
+import React, {
+  createContext,
+  useReducer,
+  useContext,
+  type ReactNode,
+} from 'react';
 
 export type UserRole = 'Global Admin' | 'Project User';
 
@@ -13,12 +18,12 @@ export interface User {
 export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  isLoading: boolean; 
+  isLoading: boolean;
   token: string | null; //For JWT token.
 }
 
 export type AuthAction =
-  | { type: 'LOGIN'; payload: {user: User, token: string} }
+  | { type: 'LOGIN'; payload: { user: User; token: string } }
   | { type: 'LOGOUT' }
   | { type: 'UPDATE_AVATAR'; payload: string }
   | { type: 'SET_LOADING'; payload: boolean };
@@ -43,11 +48,18 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isLoading: false,
       };
     case 'LOGOUT':
-      return { ...state, isAuthenticated: false, user: null, token: null, isLoading: false };
-    case 'UPDATE_AVATAR':
-      if(!state.user) return state;
       return {
-        ...state, user: { ...state.user, avatar: action.payload },
+        ...state,
+        isAuthenticated: false,
+        user: null,
+        token: null,
+        isLoading: false,
+      };
+    case 'UPDATE_AVATAR':
+      if (!state.user) return state;
+      return {
+        ...state,
+        user: { ...state.user, avatar: action.payload },
       };
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
