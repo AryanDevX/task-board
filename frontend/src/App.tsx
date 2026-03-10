@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
-import { ProjectDetail } from './pages/ProjectDetail';
+import { ProjectBoard } from './pages/ProjectBoard';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Navigate } from 'react-router-dom';
 
@@ -24,7 +24,14 @@ export default function App() {
           }
         />
         {/* Dynamic Project Route for different projects */}
-        <Route path="/project/:id" element={<ProjectDetail />} />
+        <Route
+          path="/project/:projectId"
+          element={
+            <ProtectedRoute>
+              <ProjectBoard />
+            </ProtectedRoute>
+          }
+        />
         {/* Any other path: */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
