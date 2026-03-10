@@ -1,24 +1,41 @@
-generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+model User {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String   @unique
+  password    String
+  avatar      String?
+  globalRole  GlobalRole @default(USER)
+  memberships ProjectMembership[]
+  createdProjects Project[]
 }
 
-datasource db {
-  provider = "postgresql"
+model Project {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  createdById Int
+  createdBy   User @relation(fields: [createdById], references: [id])
+  members     ProjectMembership[]
+  createdAt   DateTime @default(now())
 }
 
-model User { 
-  id    Int     @id @default(autoincrement()) 
-  email String  @unique
-  name  String?
-  posts Post[]
-} 
+model ProjectMembership {
+  id        Int @id @default(autoincrement())
+  userId    Int @unique
+  projectId Int @unique
+  role      ProjectRole
+  user      User    @relation(fields: [userId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
+  
+}
 
-model Post { 
-  id        Int     @id @default(autoincrement()) 
-  title     String
-  content   String?
-  published Boolean @default(false) 
-  author    User    @relation(fields: [authorId], references: [id]) 
-  authorId  Int
-} 
+enum GlobalRole {
+  GLOBAL_ADMIN
+  USER
+}
+
+enum ProjectRole {
+  PROJECT_ADMIN
+  PROJECT_MEMBER
+  PROJECT_VIEWER
+}
