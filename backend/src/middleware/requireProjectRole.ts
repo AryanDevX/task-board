@@ -24,7 +24,7 @@ export const requireProjectRole = (allowedRoles: string[]) => {
       return res.status(403).json({ message: "Not part of project" });
     }
 
-    if (!allowedRoles.includes(membership.role)) {
+    if (!allowedRoles.includes(membership.role) && (req.user?.globalRole!="GLOBAL_ADMIN")) {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 

@@ -2,6 +2,8 @@ import {prisma} from '../../lib/prisma';
 import { Request ,Response } from 'express';
 import { getUsername} from '../utils/helpers';
 
+//GET /projects/:projectId
+
 export const createProject= async (req:Request ,res:Response)=>{
     try{
         if(!req.user){return res.status(401).json( {message : "Missing user authentication" })};
@@ -16,6 +18,14 @@ export const createProject= async (req:Request ,res:Response)=>{
                 name,
                 description,
                 createdBy: { connect: { id:id } }
+            }
+        });
+
+        await prisma.projectMembership.create({
+            data:{
+                userId:id,
+                projectId:project.id,
+                role:"PROJECT_ADMIN"
             }
         });
 
