@@ -1,3 +1,12 @@
+import { useAuth } from '../context/AuthContext.tsx';
+
 export const Dashboard = () => {
-  return <h1>Kanban Board - View All Tasks</h1>;
+  const { user, dispatch } = useAuth();
+  return (
+    <div>
+      <h1>Project Dashboard</h1>
+      <p>Welcome, {user?.name || 'Guest'}!</p>
+      <button onClick={() => dispatch({ type: 'LOGOUT' })}>Log Out</button>
+    </div>
+  );
 };

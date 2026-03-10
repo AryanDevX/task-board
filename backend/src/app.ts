@@ -1,4 +1,4 @@
-import express from "express";
+import express from 'express';
 
 const app = express();
 
@@ -6,9 +6,8 @@ const app = express();
 app.use(express.json());
 
 // test route
-app.get("/", (req, res) => {
-  res.send("Backend running");
+app.get('/', (req, res) => {
+  res.send('Backend running');
 });
-
 
 export default app;
