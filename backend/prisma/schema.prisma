@@ -1,6 +1,15 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
 model User {
   id          Int      @id @default(autoincrement())
-  name        String
+  username    String   @unique
   email       String   @unique
   password    String
   avatar      String?
@@ -21,12 +30,12 @@ model Project {
 
 model ProjectMembership {
   id        Int @id @default(autoincrement())
-  userId    Int @unique
-  projectId Int @unique
+  userId    Int 
+  projectId Int 
   role      ProjectRole
   user      User    @relation(fields: [userId], references: [id])
   project   Project @relation(fields: [projectId], references: [id])
-  
+   @@unique([userId, projectId])
 }
 
 enum GlobalRole {
