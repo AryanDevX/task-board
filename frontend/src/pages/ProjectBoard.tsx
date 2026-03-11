@@ -108,8 +108,40 @@ export const ProjectBoard: React.FC = () => {
   };
 
   const handleSaveTask = (newTaskData: Task) => {
-    console.log('Saving new task:', newTaskData);
-    //Handle later.
+    setBoardData((prevBoard) => {
+      if(!editingTask){
+        const newTask = {...newTaskData, id: 'task-${Date.now()}' };
+        return prevBoard.map((column) => {
+          if(column.title === newTask.status){
+            return{...column, tasks:[...column.tasks, newTask]};
+          };
+          return column;
+        });
+      }
+      else{
+        return prevBoard.map((column)=>{
+          if(column.title!==newTaskData.status){
+            return {...column, tasks:column.tasks.filter((t)=> t.id!==newTaskData.id )};
+          }
+          const taskExistsInColumn = column.tasks.some((t) => t.id === newTaskData.id);
+          if(taskExistsInColumn){
+            return {
+              ...column,
+              tasks: column.tasks.map((t) => 
+                t.id === newTaskData.id ? { ...t, ...newTaskData } : t
+              ),
+            };
+          }
+          else{
+            return {
+              ...column,
+              tasks: [...column.tasks, newTaskData],
+            };
+          }
+        });
+      }
+    });
+    handleCloseModal();
   }
   return (
     <div className={styles.pageContainer}>
