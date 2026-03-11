@@ -27,9 +27,9 @@ export default function App() {
         <Route
           path="/project/:projectId"
           element={
-            <ProtectedRoute>
-              <ProjectBoard />
-            </ProtectedRoute>
+            // <ProtectedRoute>
+            <ProjectBoard />
+            // </ProtectedRoute>
           }
         />
         {/* Any other path: */}

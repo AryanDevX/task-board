@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Column } from '../components/Column';
+import {TaskModal, type Task} from '../components/TaskModal';
 import styles from './ProjectBoard.module.css';
 
 interface TaskData {
   id: string;
   taskName: string;
+  description?:string;
+  assignedId?:string | null;
 }
 
 interface DummyColumn {
@@ -46,6 +49,31 @@ const initialBoardData: DummyColumn[] = [
 export const ProjectBoard: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const [boardData, setBoardData] = useState<DummyColumn[]>(initialBoardData);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+  
+  const handleTaskClick = (taskId: string) => {
+    for (const column of boardData) {
+      const foundTask = column.tasks.find((t) => t.id === taskId);
+      if (foundTask) {
+        setEditingTask({
+          id: foundTask.id,
+          taskName: foundTask.taskName,
+          description: foundTask.description,
+          status: column.title,
+          assigneeId:foundTask.assignedId || null
+        });
+        setIsModalOpen(true);
+        return; // Stop searching
+      }
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingTask(undefined); // Clear out the form so the next "Add Task" is blank
+  };
+
   const handleTaskDrop = (taskId: string, targetColumnId: string) => {
     setBoardData((prevBoard) => {
       let taskToMove: TaskData | null = null;
@@ -79,11 +107,21 @@ export const ProjectBoard: React.FC = () => {
     });
   };
 
+  const handleSaveTask = (newTaskData: Task) => {
+    console.log('Saving new task:', newTaskData);
+    //Handle later.
+  }
   return (
     <div className={styles.pageContainer}>
-      <header style={{ marginBottom: '20px' }}>
+      <header style={{ marginBottom: '20px', display: 'flex', gap: '20px', alignItems: 'center' }}>
         <h1>Viewing Project: {projectId}</h1>
-        <p>Drag and Drop is fully operational!</p>
+        <button
+          onClick={() => {setEditingTask(undefined); setIsModalOpen(true)}}
+          style={{ padding: '8px 16px', cursor: 'pointer' }}
+        >
+          + Add New Task
+        </button>
+        {/* <p>Drag and Drop is fully operational!</p> */}
       </header>
 
       <div className={styles.boardWrapper}>
@@ -94,9 +132,16 @@ export const ProjectBoard: React.FC = () => {
             title={columnData.title}
             tasks={columnData.tasks}
             onTaskDrop={handleTaskDrop}
+            onTaskClick={handleTaskClick}
           />
         ))}
       </div>
+      <TaskModal 
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSaveTask}
+        initialData={editingTask}
+      />
     </div>
   );
 };
