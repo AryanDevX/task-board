@@ -1,6 +1,9 @@
-import { ProjectRole } from '@prisma/client';
+import { ProjectRole } from "../../types/roles";
 import { prisma } from '../../lib/prisma.js';
 import { Request, Response } from 'express';
+
+
+
 
 export const addMember = async (req: Request, res: Response) => {
   try {
@@ -44,13 +47,15 @@ export const addMember = async (req: Request, res: Response) => {
     if (existingMembership) {
       return res.status(400).json({ message: "User is already a member of this project" });
     }
+    
+    const DEFAULT_ROLE: ProjectRole = "PROJECT_VIEWER";
 
     // Add user as a PROJECT_VIEWER
     const membership = await prisma.projectMembership.create({
       data: {
         userId:user.id,
         projectId:project.id,
-        role: "PROJECT_VIEWER",
+        role: DEFAULT_ROLE,
       },
     });
 
@@ -122,7 +127,7 @@ export const deleteMember = async (req: Request, res: Response) => {
 export const updateRole =  async (req:Request,res:Response)=>{
      try {
 
-         const validRoles = Object.values(ProjectRole); 
+        const validRoles: ProjectRole[] = [ "PROJECT_VIEWER","PROJECT_ADMIN","PROJECT_MEMBER"];
         const incomingRole = req.params.role; 
 
         if (!validRoles.includes(incomingRole as ProjectRole)) {
