@@ -146,7 +146,7 @@ export const ProjectBoard: React.FC = () => {
   return (
     <div className={styles.pageContainer}>
       <header style={{ marginBottom: '20px', display: 'flex', gap: '20px', alignItems: 'center' }}>
-        <h1>Viewing Project: {projectId}</h1>
+        <h1>{projectId}</h1>
         <button
           onClick={() => {setEditingTask(undefined); setIsModalOpen(true)}}
           style={{ padding: '8px 16px', cursor: 'pointer' }}
