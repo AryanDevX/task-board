@@ -1,14 +1,16 @@
 import { NextFunction, Request, Response } from 'express';
 import {prisma} from '../../lib/prisma.js';
+import { AppError } from '../../types/appError.js';
 
 
 export const requireProjectRole = (allowedRoles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
+    try{
     const userId = req.user?.userId;
     const projectId = parseInt(req.params.projectId);
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return next(new AppError ("Unauthorized",401));
     }
 
     const membership = await prisma.projectMembership.findUnique({
@@ -21,13 +23,16 @@ export const requireProjectRole = (allowedRoles: string[]) => {
     });
 
     if (!membership) {
-      return res.status(403).json({ message: "Not part of project" });
+      return next(new AppError("Not part of project" , 403));
     }
 
     if (!allowedRoles.includes(membership.role) && (req.user?.globalRole!="GLOBAL_ADMIN")) {
-      return res.status(403).json({ message: "Insufficient permissions" });
+      return  next(new AppError("Insufficient permissions", 403));
     }
 
-    next();
+    next();}
+    catch(err){
+      next(err);
+    }
   };
 };

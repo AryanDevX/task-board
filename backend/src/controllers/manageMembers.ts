@@ -1,21 +1,23 @@
 import { ProjectRole } from "../../types/roles";
 import { prisma } from '../../lib/prisma.js';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
+import { AppError } from "../../types/appError";
+import app from "../app";
 
 
 
 
-export const addMember = async (req: Request, res: Response) => {
+export const addMember = async (req: Request, res: Response,next:NextFunction) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: "Missing user authentication" });
+      return next(new AppError ("Missing user authentication", 401));
     }
 
     const projectId = parseInt(req.params.projectId);
     const userId = req.params.id;
 
     if (!userId) {
-      return res.status(400).json({ message: "Missing userId to add" });
+      return next(new AppError("Missing userId to add",400));
     }
     //check if user exists
     const user = await prisma.user.findUnique({
@@ -23,7 +25,7 @@ export const addMember = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return next(new AppError("User not found",404));
     }
 
     // Check if project exists
@@ -32,7 +34,7 @@ export const addMember = async (req: Request, res: Response) => {
     });
 
     if (!project) {
-      return res.status(404).json({ message: "Project not found" });
+      return next(new AppError("Project not found",404));
     }
 
     // Check if user is already a member
@@ -45,9 +47,9 @@ export const addMember = async (req: Request, res: Response) => {
     });
 
     if (existingMembership) {
-      return res.status(400).json({ message: "User is already a member of this project" });
+      return next(new AppError("User is already a member of this project", 400)); 
     }
-    
+
     const DEFAULT_ROLE: ProjectRole = "PROJECT_VIEWER";
 
     // Add user as a PROJECT_VIEWER
@@ -61,22 +63,21 @@ export const addMember = async (req: Request, res: Response) => {
 
     return res.status(201).json({ message: "Member added successfully", membership });
   } catch (err) {
-    console.error("Error adding member:", err);
-    return res.status(500).json({ message: "Internal server error" });
+   next(err);
   }
 };
 
-export const deleteMember = async (req: Request, res: Response) => {
+export const deleteMember = async (req: Request, res: Response, next:NextFunction) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: "Missing user authentication" });
+      return next(new AppError ("Missing user authentication", 401));
     }
 
     const projectId = parseInt(req.params.projectId);
     const userId = req.params.id;
 
     if (!userId) {
-      return res.status(400).json({ message: "Missing userId to remove" });
+      return next(new AppError("Missing userId to remove",400));
     }
 
     const user = await prisma.user.findUnique({
@@ -84,7 +85,7 @@ export const deleteMember = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return next(new AppError("User not found",404));
     }
 
     const project = await prisma.project.findUnique({
@@ -92,7 +93,7 @@ export const deleteMember = async (req: Request, res: Response) => {
     });
 
     if (!project) {
-      return res.status(404).json({ message: "Project not found" });
+      return next(new AppError("Project not found",404));
     }
 
     const membership = await prisma.projectMembership.findUnique({
@@ -105,7 +106,7 @@ export const deleteMember = async (req: Request, res: Response) => {
     });
 
     if (!membership) {
-      return res.status(400).json({ message: "User is not a member of this project" });
+      return next(new AppError("User is not a member of this project" ,400));
     }
 
     await prisma.projectMembership.delete({
@@ -119,12 +120,11 @@ export const deleteMember = async (req: Request, res: Response) => {
 
     return res.status(200).json({ message: "Member removed successfully" });
   } catch (err) {
-    console.error("Error removing member:", err);
-    return res.status(500).json({ message: "Internal server error" });
+    next(err);
   }
 };
 
-export const updateRole =  async (req:Request,res:Response)=>{
+export const updateRole =  async (req:Request,res:Response,next:NextFunction)=>{
      try {
 
         const validRoles: ProjectRole[] = [ "PROJECT_VIEWER","PROJECT_ADMIN","PROJECT_MEMBER"];
@@ -137,14 +137,14 @@ export const updateRole =  async (req:Request,res:Response)=>{
         const newRole: ProjectRole = incomingRole as ProjectRole;
 
     if (!req.user) {
-      return res.status(401).json({ message: "Missing user authentication" });
+      return next(new AppError ("Missing user authentication", 401));
     }
 
     const projectId = parseInt(req.params.projectId);
     const username  = req.params.username;
 
     if (!username) {
-      return res.status(400).json({ message: "Missing username to update" });
+      return next(new AppError("Missing userId to update",400));
     }
 
     const user = await prisma.user.findUnique({
@@ -152,7 +152,7 @@ export const updateRole =  async (req:Request,res:Response)=>{
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+     return next(new AppError("User not found",404));
     }
 
     const project = await prisma.project.findUnique({
@@ -160,7 +160,7 @@ export const updateRole =  async (req:Request,res:Response)=>{
     });
 
     if (!project) {
-      return res.status(404).json({ message: "Project not found" });
+      return next(new AppError("Project not found",404));
     }
 
     const membership = await prisma.projectMembership.findUnique({
@@ -173,7 +173,7 @@ export const updateRole =  async (req:Request,res:Response)=>{
     });
 
     if (!membership) {
-      return res.status(400).json({ message: "User is not a member of this project" });
+      return next(new AppError("User is not a member of this project" ,400));
     }
 
  await prisma.projectMembership.update({
@@ -188,10 +188,9 @@ export const updateRole =  async (req:Request,res:Response)=>{
   },
 });
 
-      return res.status(200).json({ message: "Member Role updated successfully" });
+    return res.status(200).json({ message: "Member Role updated successfully" });
   } catch (err) {
-    console.error("Error updating  member:", err);
-    return res.status(500).json({ message: "Internal server error" });
+    next(err);
   }
 
 };

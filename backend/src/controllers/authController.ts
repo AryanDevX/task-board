@@ -1,13 +1,14 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import {prisma} from '../../lib/prisma.js';
 import jwt from 'jsonwebtoken';
 import { JwtPayload } from 'jsonwebtoken';
+import { AppError } from '../../types/appError.js';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
 // Register
-export const registerUser = async (req: Request, res: Response) => {
+export const registerUser = async (req: Request, res: Response,next:NextFunction) => {
   const { username, email, password } = req.body;
 
   try {
@@ -48,15 +49,13 @@ export const registerUser = async (req: Request, res: Response) => {
       }
     });
 
-  } catch (error) {
-    res.status(500).json({
-      message: "Server error"
-    });
+  } catch (err) {
+    next(err);
   }
 };
 
 // Login
-  export const loginUser = async (req: Request, res: Response) => {
+  export const loginUser = async (req: Request, res: Response,next:NextFunction) => {
   const { username, password } = req.body;
 
   try {
@@ -65,13 +64,13 @@ export const registerUser = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid username or password" });
+      return next(new AppError ("Invalid username or password", 400)) ;
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid username or password" });
+      return next(new AppError ("Invalid username or password", 400));
     }
 
     const token = jwt.sign(
@@ -110,16 +109,16 @@ res.cookie("refreshToken", refreshToken, {
   secure: true
 })
 
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
+  } catch (err) {
+    next(err);
   }
 };
 
 
-export const refreshUser= async (req:Request,res:Response)=>{
+export const refreshUser= async (req:Request,res:Response,next:NextFunction)=>{
   try{
   const refreshToken=req.cookies.refreshToken;
-  if(!refreshToken) {res.status(401).json({message:"Refresh Token missing"});}
+  if(!refreshToken) { return next(new AppError("Refresh Token missing",401));}
 
   const payload=jwt.verify(refreshToken,JWT_SECRET) as JwtPayload;
 
@@ -127,9 +126,8 @@ export const refreshUser= async (req:Request,res:Response)=>{
     where:{token:refreshToken}
   });
   
-  if(!dbtoken) {res.status(403).json({message:"Token revoked "});}
+  if(!dbtoken) { return next(new AppError("Token revoked", 403));}
 
- 
  const accessToken = jwt.sign(
    { userId: payload.userId,
     globalRole: payload.globalRole
@@ -143,11 +141,11 @@ export const refreshUser= async (req:Request,res:Response)=>{
  res.json({message:"token refreshed"});}
 
  catch(err){
-  res.status(500).json({ message: "Server error" });
+  next(err);
  }
 };
 
-export const logoutUser = async (req:Request ,res:Response )=>{
+export const logoutUser = async (req:Request ,res:Response ,next:NextFunction)=>{
 try{
  const token = req.cookies.refreshToken
 
@@ -161,6 +159,6 @@ try{
  res.json({message:"logged out"})}
  
  catch(err){
-  res.status(500).json({ message: "Server error" });
+  next(err);
  }
 };

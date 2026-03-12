@@ -1,7 +1,6 @@
 import express from 'express';
-import { createProject } from '../controllers/createProjectController.js';
+import { createProject ,getProjects} from '../controllers/ProjectControllers.js';
 import { authenticateJWT } from '../middleware/authenticateJWT.js';
-import { getProjects } from '../controllers/getProjects.js';
 import { requireProjectRole } from '../middleware/requireProjectRole.js';
 import { addMember,deleteMember,updateRole } from '../controllers/manageMembers.js';
 const router = express.Router();

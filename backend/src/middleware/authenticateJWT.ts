@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import {prisma} from '../../lib/prisma.js';
 import jwt from 'jsonwebtoken';
+import { AppError } from '../../types/appError.js';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 interface JwtPayload {
@@ -13,14 +14,14 @@ export const authenticateJWT = (req:Request, res:Response, next:NextFunction) =>
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return res.status(401).json({ message: 'Authorization header missing' });
+    return next(new AppError ("Authorization header missing",401));
   }
 
   // Extract token from "Bearer <token>"
   const token = authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ message: 'Token missing' });
+    return next(new AppError("Token missing",401));
   }
 
   try {
@@ -31,7 +32,8 @@ export const authenticateJWT = (req:Request, res:Response, next:NextFunction) =>
     req.user = decoded;
 
     next();
-  } catch (error) {
-    return res.status(403).json({ message: 'Invalid or expired token' });
+  } catch (err) {
+    next(err)
+
   }
 };

@@ -3,6 +3,8 @@ import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import cookieParser from "cookie-parser"
+import { errorMiddleware } from './middleware/errorMiddleware.js';
+import { error } from 'console';
 
 
 const app: Application = express();
@@ -34,4 +36,5 @@ app.post('/users', (req: Request, res: Response) => {
     res.status(201).send(user);
 });
 
+app.use(errorMiddleware);
 export default app;
