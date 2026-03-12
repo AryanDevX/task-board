@@ -1,6 +1,6 @@
-import {prisma} from '../../lib/prisma';
+import {prisma} from '../../lib/prisma.js';
 import { Request ,Response } from 'express';
-import { getUsername} from '../utils/helpers';
+import { getUsername} from '../utils/helpers.js';
 
 //GET /projects/:projectId
 

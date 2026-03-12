@@ -1,9 +1,9 @@
 import express from 'express';
-import { createProject } from '../controllers/createProjectController';
-import { authenticateJWT } from '../middleware/authenticateJWT';
-import { getProjects } from '../controllers/getProjects';
-import { requireProjectRole } from '../middleware/requireProjectRole';
-import { addMember,deleteMember,updateRole } from '../controllers/manageMembers';
+import { createProject } from '../controllers/createProjectController.js';
+import { authenticateJWT } from '../middleware/authenticateJWT.js';
+import { getProjects } from '../controllers/getProjects.js';
+import { requireProjectRole } from '../middleware/requireProjectRole.js';
+import { addMember,deleteMember,updateRole } from '../controllers/manageMembers.js';
 const router = express.Router();
 
 router.post('/projects',authenticateJWT ,createProject);
