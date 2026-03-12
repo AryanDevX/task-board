@@ -16,6 +16,7 @@ model User {
   globalRole  GlobalRole @default(USER)
   memberships ProjectMembership[]
   createdProjects Project[]
+  RefreshTokens RefreshToken[]
 }
 
 model Project {
@@ -36,6 +37,15 @@ model ProjectMembership {
   user      User    @relation(fields: [userId], references: [id])
   project   Project @relation(fields: [projectId], references: [id])
    @@unique([userId, projectId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 enum GlobalRole {

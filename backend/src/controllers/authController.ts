@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import {prisma} from '../../lib/prisma';
 import jwt from 'jsonwebtoken';
+import { JwtPayload } from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -82,9 +83,84 @@ export const registerUser = async (req: Request, res: Response) => {
       { expiresIn: "1h" }
     );
 
-    res.json({ token });
+    const refreshToken= jwt.sign(
+      {
+        userId: user.id,
+        globalRole: user.globalRole
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    prisma.refreshToken.create({
+      data:{
+        userId:user.id,
+        token:token,
+        expiresAt:new Date(Date.now() + 7*24*60*60*1000)
+      }
+    });
+
+   res.cookie("accessToken", token, {
+  httpOnly: true,
+  secure: true
+})
+
+res.cookie("refreshToken", refreshToken, {
+  httpOnly: true,
+  secure: true
+})
 
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
+};
+
+
+export const refreshUser= async (req:Request,res:Response)=>{
+  try{
+  const refreshToken=req.cookies.refreshToken;
+  if(!refreshToken) {res.status(401).json({message:"Refresh Token missing"});}
+
+  const payload=jwt.verify(refreshToken,JWT_SECRET) as JwtPayload;
+
+  const dbtoken =await prisma.refreshToken.findUnique({
+    where:{token:refreshToken}
+  });
+  
+  if(!dbtoken) {res.status(403).json({message:"Token revoked "});}
+
+ 
+ const accessToken = jwt.sign(
+   { userId: payload.userId,
+    globalRole: payload.globalRole
+    },
+   JWT_SECRET!,
+   { expiresIn: "1h" }
+ );
+
+ res.cookie("accessToken", accessToken, { httpOnly:true });
+
+ res.json({message:"token refreshed"});}
+
+ catch(err){
+  res.status(500).json({ message: "Server error" });
+ }
+};
+
+export const logoutUser = async (req:Request ,res:Response )=>{
+try{
+ const token = req.cookies.refreshToken
+
+ await prisma.refreshToken.delete({
+   where:{token}
+ })
+
+ res.clearCookie("accessToken")
+ res.clearCookie("refreshToken")
+
+ res.json({message:"logged out"})}
+ 
+ catch(err){
+  res.status(500).json({ message: "Server error" });
+ }
 };
