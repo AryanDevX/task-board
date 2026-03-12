@@ -1,5 +1,5 @@
-import { ProjectRole } from '../../generated/prisma/enums';
-import { prisma } from '../../lib/prisma';
+import { ProjectRole } from '@prisma/client';
+import { prisma } from '../../lib/prisma.js';
 import { Request, Response } from 'express';
 
 export const addMember = async (req: Request, res: Response) => {
