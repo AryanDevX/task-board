@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import {prisma} from '../../lib/prisma.js';
+import { Prisma } from '@prisma/client';
 
 export const createTask = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
     try {
@@ -81,10 +82,6 @@ export const updateTask = async (req: Request, res: Response, next:NextFunction)
         const {taskId} = req.params;
         const { title, description, columnId, assigneeId, priority } = req.body;
         const userId = (req as any).user.id;
-        if(!taskId){
-            res.status(400).json({error: 'Task ID is required.'});
-            return;
-        }
         const oldTask = await prisma.task.findUnique({
             where: { id: parseInt(taskId) },
             select: {
@@ -93,11 +90,12 @@ export const updateTask = async (req: Request, res: Response, next:NextFunction)
                 priority: true, 
             }
         });
-
+        
         if (!oldTask) {
             res.status(404).json({ error: "Task not found." });
             return;
         }
+        const auditLogsData: any[] = [];
         if (columnId && oldTask.columnId !== parseInt(columnId)) {
             const allowedTransition = await prisma.workflowTransition.findFirst({
                 where: {
@@ -119,11 +117,30 @@ export const updateTask = async (req: Request, res: Response, next:NextFunction)
                 }
             });
         }
+
+        const parsedAssigneeId = assigneeId ? parseInt(assigneeId) : null;
+        if (assigneeId !== undefined && oldTask.assigneeId !== parsedAssigneeId) {
+            auditLogsData.push({
+                taskId: parseInt(taskId),
+                userId: parseInt(userId),
+                type: 'ASSIGNEE_CHANGE',
+                oldValue: oldTask.assigneeId ? oldTask.assigneeId.toString() : "Unassigned",
+                newValue: parsedAssigneeId ? parsedAssigneeId.toString() : "Unassigned"
+            });
+        }
+        if (priority && oldTask.priority !== priority) {
+            auditLogsData.push({
+                taskId: parseInt(taskId),
+                userId: parseInt(userId),
+                type: 'PRIORITY_CHANGE',
+                oldValue: oldTask.priority,
+                newValue: priority
+            });
+        }
+
         const updatedTask = await prisma.task.update({
             where: { id: parseInt(taskId) },
             data: {
-                // Prisma Magic: If any of these are `undefined` in req.body, 
-                // Prisma simply ignores them and keeps the old database value!
                 title: title,
                 description: description,
                 columnId: columnId ? parseInt(columnId) : undefined,
@@ -131,37 +148,36 @@ export const updateTask = async (req: Request, res: Response, next:NextFunction)
                 priority: priority,
             }
         });
-
-        // 2. FETCH OLD DATA: Before we change anything, we must fetch the current 
-        //    task from the database. We need to know what it looked like so we can 
-        //    compare the old values to the new values for the Audit Trail.
-        
-        // 3. WORKFLOW GUARD: If the req.body includes a new columnId (meaning they 
-        //    are dragging it to a new status), check the WorkflowTransition table. 
-        //    If the move is illegal, reject the request (400 Bad Request).
-        
-        // 4. EXECUTE: Update the task in Prisma with the new data.
-        
-        // 5. AUDIT LOGS: 
-        //    - If the columnId changed, create a "STATUS_CHANGE" log.
-        //    - If the assigneeId changed, create an "ASSIGNEE_CHANGE" log.
-
-    } catch (error) {
+        if (auditLogsData.length > 0) {
+            await prisma.auditLog.createMany({
+                data: auditLogsData
+            });
+        }
+        res.status(200).json(updatedTask)
+    }
+     catch (error) {
         next(error);
     }
 };
 
-export const deleteTask = async (req: Request, res: Response): Promise<void> => {
+export const deleteTask = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
     try {
         const {taskId} = req.params;
-        // 1. EXTRACT: Pull the taskId from the URL.
-        
-        // 2. EXECUTE: Tell Prisma to delete it. (Because we used onDelete: Cascade 
-        //    in the schema, Prisma will automatically wipe out all its comments 
-        //    and audit logs so we don't have to!)
-        
-        // 3. RESPOND: Send back a 200 success message.
+        if(!taskId){
+            res.status(400).json({error: 'Task ID is required.'});
+            return;
+        }
+        const deletedTask = await prisma.task.delete({
+            where: {
+                id:parseInt(taskId),
+            },
+        });
+        res.status(200).json({message: "Task deleted successfully",deletedTask});
     } catch (error) {
-        // Handle error
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+            res.status(404).json({ error: "Task not found." });
+        } else {
+            next(error); 
+        }
     }
 };
