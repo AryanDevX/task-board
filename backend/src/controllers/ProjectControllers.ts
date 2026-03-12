@@ -40,8 +40,13 @@ export const createProject= async (req:Request ,res:Response,next:NextFunction)=
 export const projectnameChange =(name:string, projectId:number)=>{
     return  async (req:Request,res:Response,next:NextFunction) =>{
 try{
+    const project= await prisma.project.findUnique({
+        where:{id:projectId,archived:false}
+    });
+    if(!project) {return next(new AppError ("project not found" ,404 ));}
+
    await prisma.project.update({
-    where:{id:projectId},                               // Only be Called for Valid ProjectIds 
+    where:{id:projectId},                               
     data:{name}
    });
 }
@@ -54,6 +59,12 @@ catch(err){
 
 export const projectchangeDescp =(description:string, projectId:number)=>{return  async(req:Request,res:Response,next:NextFunction) =>{
 try{
+     const project= await prisma.project.findUnique({
+        where:{id:projectId, archived:false}
+    });
+
+    if(!project) {return next(new AppError ("project not found" ,404 ));}
+
    await prisma.project.update({
     where:{id:projectId},
     data:{description}
@@ -73,7 +84,7 @@ export const getProjects = async (req: Request, res: Response,next:NextFunction)
     }
 
     let projects;
-    if (!projectId) {
+    if (!projectId) {                                               // fetches archived and non archived together
       projects = await prisma.projectMembership.findMany({
         where: { userId: req.user.userId },
         include: { project: true }, 
@@ -92,6 +103,28 @@ export const getProjects = async (req: Request, res: Response,next:NextFunction)
   } catch (err) {
     next(err);
   }
+};
+
+export const projectArchive=(projectId: number)=>{return  async (req:Request,res:Response,next:NextFunction)=>{
+    try{
+        const project= await prisma.project.findUnique({
+            where:{id:projectId}
+        });
+
+        if(!project) {return next(new AppError ("project not found" ,404 ));}
+
+        if(project?.archived === true){return next(new AppError("Project already archived", 409));}
+
+        await prisma.project.update({
+            where:{id:projectId},
+            data:{archived:true, archivedAt: new Date()}
+        });
+
+    }
+    catch(err){
+        next(err);
+    }
+};
 };
 
 

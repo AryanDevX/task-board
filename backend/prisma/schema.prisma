@@ -23,6 +23,8 @@ model Project {
   name        String
   description String?
   createdById Int
+  archived    Boolean    @default(false)
+  archivedAt  DateTime?
   createdBy   User @relation(fields: [createdById], references: [id])
   members     ProjectMembership[]
   createdAt   DateTime @default(now())
