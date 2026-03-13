@@ -5,7 +5,10 @@ import userRoutes from './routes/userRoutes.js';
 import cookieParser from "cookie-parser"
 import { errorMiddleware } from './middleware/errorMiddleware.js';
 import { error } from 'console';
-
+import columnRoutes from './routes/columnRoutes.js';
+import taskRoutes from './routes/taskRoutes.js';
+import commentRoutes from './routes/commentRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 const app: Application = express();
 
@@ -22,11 +25,16 @@ app.use(cookieParser())
 //routes:
 app.use('/api/auth',authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/tasks', columnRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // test route
 app.get('/', (req, res) => {
   res.send('Welcome to our server ROHIT.');
 });
+
 
 
 let users: any[] = []; // Added a quick 'any[]' type here to keep TS happy!
