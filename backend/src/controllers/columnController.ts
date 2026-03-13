@@ -8,6 +8,7 @@ export const createColumn = async (req: Request, res:Response, next:NextFunction
         if(!title || !projectId){
             return next(new AppError ("Column title and projectID are required.", 400));
         }
+
         const newColumn = await prisma.column.create({
             data: {
                 title: title,

@@ -14,7 +14,6 @@ model User {
   avatar          String?
   globalRole      GlobalRole          @default(USER)
   memberships     ProjectMembership[]
-  createdProjects Project[]
   RefreshTokens   RefreshToken[]
   assignedTasks   Task[]              @relation("TaskAssignee")
   reportedTasks   Task[]              @relation("TaskReporter")
@@ -30,6 +29,7 @@ model Project {
   createdById         Int
   archived            Boolean              @default(false)
   archivedAt          DateTime?
+  modifiedAt          DateTime?         
   createdBy           User                 @relation(fields: [createdById], references: [id])
   members             ProjectMembership[]
   createdAt           DateTime             @default(now())
