@@ -3,13 +3,13 @@ import { createColumn, getColumns, updateColumn, deleteColumn } from '../control
 import { authenticateJWT } from '../middleware/authenticateJWT.js';
 import { requireProjectRole } from '../middleware/requireProjectRole.js';
 
-const router = Router();
+const router = Router({mergeParams:true});
 
 //Creating column
 router.post('/', authenticateJWT,  requireProjectRole(["PROJECT_ADMIN"]),createColumn);
 
 //Getting columns 
-router.get('/project/:projectId', authenticateJWT, getColumns);
+router.get('/', authenticateJWT, getColumns);
 
 //Updating column
 router.put('/:columnId', authenticateJWT,  requireProjectRole(["PROJECT_ADMIN"]), updateColumn);

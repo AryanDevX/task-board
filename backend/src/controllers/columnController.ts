@@ -4,17 +4,18 @@ import { AppError } from '../../types/appError';
 
 export const createColumn = async (req: Request, res:Response, next:NextFunction): Promise<void> => {
     try {
-        const {title, order} = req.body;
         const {boardId} = req.params;
+        const {title, order, wipLimit} = req.body;
         if(!title || !boardId){
             return next(new AppError ("Column title and boardId are required.", 400));
         }
 
         const newColumn = await prisma.column.create({
             data: {
-                title: title,
+                title,
                 boardId: parseInt(boardId),
-                order: order || 0,
+                order,
+                wipLimit: wipLimit?parseInt(wipLimit):null,
             },
         });
         res.status(201).json(newColumn);
@@ -55,7 +56,7 @@ export const getColumns = async (req: Request, res:Response, next:NextFunction):
 export const updateColumn = async (req: Request, res:Response, next:NextFunction): Promise<void> => {
     try{
         const {columnId} = req.params;
-        const {title, order} = req.body;
+        const {title, wipLimit, order} = req.body;
         if(!columnId){
             return next(new AppError ("Column ID is required.", 400));
         }
@@ -73,6 +74,7 @@ export const updateColumn = async (req: Request, res:Response, next:NextFunction
             data:{
                 title: title,
                 order: order,
+                wipLimit:wipLimit!== undefined?parseInt(wipLimit):undefined
             },
         });
         res.status(200).json(updatedColumn);

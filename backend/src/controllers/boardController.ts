@@ -4,7 +4,7 @@ import { AppError } from '../../types/appError.js';
 
 export const createBoard = async (req: Request, res:Response, next:NextFunction): Promise<void> =>{
     try{
-        const {title, description} = req.body;
+        const {title} = req.body;
         const {projectId} = req.params;
         if(!title || !projectId){
             return next(new AppError ("Board title and projectId are required.", 400));
@@ -41,7 +41,7 @@ export const getBoards = async (req: Request, res:Response, next:NextFunction): 
         }
         const boards = await prisma.board.findMany({
             where:{
-                id:parseInt(projectId),
+                projectId:parseInt(projectId),
             },
             include:{
                 columns:{

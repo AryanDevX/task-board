@@ -212,3 +212,37 @@ export const deleteTask = async (req: Request, res: Response, next:NextFunction)
         }
     }
 };
+
+export const moveTask = async (req:Request, res: Response, next: NextFunction): Promise<void>=>{
+    try{
+        const {taskId} = req.params;
+        const {targetColumnId, newOrder} = req.body;
+        const targetColumn = await prisma.column.findUnique({
+            where:{
+                id:parseInt(targetColumnId),
+            },
+        });
+        if(!targetColumn){
+            return next(new AppError("Target column not found.", 404));
+        }
+        if(targetColumn.wipLimit!==null){
+            const currentTaskCount = await prisma.task.count({
+                where: { columnId: parseInt(targetColumnId) }
+            });
+            if (currentTaskCount >= targetColumn.wipLimit) {
+                return next(new AppError(`WIP Limit Reached: The '${targetColumn.title}' column cannot accept more than ${targetColumn.wipLimit} tasks.`, 400));
+            }
+            const updatedTask = await prisma.task.update({
+                where: { id: parseInt(taskId) },
+                data: { 
+                    columnId: parseInt(targetColumnId),
+                    order: parseFloat(newOrder) 
+                }
+            });
+        }
+        res.status(200).json(updateTask);
+    }
+    catch(error){
+        next(error);
+    }
+}
