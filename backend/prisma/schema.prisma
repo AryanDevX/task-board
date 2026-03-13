@@ -81,7 +81,8 @@ model Project {
   createdBy           User                 @relation(fields: [createdById], references: [id])
   members             ProjectMembership[]
   createdAt           DateTime             @default(now())
-  boards              Boards[]
+  boards              Board[]
+  workflowTransitions WorkflowTransition[]
 
   @@index([createdById])
 }
@@ -171,6 +172,7 @@ model Task {
   closedAt     DateTime?
   comments     Comment[]
   auditLogs    AuditLog[]
+  notifications Notification[]
 
   @@unique([columnId,order])
 
