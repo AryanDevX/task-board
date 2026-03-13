@@ -6,6 +6,7 @@ datasource db {
   provider = "postgresql"
 }
 
+//User and Authentication:
 model User {
   id              Int                 @id @default(autoincrement())
   username        String              @unique
@@ -13,28 +14,44 @@ model User {
   password        String
   avatar          String?
   globalRole      GlobalRole          @default(USER)
+
+  //relations
   memberships     ProjectMembership[]
   RefreshTokens   RefreshToken[]
   assignedTasks   Task[]              @relation("TaskAssignee")
   reportedTasks   Task[]              @relation("TaskReporter")
   comments        Comment[]
   auditLogs       AuditLog[]
-  notification    Notification[]
+  notifications   Notification[]
+  createdProjects Project[]
 }
 
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  //relation:
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+//Project and Roles:
 model Project {
-  id                  Int                  @id @default(autoincrement())
-  name                String
-  description         String?
-  createdById         Int
-  archived            Boolean              @default(false)
-  archivedAt          DateTime?
-  modifiedAt          DateTime?         
-  createdBy           User                 @relation(fields: [createdById], references: [id])
-  members             ProjectMembership[]
-  createdAt           DateTime             @default(now())
-  columns             Column[]
-  workflowTransitions WorkflowTransition[]
+  id          Int                 @id @default(autoincrement())
+  name        String
+  description String?
+  archived    Boolean             @default(false)
+  archivedAt  DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  createdById Int
+
+  //relations:
+  createdBy   User                @relation(fields: [createdById], references: [id])
+  members     ProjectMembership[]
+  boards      Board[]
 }
 
 model ProjectMembership {
@@ -42,21 +59,125 @@ model ProjectMembership {
   userId    Int
   projectId Int
   role      ProjectRole
-  user      User        @relation(fields: [userId], references: [id])
-  project   Project     @relation(fields: [projectId], references: [id])
+
+  //relations:
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([userId, projectId])
 }
 
-model RefreshToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+//Board, Columns, Workflow:
+model Board {
+  id                  Int                  @id @default(autoincrement())
+  title               String
+  projectId           Int
+
+  //relations:
+  project             Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  columns             Column[]
+  workflowTransitions WorkflowTransition[]
 }
 
+model Column {
+  id              Int                  @id @default(autoincrement())
+  title           String
+  order           Int
+  wipLimit        Int?
+  boardId         Int
+
+  //relations:
+  board           Board                @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks           Task[]
+  transitionsFrom WorkflowTransition[] @relation("FromTransition")
+  transitionsTo   WorkflowTransition[] @relation("ToTransition")
+}
+
+model WorkflowTransition {
+  id           Int    @id @default(autoincrement())
+  boardId      Int
+  fromColumnId Int
+  toColumnId   Int
+
+  //relations:
+  board        Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  fromColumn   Column @relation("FromTransition", fields: [fromColumnId], references: [id], onDelete: Cascade)
+  toColumn     Column @relation("ToTransition", fields: [toColumnId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, fromColumnId, toColumnId])
+}
+
+// TASKS & COLLABORATION
+model Task {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  order       Float // Changed to Float for fractional indexing
+  issueType   IssueType @default(TASK)
+  priority    Priority  @default(MEDIUM)
+  columnId Int
+  parentId Int?
+  assigneeId Int?
+  reporterId Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  dueDate    DateTime?
+  resolvedAt DateTime?
+  closedAt   DateTime?
+
+  // Relations
+  column   Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  parent   Task?  @relation("StoryChildren", fields: [parentId], references: [id])
+  children Task[] @relation("StoryChildren")
+  assignee   User? @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  reporter   User  @relation("TaskReporter", fields: [reporterId], references: [id])
+  comments      Comment[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  taskId    Int
+  authorId  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  //relations:
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model AuditLog {
+  id        Int          @id @default(autoincrement())
+  taskId    Int
+  userId    Int
+  type      ActivityType
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime     @default(now())
+
+  //relations:
+  task      Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  taskId    Int?
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  //relations:
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task      Task?            @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+// enums:
 enum GlobalRole {
   GLOBAL_ADMIN
   USER
@@ -66,44 +187,6 @@ enum ProjectRole {
   PROJECT_ADMIN
   PROJECT_MEMBER
   PROJECT_VIEWER
-}
-
-model Column {
-  id              Int                  @id @default(autoincrement())
-  title           String
-  order           Int
-  projectId       Int
-  project         Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  tasks           Task[]
-  createdAt       DateTime             @default(now())
-  transitionsFrom WorkflowTransition[] @relation("FromTransition")
-  transitionsTo   WorkflowTransition[] @relation("ToTransition")
-}
-
-model Task {
-  id           Int            @id @default(autoincrement())
-  title        String
-  columnId     Int
-  column       Column         @relation(fields: [columnId], references: [id], onDelete: Cascade)
-  description  String?
-  order        Int
-  issueType    IssueType      @default(TASK)
-  priority     Priority       @default(MEDIUM)
-  parentId     Int?
-  parent       Task?          @relation("StoryChildren", fields: [parentId], references: [id])
-  children     Task[]         @relation("StoryChildren")
-  assigneeId   Int?
-  assignee     User?          @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
-  reporterId   Int
-  reporter     User           @relation("TaskReporter", fields: [reporterId], references: [id])
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  dueDate      DateTime?
-  resolvedAt   DateTime?
-  closedAt     DateTime?
-  comments     Comment[]
-  auditLogs    AuditLog[]
-  notification Notification[]
 }
 
 enum IssueType {
@@ -129,58 +212,9 @@ enum ActivityType {
   TASK_CREATED
 }
 
-model Comment {
-  id        Int      @id @default(autoincrement())
-  content   String
-  taskId    Int
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  authorId  Int
-  author    User     @relation(fields: [authorId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model AuditLog {
-  id        Int          @id @default(autoincrement())
-  taskId    Int
-  task      Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  userId    Int
-  user      User         @relation(fields: [userId], references: [id])
-  type      ActivityType
-  oldValue  String?
-  newValue  String?
-  createdAt DateTime     @default(now())
-}
-
-model WorkflowTransition {
-  id        Int     @id @default(autoincrement())
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  fromColumnId Int
-  toColumnId   Int
-
-  fromColumn Column @relation("FromTransition", fields: [fromColumnId], references: [id], onDelete: Cascade)
-  toColumn   Column @relation("ToTransition", fields: [toColumnId], references: [id], onDelete: Cascade)
-
-  @@unique([projectId, fromColumnId, toColumnId])
-}
-
 enum NotificationType {
   TASK_ASSIGNED
   STATUS_CHANGED
   COMMENT_ADDED
   USER_MENTIONED
-}
-
-model Notification {
-  id        Int              @id @default(autoincrement())
-  userId    Int
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  taskId    Int?
-  task      Task?            @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  type      NotificationType
-  message   String
-  isRead    Boolean          @default(false)
-  createdAt DateTime         @default(now())
 }

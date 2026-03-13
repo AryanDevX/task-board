@@ -4,36 +4,35 @@ import { AppError } from '../../types/appError';
 
 export const createColumn = async (req: Request, res:Response, next:NextFunction): Promise<void> => {
     try {
-        const {title, projectId, order} = req.body;
-        if(!title || !projectId){
-            return next(new AppError ("Column title and projectID are required.", 400));
+        const {title, order} = req.body;
+        const {boardId} = req.params;
+        if(!title || !boardId){
+            return next(new AppError ("Column title and boardId are required.", 400));
         }
 
         const newColumn = await prisma.column.create({
             data: {
                 title: title,
-                projectId: projectId,
+                boardId: parseInt(boardId),
                 order: order || 0,
             },
         });
         res.status(201).json(newColumn);
     }
     catch(error){
-        // console.error("Error creating column", error);
-        // res.status(500).json({error: "Failed to create column"});
         next(error);
     }
 };
 
 export const getColumns = async (req: Request, res:Response, next:NextFunction): Promise<void> =>{
     try{
-        const{projectId} = req.params;
-        if(!projectId){
+        const{boardId} = req.params;
+        if(!boardId){
             return next(new AppError ("Project ID is required.", 400));
         }
         const columns = await prisma.column.findMany({
             where: {
-                projectId: parseInt(projectId),
+                boardId: parseInt(boardId),
             },
             orderBy: {
                 order: 'asc',
@@ -49,8 +48,6 @@ export const getColumns = async (req: Request, res:Response, next:NextFunction):
         res.status(200).json(columns);
     }
     catch(error){
-        // console.error("Error during fetching columns:", error);
-        // res.status(500).json({ error: "Failed to fetch columns from the database" });
         next(error);
     }
 };
@@ -81,8 +78,6 @@ export const updateColumn = async (req: Request, res:Response, next:NextFunction
         res.status(200).json(updatedColumn);
     }
     catch(error){
-        // console.error("Error during updating column:", error);
-        // res.status(500).json({ error: "Failed to update column from the database" });
         next(error);
     }
 };
@@ -101,8 +96,6 @@ export const deleteColumn = async (req: Request, res: Response, next:NextFunctio
         res.status(200).json({message: "Column deleted successfully",deletedColumn});
     }
     catch(error){
-        // console.error("Error during deleting column:", error);
-        // res.status(500).json({ error: "Failed to delete column from the database" });
         next(error);
     }
 };
