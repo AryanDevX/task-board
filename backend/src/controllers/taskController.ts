@@ -1,27 +1,32 @@
 import { NextFunction, Request, Response } from 'express';
 import {prisma} from '../../lib/prisma.js';
-import { Prisma } from '@prisma/client';
+import { ActivityType, Prisma } from '@prisma/client';
+import { AppError } from '../../types/appError';
 
 export const createTask = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
     try {
         const {title, columnId, description, order, issueType, priority, assigneeId, parentId, dueDate} = req.body;
-        const reporterId = (req as any).user.id; //Getting the reporterId from jwt middleware.
-        if(!title || !columnId){
-            res.status(400).json({ error: "Task title and columnId are required." });
-            return;
+        if(!req.user || !req.user.userId ){
+            return next(new AppError ('Unauthorized', 401));
         }
-        if (parentId) {
+        const reporterId = req.user.userId;
+        if(!title || !columnId){
+            return next(new AppError ("Task title and columnId are required.", 400));
+        }
+        if(parentId) {
             const parent = await prisma.task.findUnique({ where: { id: parseInt(parentId) } });
             if (!parent || parent.issueType !== 'STORY') {
-                res.status(400).json({ error: "A task can only be a child of a STORY." });
-                return;
+                return next(new AppError ("A task can only be a child of a STORY.", 400));
+            }
+            if(issueType==='STORY'){
+                return next(new AppError("A STORY cannot be a child of another STORY.", 400));
             }
         }
         const newTask = await prisma.task.create({
             data:{
                 title: title,
                 columnId: parseInt(columnId),
-                reporterId: parseInt(reporterId),
+                reporterId: reporterId,
                 description: description || null,
                 issueType: issueType || 'TASK',
                 priority: priority || 'MEDIUM',
@@ -34,7 +39,7 @@ export const createTask = async (req: Request, res: Response, next:NextFunction)
         await prisma.auditLog.create({
             data:{
                 taskId: newTask.id,
-                userId: parseInt(reporterId),
+                userId: reporterId,
                 type:'TASK_CREATED',
             }
         });
@@ -49,28 +54,44 @@ export const getTaskById = async (req: Request, res: Response, next:NextFunction
     try {
         const {taskId} = req.params;
         if(!taskId){
-            res.status(400).json({error: 'Task ID is required.'});
-            return;
+            return next(new AppError ("Task ID is required.", 400));
         }
         const task = await prisma.task.findUnique({
             where: {
                 id:parseInt(taskId),
             },
             include:{
-                comments:true,
                 reporter:{select:{id:true, username:true, avatar:true}},
-                auditLogs:{orderBy: {
-                    createdAt:'desc',
-                }},
                 assignee:{select:{id:true, username:true, avatar:true}},
                 children:true,
+                comments:{
+                    include: { author: { select: { id: true, username: true, avatar: true } } },
+                },
+                auditLogs: { 
+                    include: { user: { select: { id: true, username: true, avatar: true } } }
+                }
             }
         });
         if(!task){
-            res.status(404).json({ error: "Task not found" });
-            return;
+            return next(new AppError ("Task not found", 404));
         }
-        res.status(201).json(task);
+        const commentActivities = task.comments.map(comment => ({
+            ActivityType: 'COMMENT' as const,
+            timestamp: comment.createdAt,
+            data: comment
+        }));
+        const auditActivities = task.auditLogs.map(log => ({
+            ActivityType: 'AUDIT_LOG' as const,
+            timestamp: log.createdAt,
+            data: log
+        }));
+        const mergedTimeline = [...commentActivities, ...auditActivities];
+        mergedTimeline.sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
+        const { comments, auditLogs, ...taskDetails } = task;
+        res.status(200).json({
+            ...taskDetails,
+            activityTimeline: mergedTimeline
+        });
     }
      catch (error) {
         next(error);
@@ -81,19 +102,31 @@ export const updateTask = async (req: Request, res: Response, next:NextFunction)
     try {
         const {taskId} = req.params;
         const { title, description, columnId, assigneeId, priority } = req.body;
-        const userId = (req as any).user.id;
+        if(!req.user || !req.user.userId){
+            return next(new AppError ('Unauthorized', 401));
+        }
+        const userId = req.user.userId;
         const oldTask = await prisma.task.findUnique({
             where: { id: parseInt(taskId) },
             select: {
                 columnId: true,
                 assigneeId: true,
-                priority: true, 
+                priority: true,
+                issueType:true, 
             }
         });
         
         if (!oldTask) {
-            res.status(404).json({ error: "Task not found." });
-            return;
+            return next(new AppError ("Task not found.", 404));
+        }
+        if(oldTask.issueType === 'STORY' && columnId && oldTask.columnId !== parseInt(columnId)) {
+            const children = await prisma.task.findMany({ where:{ parentId:parseInt(taskId)}});
+            if(children.length > 0) {
+                const allChildrenMatch = children.every(c => c.columnId === parseInt(columnId));
+                if (!allChildrenMatch) {
+                    return next(new AppError("Story status must be consistent. Move all child tasks/bugs to this column first.", 400));
+                }
+            }
         }
         const auditLogsData: any[] = [];
         if (columnId && oldTask.columnId !== parseInt(columnId)) {
@@ -104,13 +137,12 @@ export const updateTask = async (req: Request, res: Response, next:NextFunction)
                 }
             });
             if (!allowedTransition) {
-                res.status(400).json({ error: "Invalid status transition. You cannot move the task there." });
-                return; 
+                return next(new AppError ("Invalid status transition. You cannot move the task there.", 400));
             }
             await prisma.auditLog.create({
                 data: {
                     taskId: parseInt(taskId),
-                    userId: parseInt(userId), 
+                    userId: userId, 
                     type: 'STATUS_CHANGE',
                     oldValue: oldTask.columnId.toString(),
                     newValue: columnId.toString(),
@@ -122,7 +154,7 @@ export const updateTask = async (req: Request, res: Response, next:NextFunction)
         if (assigneeId !== undefined && oldTask.assigneeId !== parsedAssigneeId) {
             auditLogsData.push({
                 taskId: parseInt(taskId),
-                userId: parseInt(userId),
+                userId: userId,
                 type: 'ASSIGNEE_CHANGE',
                 oldValue: oldTask.assigneeId ? oldTask.assigneeId.toString() : "Unassigned",
                 newValue: parsedAssigneeId ? parsedAssigneeId.toString() : "Unassigned"
@@ -131,7 +163,7 @@ export const updateTask = async (req: Request, res: Response, next:NextFunction)
         if (priority && oldTask.priority !== priority) {
             auditLogsData.push({
                 taskId: parseInt(taskId),
-                userId: parseInt(userId),
+                userId: userId,
                 type: 'PRIORITY_CHANGE',
                 oldValue: oldTask.priority,
                 newValue: priority
@@ -164,8 +196,7 @@ export const deleteTask = async (req: Request, res: Response, next:NextFunction)
     try {
         const {taskId} = req.params;
         if(!taskId){
-            res.status(400).json({error: 'Task ID is required.'});
-            return;
+            return next(new AppError ("Task ID is required.", 400));
         }
         const deletedTask = await prisma.task.delete({
             where: {
@@ -175,7 +206,7 @@ export const deleteTask = async (req: Request, res: Response, next:NextFunction)
         res.status(200).json({message: "Task deleted successfully",deletedTask});
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-            res.status(404).json({ error: "Task not found." });
+            return next(new AppError ("Task not found.", 404));
         } else {
             next(error); 
         }

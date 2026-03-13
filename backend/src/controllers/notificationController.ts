@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import {prisma} from '../../lib/prisma.js';
 import { RequiredExtensionArgs } from '@prisma/client/runtime/client.js';
+import { AppError } from '../../types/appError';
 
 export const getUserNotifications = async (req: Request, res:Response, next: NextFunction): Promise<void> =>{
     try{
@@ -33,8 +34,7 @@ export const readNotfications = async (req: Request, res:Response, next:NextFunc
             }
         });
         if(!notification || notification.userId!==userId){
-            res.status(404).json({ error: "Notification not found or unauthorized." });
-            return;
+            return next(new AppError ("Notification not found or unauthorized.", 404));
         }
         const updated = await prisma.notification.update({
             where:{
@@ -50,21 +50,3 @@ export const readNotfications = async (req: Request, res:Response, next:NextFunc
         next(error);
     }
 }
-
-export const markAllAsRead = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-        const userId = (req as any).user.id;
-
-        await prisma.notification.updateMany({
-            where: { 
-                userId: parseInt(userId),
-                isRead: false 
-            },
-            data: { isRead: true }
-        });
-
-        res.status(200).json({ message: "All notifications marked as read." });
-    } catch (error: any) {
-        next(error);
-    }
-};

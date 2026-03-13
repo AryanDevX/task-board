@@ -1,12 +1,12 @@
 import {NextFunction, Request, Response} from 'express';
 import {prisma} from '../../lib/prisma.js';
+import { AppError } from '../../types/appError';
 
 export const createColumn = async (req: Request, res:Response, next:NextFunction): Promise<void> => {
     try {
         const {title, projectId, order} = req.body;
         if(!title || !projectId){
-            res.status(400).json({error: "Column title and projectID are required."});
-            return;
+            return next(new AppError ("Column title and projectID are required.", 400));
         }
         const newColumn = await prisma.column.create({
             data: {
@@ -28,8 +28,7 @@ export const getColumns = async (req: Request, res:Response, next:NextFunction):
     try{
         const{projectId} = req.params;
         if(!projectId){
-            res.status(400).json({error: 'Project ID is required.'});
-            return;
+            return next(new AppError ("Project ID is required.", 400));
         }
         const columns = await prisma.column.findMany({
             where: {
@@ -60,8 +59,7 @@ export const updateColumn = async (req: Request, res:Response, next:NextFunction
         const {columnId} = req.params;
         const {title, order} = req.body;
         if(!columnId){
-            res.status(400).json({error: "Column ID is required."});
-            return;
+            return next(new AppError ("Column ID is required.", 400));
         }
         const updatedColumn = await prisma.column.update({
             where: {
@@ -92,8 +90,7 @@ export const deleteColumn = async (req: Request, res: Response, next:NextFunctio
     try{
         const {columnId} = req.params;
         if(!columnId){
-            res.status(400).json({error: 'Column ID is required.'});
-            return;
+            return next(new AppError ("Column ID is required.", 400));
         }
         const deletedColumn = await prisma.column.delete({
             where: {
