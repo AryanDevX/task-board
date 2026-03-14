@@ -1,4 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
+import { CommentWithAuthor, AuditLogWithUser, TimelineEntry } from '../types/dtos.js';
 
 //Sending notification to reporter and assignee while moving a task.
 //Not notifying twice if both are same.
@@ -29,7 +30,7 @@ export const notifyTaskAssigned = async(taskId: number, title: string, assigneeI
 };
 
 //Merging comments and audit logs into single list for chronological order in UI.
-export const buildActivityTimeline = (comments: any[], auditLogs: any[]): any[] => {
+export const buildActivityTimeline = (comments: CommentWithAuthor[], auditLogs: AuditLogWithUser[]): TimelineEntry[] => {
     const commentActivities = comments.map(comment => ({
         ActivityType: 'COMMENT' as const, timestamp: comment.createdAt, data: comment
     }));

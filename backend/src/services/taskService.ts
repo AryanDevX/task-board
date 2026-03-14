@@ -3,25 +3,26 @@ import { Prisma } from '@prisma/client';
 import { AppError } from '../../types/appError.js';
 import { enforceWipLimit, validateAssigneeMembership, validateTaskHierarchy, validateTransition, getResolutionDatesForColumn, syncStoryStatus } from '../utils/taskHelpers.js';
 import { notifyStatusChanged, notifyTaskAssigned, buildActivityTimeline } from './taskActivityService.js';
+import { TaskDTO, UpdateTaskDTO, MoveTaskDTO } from '../types/dtos.js';
 
-export const createTask = async(data: any, reporterId: number) => {
+export const createTask = async(data: TaskDTO, reporterId: number) => {
     const { title, columnId, description, order, issueType, priority, assigneeId, parentId, dueDate } = data;
     
     if(!title || !columnId) throw new AppError("Task title and columnId are required.", 400);
 
     //Checking hierarchy and wip limit:
-    await validateTaskHierarchy(parentId ? parseInt(parentId) : null, issueType || 'TASK');
-    await enforceWipLimit(parseInt(columnId));
-    if(assigneeId) await validateAssigneeMembership(parseInt(assigneeId), parseInt(columnId));
+    await validateTaskHierarchy(parentId ? Number(parentId) : null, issueType || 'TASK');
+    await enforceWipLimit(Number(columnId));
+    if(assigneeId) await validateAssigneeMembership(Number(assigneeId), Number(columnId));
 
     //Creating database:
     const newTask = await prisma.task.create({
         data: {
-            title, columnId: parseInt(columnId), reporterId,
+            title, columnId: Number(columnId), reporterId,
             description: description || null, issueType: issueType || 'TASK',
             priority: priority || 'MEDIUM', order: order || 0,
-            assigneeId: assigneeId ? parseInt(assigneeId) : null,
-            parentId: parentId ? parseInt(parentId) : null,
+            assigneeId: assigneeId ? Number(assigneeId) : null,
+            parentId: parentId ? Number(parentId) : null,
             dueDate: dueDate ? new Date(dueDate) : null,
         },
     });
@@ -29,6 +30,16 @@ export const createTask = async(data: any, reporterId: number) => {
     //Audit log:
     await prisma.auditLog.create({ data: { taskId: newTask.id, userId: reporterId, type: 'TASK_CREATED' } });
     
+    //Notification if reporter assigneed to someone else:
+    if (newTask.assigneeId && newTask.assigneeId !== reporterId) {
+        await notifyTaskAssigned(
+            newTask.id, 
+            newTask.title, 
+            newTask.assigneeId, 
+            reporterId
+        );
+    }
+
     //Changing story status if added to a story:
     if(newTask.parentId) await syncStoryStatus(newTask.parentId, reporterId);
     
@@ -57,7 +68,7 @@ export const getTaskWithTimeline = async(taskId: number) => {
     return { ...taskDetails, activityTimeline: timeline };
 };
 
-export const updateTask = async(taskId: number, data: any, userId: number) => {
+export const updateTask = async(taskId: number, data: UpdateTaskDTO, userId: number) => {
     const { title, description, columnId, assigneeId, priority, dueDate, issueType, parentId } = data;
     
     //Pulling current data:
@@ -74,29 +85,28 @@ export const updateTask = async(taskId: number, data: any, userId: number) => {
     if(!oldTask) throw new AppError("Task not found.", 404);
 
     // Checking hierarchy:
-    const targetParentId = parentId !== undefined ? (parentId ? parseInt(parentId) : null) : oldTask.parentId;
+    const targetParentId = parentId !== undefined ? (parentId ? Number(parentId) : null) : oldTask.parentId;
     await validateTaskHierarchy(targetParentId, issueType || oldTask.issueType);
 
-    if(oldTask.issueType === 'STORY' && columnId && oldTask.columnId !== parseInt(columnId)){
+    if(oldTask.issueType === 'STORY' && columnId && oldTask.columnId !== Number(columnId)){
         throw new AppError("A Story cannot be directly moved across columns.", 400);
     }
 
-    const auditLogsData: any[] = [];
-    
+    const auditLogsData: Prisma.AuditLogCreateManyInput[] = [];    
     //If column changed:
-    if(columnId && oldTask.columnId !== parseInt(columnId)){
-        await validateTransition(oldTask.column.boardId, oldTask.columnId, parseInt(columnId));
-        await enforceWipLimit(parseInt(columnId));
+    if(columnId && oldTask.columnId !== Number(columnId)){
+        await validateTransition(oldTask.column.boardId, oldTask.columnId, Number(columnId));
+        await enforceWipLimit(Number(columnId));
         
         auditLogsData.push({ taskId, userId, type: 'STATUS_CHANGE', oldValue: oldTask.columnId.toString(), newValue: columnId.toString() });
         await notifyStatusChanged(taskId, oldTask.title, oldTask.assigneeId, oldTask.reporterId, userId);
     }
 
     //If assignee changed
-    const parsedAssigneeId = assigneeId !== undefined ? (assigneeId ? parseInt(assigneeId) : null) : undefined;        
+    const parsedAssigneeId = assigneeId !== undefined ? (assigneeId ? Number(assigneeId) : null) : undefined;        
     if(assigneeId !== undefined && oldTask.assigneeId !== parsedAssigneeId){
         if(typeof parsedAssigneeId === 'number'){
-            await validateAssigneeMembership(parsedAssigneeId, columnId ? parseInt(columnId) : oldTask.columnId);
+            await validateAssigneeMembership(parsedAssigneeId, columnId ? Number(columnId) : oldTask.columnId);
             await notifyTaskAssigned(taskId, oldTask.title, parsedAssigneeId, userId);
         }
         auditLogsData.push({ taskId, userId, type: 'ASSIGNEE_CHANGE', oldValue: oldTask.assigneeId?.toString() || "Unassigned", newValue: parsedAssigneeId?.toString() || "Unassigned" });
@@ -108,33 +118,40 @@ export const updateTask = async(taskId: number, data: any, userId: number) => {
     }
     
     //Calculating resolved and created date:
-    let dates = { resolvedAt: oldTask.resolvedAt, closedAt: undefined as any };
-    if(columnId && oldTask.columnId !== parseInt(columnId)){
-        dates = await getResolutionDatesForColumn(parseInt(columnId), oldTask.resolvedAt);
+    let dates: 
+    { 
+        resolvedAt: Date | null | undefined; 
+        closedAt: Date | null | undefined } = 
+    { 
+        resolvedAt: oldTask.resolvedAt, 
+        closedAt: undefined 
+    };
+    if(columnId && oldTask.columnId !== Number(columnId)){
+        dates = await getResolutionDatesForColumn(Number(columnId), oldTask.resolvedAt);
     }
     //Updating the database:
     const updatedTask = await prisma.task.update({
         where: { id: taskId },
         data: {
             title, description, priority, issueType,
-            columnId: columnId ? parseInt(columnId) : undefined,
+            columnId: columnId ? Number(columnId) : undefined,
             assigneeId: assigneeId !== undefined ? parsedAssigneeId : undefined,
             dueDate: dueDate !== undefined ? (dueDate ? new Date(dueDate) : null) : undefined,
-            parentId: parentId !== undefined ? (parentId ? parseInt(parentId) : null) : undefined,
+            parentId: parentId !== undefined ? (parentId ? Number(parentId) : null) : undefined,
             resolvedAt: dates.resolvedAt, closedAt: dates.closedAt,
         }
     });
 
     //Maintaining logs and syncing story:
     if(auditLogsData.length > 0) await prisma.auditLog.createMany({ data: auditLogsData });
-    if(oldTask.parentId && columnId && oldTask.columnId !== parseInt(columnId)){
+    if(oldTask.parentId && columnId && oldTask.columnId !== Number(columnId)){
         await syncStoryStatus(oldTask.parentId, userId);
     }
     
     return updatedTask;
 };
 
-export const moveTask = async(taskId: number, data: any, userId: number) => {
+export const moveTask = async(taskId: number, data: MoveTaskDTO, userId: number) => {
     const { targetColumnId, newOrder } = data;
 
     //Pulling issueType:
@@ -142,25 +159,25 @@ export const moveTask = async(taskId: number, data: any, userId: number) => {
     if(!taskToMove) throw new AppError("Task not found.", 404);
     if(taskToMove.issueType === 'STORY') throw new AppError("Stories cannot be directly moved across columns.", 400);
     
-    const targetColumn = await prisma.column.findUnique({ where: { id: parseInt(targetColumnId) } });
+    const targetColumn = await prisma.column.findUnique({ where: { id: Number(targetColumnId) } });
     if(!targetColumn) throw new AppError("Target column not found.", 404);
     if(taskToMove.column.boardId !== targetColumn.boardId) throw new AppError("Cross-board transfers are not allowed.", 400);
 
     //Processing drag and drop:
-    if(taskToMove.columnId !== parseInt(targetColumnId)){
-        await validateTransition(taskToMove.column.boardId, taskToMove.columnId, parseInt(targetColumnId));
+    if(taskToMove.columnId !== Number(targetColumnId)){
+        await validateTransition(taskToMove.column.boardId, taskToMove.columnId, Number(targetColumnId));
         await prisma.auditLog.create({ data: { taskId, userId, type: 'STATUS_CHANGE', oldValue: taskToMove.columnId.toString(), newValue: targetColumnId.toString() } });
         await notifyStatusChanged(taskId, taskToMove.title, taskToMove.assigneeId, taskToMove.reporterId, userId);
     }
 
     //WIP Limits and Timestamps
-    await enforceWipLimit(parseInt(targetColumnId));
-    const dates = await getResolutionDatesForColumn(parseInt(targetColumnId), taskToMove.resolvedAt);
+    await enforceWipLimit(Number(targetColumnId));
+    const dates = await getResolutionDatesForColumn(Number(targetColumnId), taskToMove.resolvedAt);
 
     //Updating db
-    const newOrderInt = parseInt(newOrder);
+    const newOrderInt = Number(newOrder);
     const oldOrderInt = taskToMove.order;
-    const isSameColumn = taskToMove.columnId === parseInt(targetColumnId);
+    const isSameColumn = taskToMove.columnId === Number(targetColumnId);
 
     const updatedTask = await prisma.$transaction(async (tx)=>{
         if(!isSameColumn){
@@ -173,7 +190,7 @@ export const moveTask = async(taskId: number, data: any, userId: number) => {
             //Shifting tasks down in new column:
             // B. Make room in the new column (shift items down)
             await tx.task.updateMany({
-                where: { columnId: parseInt(targetColumnId), order: { gte: newOrderInt } },
+                where: { columnId: Number(targetColumnId), order: { gte: newOrderInt } },
                 data: { order: { increment: 1 } }
             });
         } 
@@ -182,14 +199,14 @@ export const moveTask = async(taskId: number, data: any, userId: number) => {
             if(oldOrderInt < newOrderInt){
                 //Moving task down so shift intermediate tasks up:
                 await tx.task.updateMany({
-                    where: { columnId: parseInt(targetColumnId), order: { gt: oldOrderInt, lte: newOrderInt } },
+                    where: { columnId: Number(targetColumnId), order: { gt: oldOrderInt, lte: newOrderInt } },
                     data: { order: { decrement: 1 } }
                 });
             } 
             else if(oldOrderInt > newOrderInt){
                 //Moving tasks up so intermediate tasks down:
                 await tx.task.updateMany({
-                    where: { columnId: parseInt(targetColumnId), order: { gte: newOrderInt, lt: oldOrderInt } },
+                    where: { columnId: Number(targetColumnId), order: { gte: newOrderInt, lt: oldOrderInt } },
                     data: { order: { increment: 1 } }
                 });
             }
@@ -199,7 +216,7 @@ export const moveTask = async(taskId: number, data: any, userId: number) => {
         return await tx.task.update({
             where: { id: taskId },
             data: { 
-                columnId: parseInt(targetColumnId), 
+                columnId: Number(targetColumnId), 
                 order: newOrderInt, 
                 resolvedAt: dates.resolvedAt, 
                 closedAt: dates.closedAt 
@@ -208,7 +225,7 @@ export const moveTask = async(taskId: number, data: any, userId: number) => {
     });
 
     //Auto story status:
-    if(taskToMove.parentId && taskToMove.columnId !== parseInt(targetColumnId)){
+    if(taskToMove.parentId && taskToMove.columnId !== Number(targetColumnId)){
         await syncStoryStatus(taskToMove.parentId, userId);
     }
     return updatedTask;

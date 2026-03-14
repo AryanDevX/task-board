@@ -1,8 +1,10 @@
 import { prisma } from '../../lib/prisma.js';
+import { Prisma } from '@prisma/client';
 import { AppError } from '../../types/appError.js';
+import { CreateColumnDTO, UpdateColumnDTO } from '../types/dtos.js';
 
 //creating a column on a board:
-export const createColumn = async(boardId: number, data: any) =>{
+export const createColumn = async(boardId: number, data: CreateColumnDTO) =>{
     const { title, order, wipLimit } = data;
 
     if(!title) throw new AppError("Column title is required.", 400);
@@ -11,8 +13,8 @@ export const createColumn = async(boardId: number, data: any) =>{
         data: {
             title,
             boardId,
-            order: order !== undefined ? parseInt(order) : 0,
-            wipLimit: wipLimit ? parseInt(wipLimit) : null,
+            order: order !== undefined ? Number(order) : 0,
+            wipLimit: wipLimit ? Number(wipLimit) : null,
         },
     });
 };
@@ -29,15 +31,15 @@ export const getColumnsByBoardId = async(boardId: number) =>{
 };
 
 //Updating column:
-export const updateColumn = async(columnId: number, data: any) =>{
+export const updateColumn = async(columnId: number, data: UpdateColumnDTO) =>{
     const { title, wipLimit, order } = data;
 
     const oldColumn = await prisma.column.findUnique({ where: { id: columnId } });
     if(!oldColumn) throw new AppError("Column not found.", 404);
 
     //Case 1: order changed
-    if(order !== undefined && parseInt(order) !== oldColumn.order){
-        const newOrderInt = parseInt(order);
+    if(order !== undefined && Number(order) !== oldColumn.order){
+        const newOrderInt = Number(order);
         const oldOrderInt = oldColumn.order;
 
         // Using a transaction so "Either all columns safely shift or if fails then stop and update nothing.
@@ -62,7 +64,7 @@ export const updateColumn = async(columnId: number, data: any) =>{
                 where: { id: columnId },
                 data: {
                     title: title || oldColumn.title,
-                    wipLimit: wipLimit !== undefined ? (wipLimit ? parseInt(wipLimit) : null) : oldColumn.wipLimit,
+                    wipLimit: wipLimit !== undefined ? (wipLimit ? Number(wipLimit) : null) : oldColumn.wipLimit,
                     order: newOrderInt
                 }
             });
@@ -80,7 +82,7 @@ export const updateColumn = async(columnId: number, data: any) =>{
         include: { tasks: { orderBy: { order: 'asc' } } },
         data: {
             title,
-            wipLimit: wipLimit !== undefined ? (wipLimit ? parseInt(wipLimit) : null) : undefined,
+            wipLimit: wipLimit !== undefined ? (wipLimit ? Number(wipLimit) : null) : undefined,
         },
     });
 };
@@ -92,9 +94,12 @@ export const deleteColumn = async(columnId: number) =>{
             where: { id: columnId },
         });
     }
-    catch(error: any){
-        // P2025 is Prisma code for: Record to delete does not exist
-        if(error.code === 'P2025') throw new AppError("Column not found.", 404);
+    catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2025') {
+                throw new AppError("Record not found.", 404);
+            }
+        }
         throw error;
     }
 };
