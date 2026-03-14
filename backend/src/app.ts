@@ -31,7 +31,7 @@ app.use('/api/auth',authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/projects/:projectId/boards', boardRoutes);
 app.use('/api/projects/:projectId/boards/:boardId/columns', columnRoutes);
-app.use('/api/tasks', taskRoutes);
+app.use('/api/projects/:projectId/boards/:boardId/columns/:columnId/tasks', taskRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/notifications', notificationRoutes);
 

@@ -9,7 +9,7 @@ const router = Router({mergeParams:true});
 router.post('/', authenticateJWT,  requireProjectRole(["PROJECT_ADMIN"]),createColumn);
 
 //Getting columns 
-router.get('/', authenticateJWT, getColumns);
+router.get('/', authenticateJWT, requireProjectRole(["PROJECT_ADMIN", "PROJECT_MEMBER", "PROJECT_VIEWER"]), getColumns);
 
 //Updating column
 router.put('/:columnId', authenticateJWT,  requireProjectRole(["PROJECT_ADMIN"]), updateColumn);

@@ -9,7 +9,7 @@ const router = Router({mergeParams: true});
 router.post('/', authenticateJWT,  requireProjectRole(["PROJECT_ADMIN"]),createBoard);
 
 //Getting boards
-router.get('/', authenticateJWT, getBoards);
+router.get('/', authenticateJWT, requireProjectRole(["PROJECT_ADMIN", "PROJECT_MEMBER", "PROJECT_VIEWER"]), getBoards);
 
 //Updating board
 router.put('/:boardId', authenticateJWT,  requireProjectRole(["PROJECT_ADMIN"]), updateBoard);
