@@ -141,7 +141,6 @@ model Column {
   transitionsFrom WorkflowTransition[] @relation("FromTransition")
   transitionsTo   WorkflowTransition[] @relation("ToTransition")
 
-  @@unique([boardId, order])
   @@index([boardId])
 }
 
@@ -170,7 +169,6 @@ model Task {
   auditLogs     AuditLog[]
   notifications Notification[]
 
-  @@unique([columnId, order])
   @@index([columnId, order])
   @@index([columnId])
   @@index([parentId])
@@ -218,8 +216,8 @@ model WorkflowTransition {
   fromColumnId Int
   toColumnId   Int
 
-  fromColumn Column @relation("FromTransition", fields: [fromColumnId], references: [id])
-  toColumn   Column @relation("ToTransition", fields: [toColumnId], references: [id])
+  fromColumn Column @relation("FromTransition", fields: [fromColumnId], references: [id], onDelete:Cascade)
+  toColumn   Column @relation("ToTransition", fields: [toColumnId], references: [id], onDelete:Cascade)
 
   @@unique([projectId, boardId, fromColumnId, toColumnId])
   @@index([boardId, fromColumnId])

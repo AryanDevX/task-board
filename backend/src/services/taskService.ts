@@ -62,8 +62,14 @@ export const updateTask = async(taskId: number, data: any, userId: number) => {
     
     //Pulling current data:
     const oldTask = await prisma.task.findUnique({
-        where: { id: taskId }, 
-        select: { title: true, columnId: true, priority: true, issueType: true, parentId: true, assigneeId: true, reporterId: true, resolvedAt: true }
+        where:{
+            id: taskId 
+        }, 
+        select:{ 
+            title: true, columnId: true, priority: true, 
+            issueType: true, parentId: true, assigneeId: true,
+            reporterId: true, resolvedAt: true, column:true 
+        }
     });
     if(!oldTask) throw new AppError("Task not found.", 404);
 
@@ -79,7 +85,7 @@ export const updateTask = async(taskId: number, data: any, userId: number) => {
     
     //If column changed:
     if(columnId && oldTask.columnId !== parseInt(columnId)){
-        await validateTransition(oldTask.columnId, parseInt(columnId));
+        await validateTransition(oldTask.column.boardId, oldTask.columnId, parseInt(columnId));
         await enforceWipLimit(parseInt(columnId));
         
         auditLogsData.push({ taskId, userId, type: 'STATUS_CHANGE', oldValue: oldTask.columnId.toString(), newValue: columnId.toString() });
@@ -142,7 +148,7 @@ export const moveTask = async(taskId: number, data: any, userId: number) => {
 
     //Processing drag and drop:
     if(taskToMove.columnId !== parseInt(targetColumnId)){
-        await validateTransition(taskToMove.columnId, parseInt(targetColumnId));
+        await validateTransition(taskToMove.column.boardId, taskToMove.columnId, parseInt(targetColumnId));
         await prisma.auditLog.create({ data: { taskId, userId, type: 'STATUS_CHANGE', oldValue: taskToMove.columnId.toString(), newValue: targetColumnId.toString() } });
         await notifyStatusChanged(taskId, taskToMove.title, taskToMove.assigneeId, taskToMove.reporterId, userId);
     }
@@ -152,9 +158,53 @@ export const moveTask = async(taskId: number, data: any, userId: number) => {
     const dates = await getResolutionDatesForColumn(parseInt(targetColumnId), taskToMove.resolvedAt);
 
     //Updating db
-    const updatedTask = await prisma.task.update({
-        where: { id: taskId },
-        data: { columnId: parseInt(targetColumnId), order: parseInt(newOrder), resolvedAt: dates.resolvedAt, closedAt: dates.closedAt }
+    const newOrderInt = parseInt(newOrder);
+    const oldOrderInt = taskToMove.order;
+    const isSameColumn = taskToMove.columnId === parseInt(targetColumnId);
+
+    const updatedTask = await prisma.$transaction(async (tx)=>{
+        if(!isSameColumn){
+            // Case 1: Moving to a different column
+            // Shifting tasks up in old column:
+            await tx.task.updateMany({
+                where: { columnId: taskToMove.columnId, order: { gt: oldOrderInt } },
+                data: { order: { decrement: 1 } }
+            });
+            //Shifting tasks down in new column:
+            // B. Make room in the new column (shift items down)
+            await tx.task.updateMany({
+                where: { columnId: parseInt(targetColumnId), order: { gte: newOrderInt } },
+                data: { order: { increment: 1 } }
+            });
+        } 
+        else {
+            // Case 2: Moving within the SAME column
+            if(oldOrderInt < newOrderInt){
+                //Moving task down so shift intermediate tasks up:
+                await tx.task.updateMany({
+                    where: { columnId: parseInt(targetColumnId), order: { gt: oldOrderInt, lte: newOrderInt } },
+                    data: { order: { decrement: 1 } }
+                });
+            } 
+            else if(oldOrderInt > newOrderInt){
+                //Moving tasks up so intermediate tasks down:
+                await tx.task.updateMany({
+                    where: { columnId: parseInt(targetColumnId), order: { gte: newOrderInt, lt: oldOrderInt } },
+                    data: { order: { increment: 1 } }
+                });
+            }
+        }
+        
+        //Update the task:
+        return await tx.task.update({
+            where: { id: taskId },
+            data: { 
+                columnId: parseInt(targetColumnId), 
+                order: newOrderInt, 
+                resolvedAt: dates.resolvedAt, 
+                closedAt: dates.closedAt 
+            }
+        });
     });
 
     //Auto story status:

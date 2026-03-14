@@ -46,12 +46,17 @@ export const validateTaskHierarchy = async(parentId: number | null, issueType: s
 };
 
 //Checking workflow transition is allowed to that column:
-export const validateTransition = async(fromColumnId: number, toColumnId: number): Promise<void> => {
+export const validateTransition = async (boardId: number, fromColumnId: number, toColumnId: number): Promise<void> => {
     const allowedTransition = await prisma.workflowTransition.findFirst({
-        where: { fromColumnId, toColumnId }
+        where: { 
+            boardId: boardId,
+            fromColumnId, 
+            toColumnId 
+        }
     });
-    if(!allowedTransition){
-        throw new AppError("Invalid status transition.", 400);
+    
+    if (!allowedTransition) {
+        throw new AppError("Invalid status transition for this board's workflow.", 400);
     }
 };
 
