@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import {prisma} from '../../lib/prisma.js';
-import { ActivityType, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { AppError } from '../../types/appError';
 
 export const createTask = async (req: Request, res: Response, next:NextFunction): Promise<void> => {

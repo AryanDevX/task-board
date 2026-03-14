@@ -4,22 +4,30 @@ import { AppError } from '../../types/appError.js';
 
 export const createBoard = async (req: Request, res:Response, next:NextFunction): Promise<void> =>{
     try{
-        const {title} = req.body;
+        const {title, columns} = req.body;
         const {projectId} = req.params;
         if(!title || !projectId){
             return next(new AppError ("Board title and projectId are required.", 400));
+        }
+
+        let defaultColumns = [
+            {title: 'To Do', order: 0},
+            {title: 'In Progress', order: 1},
+            {title: 'Review', order: 2},
+            {title: 'Done', order: 3},
+        ];
+        if(columns && Array.isArray(columns) && columns.length>0){
+            defaultColumns = columns.map((columnTitle:string, columnOrder:number)=>({
+                title:columnTitle,
+                order:columnOrder,
+            }));
         }
         const newBoard = await prisma.board.create({
             data:{
                 title,
                 projectId: parseInt(projectId),
                 columns:{
-                    create:[
-                        {title: 'To Do', order:0},
-                        {title: 'In progress', order:1},
-                        {title: 'Review', order:2},
-                        {title: 'Done', order:3},
-                    ]
+                    create:defaultColumns,
                 },
             },
             include:{
