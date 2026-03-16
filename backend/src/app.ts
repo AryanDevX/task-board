@@ -1,11 +1,11 @@
-import express, {Application, Request, Response } from 'express';
+import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
-import cookieParser from "cookie-parser"
+import cookieParser from 'cookie-parser';
 import { errorMiddleware } from './middleware/errorMiddleware.js';
 import { error } from 'console';
-import boardRoutes from './routes/boardRoutes.js'
+import boardRoutes from './routes/boardRoutes.js';
 import columnRoutes from './routes/columnRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
@@ -15,24 +15,27 @@ import { User } from '@prisma/client';
 const app: Application = express();
 
 //cors for specific origin:
-const  corsOptions = {
-   origin : ['http://localhost:5173'],
-}
+const corsOptions = {
+  origin: ['http://localhost:5173'],
+};
 
 // middleware
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(cookieParser())
+app.use(cookieParser());
 
 //static files
-app.use("/uploads", express.static("uploads"));
+app.use('/uploads', express.static('uploads'));
 
 //routes:
-app.use('/api/auth',authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/projects/:projectId/boards', boardRoutes);
 app.use('/api/projects/:projectId/boards/:boardId/columns', columnRoutes);
-app.use('/api/projects/:projectId/boards/:boardId/columns/:columnId/tasks', taskRoutes);
+app.use(
+  '/api/projects/:projectId/boards/:boardId/columns/:columnId/tasks',
+  taskRoutes,
+);
 app.use('/api/projects/:projectId/comments', commentRoutes);
 app.use('/api/projects/:projectId/notifications', notificationRoutes);
 app.use('/api/boards/:boardId/workflows', workflowTransitionRoutes);
@@ -44,9 +47,9 @@ app.get('/', (req, res) => {
 
 let users: User[] = [];
 app.post('/users', (req: Request, res: Response) => {
-    const user = req.body;
-    users.push(user);
-    res.status(201).send(user);
+  const user = req.body;
+  users.push(user);
+  res.status(201).send(user);
 });
 
 app.use(errorMiddleware);

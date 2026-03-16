@@ -1,17 +1,36 @@
 import { Router } from 'express';
-import { createComment, updateComment, deleteComment } from '../controllers/commentController.js';
+import {
+  createComment,
+  updateComment,
+  deleteComment,
+} from '../controllers/commentController.js';
 import { authenticateJWT } from '../middleware/authenticateJWT.js';
 import { requireProjectRole } from '../middleware/requireProjectRole.js';
 
-const router = Router({mergeParams:true});
+const router = Router({ mergeParams: true });
 
 //Creating Comment
-router.post('/', authenticateJWT, requireProjectRole(["PROJECT_ADMIN","PROJECT_MEMBER"]),createComment);
+router.post(
+  '/',
+  authenticateJWT,
+  requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER']),
+  createComment,
+);
 
 //Updating Comment
-router.put('/:commentId', authenticateJWT,  requireProjectRole(["PROJECT_ADMIN","PROJECT_MEMBER"]) ,updateComment);
+router.put(
+  '/:commentId',
+  authenticateJWT,
+  requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER']),
+  updateComment,
+);
 
 //Deleting colCommentumn
-router.delete('/:commentId', authenticateJWT,  requireProjectRole(["PROJECT_ADMIN","PROJECT_MEMBER"]), deleteComment);
+router.delete(
+  '/:commentId',
+  authenticateJWT,
+  requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER']),
+  deleteComment,
+);
 
 export default router;

@@ -1,23 +1,22 @@
-import { Request,Response,NextFunction } from "express";
-import { AppError } from "../../types/appError";
+import { Request, Response, NextFunction } from 'express';
+import { AppError } from '../../types/appError';
 
 export const requireGlobalAdmin = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
-  try{
-  if (!req.user) {
-    return next(new AppError ("Unauthorized",401));
-  }
+  try {
+    if (!req.user) {
+      return next(new AppError('Unauthorized', 401));
+    }
 
-  if (req.user.globalRole !== "GLOBAL_ADMIN") {
-    return next(new AppError ("Global admin access required", 403 ));
-  }
+    if (req.user.globalRole !== 'GLOBAL_ADMIN') {
+      return next(new AppError('Global admin access required', 403));
+    }
 
-  next();}
-  
-  catch(err){
+    next();
+  } catch (err) {
     next(err);
   }
 };

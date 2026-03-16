@@ -5,9 +5,8 @@ import styles from './Column.module.css';
 export interface TaskData {
   id: string;
   taskName: string;
-  description?:string;
-  assignedId?:string | null;
-
+  description?: string;
+  assignedId?: string | null;
 }
 
 export interface ColumnProps {
@@ -15,7 +14,7 @@ export interface ColumnProps {
   title: string;
   tasks: TaskData[];
   onTaskDrop: (taskId: string, targetColumnId: string) => void;
-  onTaskClick: (taskId:string) =>void;
+  onTaskClick: (taskId: string) => void;
 }
 
 export const Column: React.FC<ColumnProps> = ({
@@ -45,7 +44,12 @@ export const Column: React.FC<ColumnProps> = ({
 
       <div className={styles.taskContainer}>
         {tasks.map((task) => (
-          <TaskCard key={task.id} id={task.id} taskName={task.taskName} onClick={() => onTaskClick} />
+          <TaskCard
+            key={task.id}
+            id={task.id}
+            taskName={task.taskName}
+            onClick={() => onTaskClick}
+          />
         ))}
       </div>
     </div>

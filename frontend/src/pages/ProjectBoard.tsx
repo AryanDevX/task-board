@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Column } from '../components/Column';
-import {TaskModal, type Task} from '../components/TaskModal';
+import { TaskModal, type Task } from '../components/TaskModal';
 import styles from './ProjectBoard.module.css';
 
 interface TaskData {
   id: string;
   taskName: string;
-  description?:string;
-  assignedId?:string | null;
+  description?: string;
+  assignedId?: string | null;
 }
 
 interface DummyColumn {
@@ -51,7 +51,7 @@ export const ProjectBoard: React.FC = () => {
   const [boardData, setBoardData] = useState<DummyColumn[]>(initialBoardData);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
-  
+
   const handleTaskClick = (taskId: string) => {
     for (const column of boardData) {
       const foundTask = column.tasks.find((t) => t.id === taskId);
@@ -61,7 +61,7 @@ export const ProjectBoard: React.FC = () => {
           taskName: foundTask.taskName,
           description: foundTask.description,
           status: column.title,
-          assigneeId:foundTask.assignedId || null
+          assigneeId: foundTask.assignedId || null,
         });
         setIsModalOpen(true);
         return; // Stop searching
@@ -109,30 +109,33 @@ export const ProjectBoard: React.FC = () => {
 
   const handleSaveTask = (newTaskData: Task) => {
     setBoardData((prevBoard) => {
-      if(!editingTask){
-        const newTask = {...newTaskData, id: 'task-${Date.now()}' };
+      if (!editingTask) {
+        const newTask = { ...newTaskData, id: 'task-${Date.now()}' };
         return prevBoard.map((column) => {
-          if(column.title === newTask.status){
-            return{...column, tasks:[...column.tasks, newTask]};
-          };
+          if (column.title === newTask.status) {
+            return { ...column, tasks: [...column.tasks, newTask] };
+          }
           return column;
         });
-      }
-      else{
-        return prevBoard.map((column)=>{
-          if(column.title!==newTaskData.status){
-            return {...column, tasks:column.tasks.filter((t)=> t.id!==newTaskData.id )};
-          }
-          const taskExistsInColumn = column.tasks.some((t) => t.id === newTaskData.id);
-          if(taskExistsInColumn){
+      } else {
+        return prevBoard.map((column) => {
+          if (column.title !== newTaskData.status) {
             return {
               ...column,
-              tasks: column.tasks.map((t) => 
-                t.id === newTaskData.id ? { ...t, ...newTaskData } : t
-              ),
+              tasks: column.tasks.filter((t) => t.id !== newTaskData.id),
             };
           }
-          else{
+          const taskExistsInColumn = column.tasks.some(
+            (t) => t.id === newTaskData.id,
+          );
+          if (taskExistsInColumn) {
+            return {
+              ...column,
+              tasks: column.tasks.map((t) =>
+                t.id === newTaskData.id ? { ...t, ...newTaskData } : t,
+              ),
+            };
+          } else {
             return {
               ...column,
               tasks: [...column.tasks, newTaskData],
@@ -142,13 +145,23 @@ export const ProjectBoard: React.FC = () => {
       }
     });
     handleCloseModal();
-  }
+  };
   return (
     <div className={styles.pageContainer}>
-      <header style={{ marginBottom: '20px', display: 'flex', gap: '20px', alignItems: 'center' }}>
+      <header
+        style={{
+          marginBottom: '20px',
+          display: 'flex',
+          gap: '20px',
+          alignItems: 'center',
+        }}
+      >
         <h1>{projectId}</h1>
         <button
-          onClick={() => {setEditingTask(undefined); setIsModalOpen(true)}}
+          onClick={() => {
+            setEditingTask(undefined);
+            setIsModalOpen(true);
+          }}
           style={{ padding: '8px 16px', cursor: 'pointer' }}
         >
           + Add New Task
@@ -168,7 +181,7 @@ export const ProjectBoard: React.FC = () => {
           />
         ))}
       </div>
-      <TaskModal 
+      <TaskModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSave={handleSaveTask}

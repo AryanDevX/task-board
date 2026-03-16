@@ -1,12 +1,12 @@
-import multer from "multer";
+import multer from 'multer';
 
-const storage= multer.diskStorage({
-  destination:(req,file,cb) => {
-    cb(null,"uploads/avatars");
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/avatars');
   },
-  filename:(req,file,cb) => {
-    cb(null,Date.now()+"-"+file.originalname);
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
   },
 });
 
-export const uploadAvatar = multer({storage});
+export const uploadAvatar = multer({ storage });
