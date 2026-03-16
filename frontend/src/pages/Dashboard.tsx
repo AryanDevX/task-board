@@ -12,13 +12,23 @@ export const Dashboard = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+  const toggleDropdown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDropdownOpen(!isDropdownOpen);
+  };
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
-  //Anything not part of html calculation is done under useeffect.
+
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+    const closeMenu = () => setIsDropdownOpen(false);
+    window.addEventListener('click', closeMenu);
+    return () => window.removeEventListener('click', closeMenu);
+  }, [isDropdownOpen]);
+
   useEffect(() => {
     const loadProjects = async () => {
       try {
@@ -28,20 +38,15 @@ export const Dashboard = () => {
         console.error("Failed to load projects", error);
       }
     };
-
     loadProjects();
   }, []);
 
-  const getInitials = (name: string) => {
-    return name.substring(0, 2).toUpperCase();
-  };
+  const getInitials = (name: string) => name.substring(0, 1).toUpperCase();
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <button className={styles.newProjectBtn}>
-          + New Project
-        </button>
+        <button className={styles.newProjectBtn}>+ New Project</button>
 
         <div className={styles.avatarContainer}>
           <button className={styles.avatarCircle} onClick={toggleDropdown}>
@@ -49,14 +54,14 @@ export const Dashboard = () => {
           </button>
 
           {isDropdownOpen && (
-            <div className={styles.dropdownMenu}>
+            <div className={styles.dropdownMenu} onClick={(e) => e.stopPropagation()}>
               <div className={styles.dropdownHeader}>
                 <div className={styles.dropdownAvatar}>
                   {user?.username ? getInitials(user.username) : 'U'}
                 </div>
                 <div className={styles.userInfo}>
-                  <h3>{user?.username}</h3>
-                  <p>{user?.email}</p>
+                  <h3>{user?.username || 'User'}</h3>
+                  <p>{user?.email || 'No email set'}</p>
                 </div>
               </div>
               <button className={styles.logoutBtn} onClick={handleLogout}>
@@ -69,7 +74,6 @@ export const Dashboard = () => {
 
       <main>
         <h2>My Projects</h2>
-        
         {projects.length === 0 ? (
           <p>You don't have any projects yet. Click "New Project" to start!</p>
         ) : (
