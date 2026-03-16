@@ -1,12 +1,13 @@
 import { apiFetch } from "./client";
+import { type User } from "../src/types/models";
 
 export const authApi = {
 
   register: (data: {
-    name: string;
+    username: string;
     email: string;
     password: string;
-  }) => apiFetch("/auth/register", {
+  }):Promise<User> => apiFetch("/auth/register", {
     method: "POST",
     body: JSON.stringify(data)
   }),
@@ -14,7 +15,7 @@ export const authApi = {
   login: (data: {
     email: string;
     password: string;
-  }) => apiFetch("/auth/login", {
+  }):Promise<User> => apiFetch("/auth/login", {
     method: "POST",
     body: JSON.stringify(data)
   }),
@@ -23,5 +24,5 @@ export const authApi = {
     method: "POST"
   }),
 
-  myProfile: () => apiFetch("/auth/myprofile")
+  myProfile: ():Promise<User> => apiFetch("/auth/myprofile")
 };

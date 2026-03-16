@@ -1,29 +1,76 @@
-.pageContainer {
-  padding: 20px;
+.container {
+  padding: 2rem;
   height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-.boardWrapper {
+.header {
   display: flex;
-  flex-direction: row;
-  overflow-x: auto; /* Enables horizontal scrolling when columns overflow */
-  gap: 24px; /* Space between each column */
-  padding-bottom: 16px; /* Space for scrollbar */
-  flex-grow: 1;
-  align-items: flex-start; /* So columns only grow as tall as their content */
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
 }
 
-/* A temporary for testing */
-.skeletonColumn {
-  min-width: 300px; /* Prevents columns to become too small */
-  height: 500px;
-  background-color: #f1f5f9;
-  border-radius: 8px;
-  border: 2px dashed #cbd5e1;
+.board {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #64748b;
+  gap: 1.5rem;
+  flex: 1;
+  overflow-x: auto; /* Horizontal scroll for columns */
+  padding-bottom: 1rem;
+}
+
+.column {
+  background-color: #f3f4f6;
+  width: 300px;
+  min-width: 300px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  max-height: 100%;
+}
+
+.column h3 {
+  margin-top: 0;
+  font-size: 1.1rem;
+  color: #374151;
+  display: flex;
+  justify-content: space-between;
+}
+
+.taskList {
+  flex: 1;
+  overflow-y: auto; /* Vertical scroll for tasks inside columns */
+  margin-top: 1rem;
+}
+
+.taskCard {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  border: 1px solid #e5e7eb;
+}
+
+.taskCard:hover {
+  border-color: #4f46e5;
+}
+
+.addTaskBtn {
+  width: 100%;
+  padding: 0.5rem;
+  background: none;
+  border: 2px dashed #d1d5db;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.addTaskBtn:hover {
+  background-color: #e5e7eb;
+  color: #374151;
 }

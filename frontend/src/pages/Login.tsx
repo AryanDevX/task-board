@@ -1,75 +1,76 @@
-import * as React from 'react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-//Extending FormElements by usernameInput and passwordInput and specifying their types.
-interface FormElements extends HTMLFormControlsCollection {
-  usernameInput: HTMLInputElement;
-  passwordInput: HTMLInputElement;
-}
+import styles from './Login.module.css';
+import { authApi } from '../api/auth.api';
 
 export const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const { dispatch } = useAuth();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
     setIsLoading(true);
-    setErrorMessage(null);
-    const elements = event.currentTarget.elements as FormElements;
-    //Pulling the values from typed elements:
-    const username = elements.usernameInput.value;
-    const password = elements.passwordInput.value;
 
     try {
-      //ROHIT: Set it up according to backend.
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      if (username == 'unregistered_user') {
-        throw new Error(
-          'User not found in the database. Please register first.',
-        );
-      }
-      const fakeUserProfile = {
-        id: 'Rohit1414',
-        name: username,
-        email: 'rohit@email.com',
-        avatar: null,
-        role: 'Global Admin' as const,
-      };
-      dispatch({
-        type: 'LOGIN',
-        payload: { user: fakeUserProfile, token: 'fake-jwt-token' },
-      });
+      const user = await authApi.login({email, password});
+      login(user);
       navigate('/dashboard');
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Invalid credentials.');
-    } finally {
+    } 
+    catch (err) {
+      if(err instanceof Error){
+        setError(err.message);
+      } else {
+        setError('Something went wrong connecting to the server.');
+      }
+    } 
+    finally{
       setIsLoading(false);
     }
   };
+
   return (
-    <div className="login-box">
-      <h2>Task Board Login</h2>
-      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '10px' }}>
-          <label htmlFor="usernameInput">Username: </label>
-          <input id="usernameInput" name="usernameInput" type="text" required />
-        </div>
-        <div style={{ marginBottom: '10px' }}>
-          <label htmlFor="passwordInput">Password: </label>
+    <div className={styles.container}>
+      <form className={styles.formCard} onSubmit={handleSubmit}>
+        <h2 className={styles.title}>Log in to task board</h2>
+
+        {error && <div className={styles.error}>{error}</div>}
+
+        <div className={styles.inputGroup}>
+          <label htmlFor="email">Email</label>
           <input
-            id="passwordInput"
-            name="passwordInput"
-            type="password"
+            id="email"
+            type="email"
+            className={styles.input}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
-        <button type="submit" disabled={isLoading}>
+
+        <div className={styles.inputGroup}>
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            className={styles.input}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        <button type="submit" className={styles.button} disabled={isLoading}>
           {isLoading ? 'Logging in...' : 'Login'}
         </button>
+        <div className={styles.registerLink}>
+          Don't have an account? <Link to="/register">Register here</Link>
+        </div>
       </form>
     </div>
   );

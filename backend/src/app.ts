@@ -12,11 +12,13 @@ import commentRoutes from './routes/commentRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import workflowTransitionRoutes from './routes/workflowTransitionsRoutes.js';
 import { User } from '@prisma/client';
+
 const app: Application = express();
 
 //cors for specific origin:
 const corsOptions = {
   origin: ['http://localhost:5173'],
+  credentials: true,
 };
 
 // middleware

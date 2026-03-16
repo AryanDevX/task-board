@@ -13,27 +13,20 @@ export const authenticateJWT = (
   res: Response,
   next: NextFunction,
 ) => {
-  // Get auth header - The Authorization header is commonly used to send authentication tokens
   const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    return next(new AppError('Authorization header missing', 401));
-  }
-
-  // Extract token from "Bearer <token>"
-  const token = authHeader.split(' ')[1];
+  const bearerToken = authHeader?.startsWith('Bearer ')
+    ? authHeader.split(' ')[1]
+    : undefined;
+  const cookieToken = req.cookies?.accessToken as string | undefined;
+  const token = bearerToken || cookieToken;
 
   if (!token) {
     return next(new AppError('Token missing', 401));
   }
 
   try {
-    // Verify token
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-
-    // Attach user to request
     req.user = decoded;
-
     next();
   } catch (err) {
     next(err);

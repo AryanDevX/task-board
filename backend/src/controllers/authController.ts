@@ -7,6 +7,12 @@ import { AppError } from '../../types/appError.js';
 
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
+const isProduction = process.env.NODE_ENV === 'production';
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: 'lax' as const,
+};
 
 // Register
 export const registerUser = async (
@@ -94,22 +100,23 @@ export const loginUser = async (
       { expiresIn: '7d' },
     );
 
-    prisma.refreshToken.create({
+    await prisma.refreshToken.create({
       data: {
         userId: user.id,
-        token: token,
+        token: refreshToken,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
 
-    res.cookie('accessToken', token, {
-      httpOnly: true,
-      secure: true,
-    });
+    res.cookie('accessToken', token, cookieOptions);
+    res.cookie('refreshToken', refreshToken, cookieOptions);
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: true,
+    res.status(200).json({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      avatar: user.avatar,
+      globalRole: user.globalRole,
     });
   } catch (err) {
     next(err);
@@ -122,9 +129,6 @@ export const refreshUser = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-     if (!req.user || !req.user.userId)
-      return next(new AppError('Unauthorized', 401));
-
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
       return next(new AppError('Refresh Token missing', 401));
@@ -146,7 +150,7 @@ export const refreshUser = async (
       { expiresIn: '1h' },
     );
 
-    res.cookie('accessToken', accessToken, { httpOnly: true });
+    res.cookie('accessToken', accessToken, cookieOptions);
 
     res.json({ message: 'token refreshed' });
   } catch (err) {
@@ -160,15 +164,16 @@ export const logoutUser = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    
     const token = req.cookies.refreshToken;
 
-    await prisma.refreshToken.delete({
-      where: { token },
-    });
+    if (token) {
+      await prisma.refreshToken.deleteMany({
+        where: { token },
+      });
+    }
 
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
+    res.clearCookie('accessToken', cookieOptions);
+    res.clearCookie('refreshToken', cookieOptions);
 
     res.json({ message: 'logged out' });
   } catch (err) {
@@ -178,17 +183,11 @@ export const logoutUser = async (
 
 export const myProfile= async (req:Request, res:Response ,next:NextFunction ):Promise<void> =>{
   try{
-     if (!req.user || !req.user.userId)
+     if (!req.user?.userId)
       return next(new AppError('Unauthorized', 401));
-    
-    const token = req.cookies.accessToken;
-    if (!token) {
-      return next(new AppError('Token missing', 401));
-    }
-    const payload  =jwt.verify(token , JWT_SECRET) as JwtPayload;
-    const id =payload.userId;
+
     const user = await prisma.user.findUnique({
-      where:{id}
+      where:{id: req.user.userId}
     });
     if(!user){
       return next(new AppError("No such user in database",404));

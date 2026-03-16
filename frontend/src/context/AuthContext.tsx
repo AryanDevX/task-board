@@ -1,50 +1,32 @@
-import React, {
-  createContext,
-  useReducer,
-  useContext,
-  type ReactNode,
-} from 'react';
-
-export type UserRole = 'Global Admin' | 'Project User';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string | null;
-  role: UserRole;
-}
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useReducer, useContext, useEffect, type ReactNode } from 'react';
+import { type User } from '../types/models';
+import { authApi } from '../api/auth.api';
 
 export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  token: string | null; //For JWT token.
 }
-
+//List of allowed command:
 export type AuthAction =
-  | { type: 'LOGIN'; payload: { user: User; token: string } }
+  | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
-  | { type: 'UPDATE_AVATAR'; payload: string }
   | { type: 'SET_LOADING'; payload: boolean };
 
-//Initial State:
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
-  isLoading: true,
-  token: null,
+  isLoading: true, // So that we can check cookie before showing the screen
 };
 
-//Reducer:
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'LOGIN':
       return {
         ...state,
         isAuthenticated: true,
-        user: action.payload.user,
-        token: action.payload.token,
+        user: action.payload,
         isLoading: false,
       };
     case 'LOGOUT':
@@ -52,14 +34,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         ...state,
         isAuthenticated: false,
         user: null,
-        token: null,
         isLoading: false,
-      };
-    case 'UPDATE_AVATAR':
-      if (!state.user) return state;
-      return {
-        ...state,
-        user: { ...state.user, avatar: action.payload },
       };
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
@@ -68,26 +43,51 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   }
 };
 
-//Context
-//Adding the dispatch function with AuthState in AuthContextType
 export interface AuthContextType extends AuthState {
-  dispatch: React.Dispatch<AuthAction>;
+  dispatch: React.Dispatch<AuthAction>; //function for sending order to a reducer that of authaction type.
+  login: (user: User) => void;
+  logout: () => Promise<void>;
 }
-//Creating context
+
+//creating a context to broadcast data to any component that want it instead of going to every component from root.
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-//Provider: That provide data to all UI components nested inside the wrapper.
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
+  //restoring session:
+  useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        //checking if user logged previously
+        const userData = await authApi.myProfile(); 
+        dispatch({ type: 'LOGIN', payload: userData });
+      } catch (error) {
+        console.error("Session restore failed", error);
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    };
+
+    restoreSession();
+  }, []);
+
+  //helper functions:
+  const login = (user: User) => {
+    dispatch({ type: 'LOGIN', payload: user });
+  };
+
+  const logout = async () => {
+    await authApi.logout();
+    dispatch({ type: 'LOGOUT' });
+  };
+
   return (
-    <AuthContext.Provider value={{ ...state, dispatch }}>
+    <AuthContext.Provider value={{ ...state, dispatch, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-//Hook(Receiver): Prevent other components from using AuthContext that are not wrapped inside AuthProvider.
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import {
   getTransitions,
   updateTransitions,
-} from '../controllers/workflowController';
+} from '../controllers/workflowController.js';
 import { authenticateJWT } from '../middleware/authenticateJWT.js';
 import { requireProjectRole } from '../middleware/requireProjectRole.js';
 
