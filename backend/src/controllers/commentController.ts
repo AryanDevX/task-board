@@ -1,7 +1,47 @@
 import { NextFunction, Request, Response } from 'express';
-import { prisma } from '../../lib/prisma';
-import { AppError } from '../../types/appError';
+import { prisma } from '../../lib/prisma.js';
+import { AppError } from '../../types/appError.js';
 import { Prisma } from '@prisma/client';
+import { getTaskWithTimeline } from '../services/taskService.js';
+
+
+export const getComments = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const taskIdParam = req.params.taskId;
+    if (!taskIdParam) {
+      return next(new AppError('Task ID is required.', 400));
+    }
+
+    const taskId = parseInt(taskIdParam);
+    if (Number.isNaN(taskId)) {
+      return next(new AppError('Task ID must be a number.', 400));
+    }
+
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+      select: { id: true },
+    });
+    if (!task) {
+      return next(new AppError('Task not found.', 404));
+    }
+
+    const comments = await prisma.comment.findMany({
+      where: { taskId },
+      include: {
+        author: { select: { id: true, username: true, avatar: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.status(200).json(comments);
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const createComment = async (
   req: Request,
@@ -9,7 +49,8 @@ export const createComment = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { content, taskId } = req.body;
+    const { content } = req.body;
+    const taskId = req.params.taskId;
     if (!req.user) {
       return next(new AppError('Unauthorized', 400));
     }

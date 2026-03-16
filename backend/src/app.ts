@@ -36,7 +36,7 @@ app.use(
   '/api/projects/:projectId/boards/:boardId/columns/:columnId/tasks',
   taskRoutes,
 );
-app.use('/api/projects/:projectId/comments', commentRoutes);
+app.use('/api/projects/:projectId/tasks/:taskId/comments', commentRoutes);
 app.use('/api/projects/:projectId/notifications', notificationRoutes);
 app.use('/api/boards/:boardId/workflows', workflowTransitionRoutes);
 
