@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AppError } from '../../types/appError';
+import { AppError } from '../../types/appError.js';
 
 export const errorMiddleware = async (
   err: any,

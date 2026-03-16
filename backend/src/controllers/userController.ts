@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import { AppError } from '../../types/appError';
-import { prisma } from '../../lib/prisma';
+import { AppError } from '../../types/appError.js';
+import { prisma } from '../../lib/prisma.js';
 
 export const getUsers = (req: Request, res: Response) => {
   res.status(200).json({ message: 'Successfully fetched the users!' });

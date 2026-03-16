@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { prisma } from '../../lib/prisma.js';
-import { AppError } from '../../types/appError';
+import { AppError } from '../../types/appError.js';
 
 export const getTransitions = async (
   req: Request,

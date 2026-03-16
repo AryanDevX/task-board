@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../../types/appError';
+import { AppError } from '../../types/appError.js';
 
 export const requireGlobalAdmin = (
   req: Request,
