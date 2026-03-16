@@ -3,7 +3,7 @@ import { createComment, updateComment, deleteComment } from '../controllers/comm
 import { authenticateJWT } from '../middleware/authenticateJWT.js';
 import { requireProjectRole } from '../middleware/requireProjectRole.js';
 
-const router = Router();
+const router = Router({mergeParams:true});
 
 //Creating Comment
 router.post('/', authenticateJWT, requireProjectRole(["PROJECT_ADMIN","PROJECT_MEMBER"]),createComment);

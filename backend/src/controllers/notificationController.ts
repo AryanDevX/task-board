@@ -5,10 +5,13 @@ import { AppError } from '../../types/appError';
 
 export const getUserNotifications = async (req: Request, res:Response, next: NextFunction): Promise<void> =>{
     try{
-        const {userId} = (req as any).user.id;
+        if(!req.user || !req.user.userId){
+            next(new AppError("Unauthorized", 401));
+        }
+        const { userId } = req.user as {userId:number};
         const notifications = await prisma.notification.findMany({
             where:{
-                userId: parseInt(userId),
+                userId: Number(userId),
             },
             orderBy:{
                 createdAt:'desc',
@@ -27,7 +30,10 @@ export const getUserNotifications = async (req: Request, res:Response, next: Nex
 export const readNotfications = async (req: Request, res:Response, next:NextFunction):Promise<void>=>{
     try{
         const {notificationId} = req.params;
-        const {userId} = (req as any).user.id;
+        if(!req.user || !req.user.userId){
+            next(new AppError("Unauthorized", 401));
+        }
+        const {userId} = req.user as {userId : number};
         const notification = await prisma.notification.findUnique({
             where:{
                 id:parseInt(notificationId),

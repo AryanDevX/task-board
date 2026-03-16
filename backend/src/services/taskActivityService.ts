@@ -31,13 +31,27 @@ export const notifyTaskAssigned = async(taskId: number, title: string, assigneeI
 
 //Merging comments and audit logs into single list for chronological order in UI.
 export const buildActivityTimeline = (comments: CommentWithAuthor[], auditLogs: AuditLogWithUser[]): TimelineEntry[] => {
-    const commentActivities = comments.map(comment => ({
-        ActivityType: 'COMMENT' as const, timestamp: comment.createdAt, data: comment
-    }));
-    const auditActivities = auditLogs.map(log => ({
-        ActivityType: 'AUDIT_LOG' as const, timestamp: log.createdAt, data: log
-    }));
     
-    // Sort descending (newest at top)
-    return [...commentActivities, ...auditActivities].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    // Mapping comments to the flat TimelineEntry shape
+    const mappedComments: TimelineEntry[] = comments.map(comment => ({
+        id: `comment-${comment.id}`,
+        type: 'comment',
+        content: comment.content,
+        createdAt: comment.createdAt,
+        user: comment.author
+    }));
+
+    // Mapping audit logs to the flat TimelineEntry shape
+    const mappedLogs: TimelineEntry[] = auditLogs.map(log => ({
+        id: `log-${log.id}`,
+        type: 'auditLog',
+        field: log.type,
+        oldValue: log.oldValue,
+        newValue: log.newValue,
+        createdAt: log.createdAt,
+        user: log.user
+    }));
+    return [...mappedComments, ...mappedLogs].sort(
+        (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
 };
