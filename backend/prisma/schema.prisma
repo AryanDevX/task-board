@@ -112,7 +112,6 @@ model RefreshToken {
 }
 
 model Board {
-
   id          Int      @id @default(autoincrement())
   projectId   Int
   title       String
@@ -120,7 +119,6 @@ model Board {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   columns     Column[]
-
 
   project             Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
   workflowTransitions WorkflowTransition[]

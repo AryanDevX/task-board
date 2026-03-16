@@ -42,7 +42,7 @@ app.get('/', (req, res) => {
   res.send('Welcome to our server ROHIT.');
 });
 
-const  users: any[] = []; // Added a quick 'any[]' type here to keep TS happy!
+let users: User[] = [];
 app.post('/users', (req: Request, res: Response) => {
     const user = req.body;
     users.push(user);
