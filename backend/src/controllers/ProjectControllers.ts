@@ -11,11 +11,11 @@ export const createProject = async (
   next: NextFunction,
 ) => {
   try {
-    const id =req.params.userId;
-    if (!id) {
+
+    if (!req.user || !req.user.userId) {
       return next(new AppError('Missing user authentication', 401));
     }
-    const userId = parseInt(id);
+    const userId = req.user.userId;
     const { projectname,description } = req.body;
     const project = await prisma.project.create({
       data: {
@@ -73,11 +73,10 @@ export const getProjects = async (
 ) => {
   try {
     const projectId = req.params.projectId;
-    const id =req.params.userId;
-    if (!id) {
+    if (!req.user || !req.user.userId) {
       return next(new AppError('Missing user authentication', 401));
     }
-    const userId= parseInt(id);
+    const userId= req.user.userId;
 
     let projects;
     if (!projectId) {

@@ -59,11 +59,11 @@ export const loginUser = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   try {
     const user = await prisma.user.findUnique({
-      where: { username },
+      where: { email },
     });
 
     if (!user) {
@@ -122,6 +122,9 @@ export const refreshUser = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
+     if (!req.user || !req.user.userId)
+      return next(new AppError('Unauthorized', 401));
+
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
       return next(new AppError('Refresh Token missing', 401));
@@ -157,6 +160,7 @@ export const logoutUser = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
+    
     const token = req.cookies.refreshToken;
 
     await prisma.refreshToken.delete({
@@ -174,6 +178,9 @@ export const logoutUser = async (
 
 export const myProfile= async (req:Request, res:Response ,next:NextFunction ):Promise<void> =>{
   try{
+     if (!req.user || !req.user.userId)
+      return next(new AppError('Unauthorized', 401));
+    
     const token = req.cookies.accessToken;
     if (!token) {
       return next(new AppError('Token missing', 401));

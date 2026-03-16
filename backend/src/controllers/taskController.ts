@@ -65,9 +65,11 @@ export const moveTask = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { taskId } = req.params;
-    if (!req.user || !req.user.userId)
-      return next(new AppError('Unauthorized', 401));
+      if (!req.user || !req.user.userId) {
+      return next(new AppError('Missing user authentication', 401));
+    }
+    const { taskId, userId } = req.params;
+
 const { targetColumnId, newOrder } = req.body;
     const updatedTask = await taskService.moveTask(
       parseInt(taskId),

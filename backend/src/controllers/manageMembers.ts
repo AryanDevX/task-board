@@ -1,8 +1,8 @@
-import { ProjectRole } from '../../types/roles';
+import { ProjectRole } from '../../types/roles.js';
 import { prisma } from '../../lib/prisma.js';
 import { NextFunction, Request, Response } from 'express';
-import { AppError } from '../../types/appError';
-import app from '../app';
+import { AppError } from '../../types/appError.js';
+import app from '../app.js';
 
 export const addMember = async (
   req: Request,
@@ -10,12 +10,9 @@ export const addMember = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    if (!req.user) {
-      return next(new AppError('Missing user authentication', 401));
-    }
-
+    
     const projectId = parseInt(req.params.projectId);
-    const userId = req.params.id;
+    const userId = req.params.userId;
 
     if (!userId) {
       return next(new AppError('Missing userId to add', 400));
@@ -77,9 +74,6 @@ export const deleteMember = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    if (!req.user) {
-      return next(new AppError('Missing user authentication', 401));
-    }
 
     const projectId = parseInt(req.params.projectId);
     const userId = req.params.id;
@@ -150,10 +144,6 @@ export const updateRole = async (
     }
 
     const newRole: ProjectRole = incomingRole as ProjectRole;
-
-    if (!req.user) {
-      return next(new AppError('Missing user authentication', 401));
-    }
 
     const projectId = parseInt(req.params.projectId);
     const username = req.params.username;

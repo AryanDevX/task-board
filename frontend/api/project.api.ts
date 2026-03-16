@@ -2,8 +2,6 @@ import { apiFetch } from "./client";
 
 export const projectApi = {
 
-  getProjects: () => apiFetch("/projects"),
-
   createProject: (userId:string ,data: {
     projectname: string;
     description?: string;
@@ -28,4 +26,6 @@ export const projectApi = {
     apiFetch(`/projects/${projectId}/archive`, {
       method: "POST"
     })
+
+ 
 };

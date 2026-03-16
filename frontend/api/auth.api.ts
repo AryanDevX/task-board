@@ -23,5 +23,5 @@ export const authApi = {
     method: "POST"
   }),
 
-  me: () => apiFetch("/auth/me")
+  myProfile: () => apiFetch("/auth/myprofile")
 };
