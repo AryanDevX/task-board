@@ -3,9 +3,11 @@ import {getTransitions, updateTransitions} from '../controllers/workflowControll
 import { authenticateJWT } from '../middleware/authenticateJWT.js';
 import { requireProjectRole } from '../middleware/requireProjectRole.js';
 
-const router = Router();
+const router = Router({mergeParams:true});
 
 //Get the transition
-router.get('/:boardId/transitions', authenticateJWT,requireProjectRole(["PROJECT_ADMIN","PROJECT_MEMBER"]) ,getTransitions);
+router.get('/', authenticateJWT,requireProjectRole(["PROJECT_ADMIN"]) ,getTransitions);
 //Updating the transitions:
-router.put('/:boardId/transitions', authenticateJWT,requireProjectRole(["PROJECT_ADMIN"]) ,updateTransitions);
+router.put('/', authenticateJWT,requireProjectRole(["PROJECT_ADMIN"]) ,updateTransitions);
+
+export default router;

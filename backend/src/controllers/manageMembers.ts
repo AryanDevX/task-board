@@ -7,7 +7,7 @@ import app from "../app";
 
 
 
-export const addMember = async (req: Request, res: Response,next:NextFunction) => {
+export const addMember = async (req: Request, res: Response,next:NextFunction):Promise<void> => {
   try {
     if (!req.user) {
       return next(new AppError ("Missing user authentication", 401));
@@ -61,13 +61,13 @@ export const addMember = async (req: Request, res: Response,next:NextFunction) =
       },
     });
 
-    return res.status(201).json({ message: "Member added successfully", membership });
+     res.status(201).json({ message: "Member added successfully", membership });
   } catch (err) {
    next(err);
   }
 };
 
-export const deleteMember = async (req: Request, res: Response, next:NextFunction) => {
+export const deleteMember = async (req: Request, res: Response, next:NextFunction):Promise<void> => {
   try {
     if (!req.user) {
       return next(new AppError ("Missing user authentication", 401));
@@ -118,20 +118,20 @@ export const deleteMember = async (req: Request, res: Response, next:NextFunctio
       },
     });
 
-    return res.status(200).json({ message: "Member removed successfully" });
+    res.status(200).json({ message: "Member removed successfully" });
   } catch (err) {
     next(err);
   }
 };
 
-export const updateRole =  async (req:Request,res:Response,next:NextFunction)=>{
+export const updateRole =  async (req:Request,res:Response,next:NextFunction):Promise<void>=>{
      try {
 
         const validRoles: ProjectRole[] = [ "PROJECT_VIEWER","PROJECT_ADMIN","PROJECT_MEMBER"];
         const incomingRole = req.params.role; 
 
         if (!validRoles.includes(incomingRole as ProjectRole)) {
-        return res.status(400).json({ error: "Invalid role" });
+         res.status(400).json({ error: "Invalid role" });
 }
 
         const newRole: ProjectRole = incomingRole as ProjectRole;
@@ -188,7 +188,7 @@ export const updateRole =  async (req:Request,res:Response,next:NextFunction)=>{
   },
 });
 
-    return res.status(200).json({ message: "Member Role updated successfully" });
+     res.status(200).json({ message: "Member Role updated successfully" });
   } catch (err) {
     next(err);
   }

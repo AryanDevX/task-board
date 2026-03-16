@@ -10,11 +10,12 @@ import columnRoutes from './routes/columnRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
-
+import workflowTransitionRoutes from './routes/workflowTransitionsRoutes.js';
+import { User } from '@prisma/client';
 const app: Application = express();
 
 //cors for specific origin:
-let corsOptions = {
+const  corsOptions = {
    origin : ['http://localhost:5173'],
 }
 
@@ -31,16 +32,17 @@ app.use('/api/auth',authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/projects/:projectId/boards', boardRoutes);
 app.use('/api/projects/:projectId/boards/:boardId/columns', columnRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/comments', commentRoutes);
-app.use('/api/notifications', notificationRoutes);
+app.use('/api/projects/:projectId/boards/:boardId/columns/:columnId/tasks', taskRoutes);
+app.use('/api/projects/:projectId/comments', commentRoutes);
+app.use('/api/projects/:projectId/notifications', notificationRoutes);
+app.use('/api/boards/:boardId/workflows', workflowTransitionRoutes);
 
 // test route
 app.get('/', (req, res) => {
   res.send('Welcome to our server ROHIT.');
 });
 
-let users: any[] = []; // Added a quick 'any[]' type here to keep TS happy!
+const  users: any[] = []; // Added a quick 'any[]' type here to keep TS happy!
 app.post('/users', (req: Request, res: Response) => {
     const user = req.body;
     users.push(user);

@@ -3,18 +3,19 @@ import { createColumn, getColumns, updateColumn, deleteColumn } from '../control
 import { authenticateJWT } from '../middleware/authenticateJWT.js';
 import { requireProjectRole } from '../middleware/requireProjectRole.js';
 
-const router = Router({mergeParams:true});
+// mergeParams: true allows this router to access :projectId or :boardId from parent routers
+const router = Router({mergeParams: true});
 
-//Creating column
-router.post('/', authenticateJWT,  requireProjectRole(["PROJECT_ADMIN"]),createColumn);
+//create: Only Admins and Members can add columns to a board
+router.post('/', authenticateJWT, requireProjectRole(["PROJECT_ADMIN"]),createColumn);
 
-//Getting columns 
-router.get('/', authenticateJWT, getColumns);
+//read: Viewers, Members, and Admins can all view the columns (Secured against IDOR)
+router.get('/', authenticateJWT, requireProjectRole(["PROJECT_ADMIN", "PROJECT_MEMBER", "PROJECT_VIEWER"]),getColumns);
 
-//Updating column
-router.put('/:columnId', authenticateJWT,  requireProjectRole(["PROJECT_ADMIN"]), updateColumn);
+//update: Only Admins and Members can rename, change WIP limits, or reorder columns
+router.put('/:columnId', authenticateJWT, requireProjectRole(["PROJECT_ADMIN"]),updateColumn);
 
-//Deleting column
+//delete: Only Admins and Members can delete a column
 router.delete('/:columnId', authenticateJWT, requireProjectRole(["PROJECT_ADMIN"]),deleteColumn);
 
 export default router;

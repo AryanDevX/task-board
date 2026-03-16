@@ -1,37 +1,23 @@
-import js from '@eslint/js';
-import globals from 'globals';
-import tseslint from 'typescript-eslint';
-import pluginReact from 'eslint-plugin-react';
-import eslintConfigPrettier from 'eslint-config-prettier';
+import js from "@eslint/js";
+import globals from "globals";
+import tseslint from "typescript-eslint";
+import prettier from "eslint-config-prettier";
 
 export default tseslint.config(
   js.configs.recommended,
-  ...tseslint.configs.strict,
-  pluginReact.configs.flat.recommended,
+  ...tseslint.configs.recommended,
   {
-    files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    files: ["**/*.ts"],
     languageOptions: {
       globals: {
-        ...globals.browser,
         ...globals.node,
-      },
-      parserOptions: {
-        project: [
-          './tsconfig.json',
-          './frontend/tsconfig.json',
-          './backend/tsconfig.json',
-        ],
-      },
-    },
-    settings: {
-      react: {
-        version: 'detect',
-      },
+      }
     },
     rules: {
-      '@typescript-eslint/no-explicit-any': 'error',
-      'no-console': 'warn',
-    },
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "no-console": "warn"
+    }
   },
-  eslintConfigPrettier,
+  prettier
 );

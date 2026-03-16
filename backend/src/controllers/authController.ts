@@ -8,7 +8,7 @@ import { AppError } from '../../types/appError.js';
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
 // Register
-export const registerUser = async (req: Request, res: Response,next:NextFunction) => {
+export const registerUser = async (req: Request, res: Response,next:NextFunction):Promise<void> => {
   const { username, email, password } = req.body;
 
   try {
@@ -23,9 +23,7 @@ export const registerUser = async (req: Request, res: Response,next:NextFunction
     });
 
     if (existingUser) {
-      return res.status(400).json({
-        message: "Username or email already exists"
-      });
+      return next(new AppError("Username or email already exists",400));
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -55,7 +53,7 @@ export const registerUser = async (req: Request, res: Response,next:NextFunction
 };
 
 // Login
-  export const loginUser = async (req: Request, res: Response,next:NextFunction) => {
+  export const loginUser = async (req: Request, res: Response,next:NextFunction):Promise<void> => {
   const { username, password } = req.body;
 
   try {
@@ -115,7 +113,7 @@ res.cookie("refreshToken", refreshToken, {
 };
 
 
-export const refreshUser= async (req:Request,res:Response,next:NextFunction)=>{
+export const refreshUser= async (req:Request,res:Response,next:NextFunction):Promise<void>=>{
   try{
   const refreshToken=req.cookies.refreshToken;
   if(!refreshToken) { return next(new AppError("Refresh Token missing",401));}
@@ -145,7 +143,7 @@ export const refreshUser= async (req:Request,res:Response,next:NextFunction)=>{
  }
 };
 
-export const logoutUser = async (req:Request ,res:Response ,next:NextFunction)=>{
+export const logoutUser = async (req:Request ,res:Response ,next:NextFunction):Promise<void>=>{
 try{
  const token = req.cookies.refreshToken
 

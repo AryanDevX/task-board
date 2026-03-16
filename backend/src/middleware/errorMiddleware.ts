@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import {  Request, Response } from 'express';
 import { AppError } from '../../types/appError';
 
 export const errorMiddleware = async (err:any,req:Request ,res:Response )=>{
