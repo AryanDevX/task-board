@@ -1,14 +1,12 @@
-import { type ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.tsx';
 
-export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+export const ProtectedRoute = () => {
+  const { user, isLoading } = useAuth();
+
   if (isLoading) {
-    return <div>Loading your profile.</div>;
+    return <div>Loading...</div>; 
   }
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  return children;
+
+  return user ? <Outlet /> : <Navigate to="/login" replace />;
 };

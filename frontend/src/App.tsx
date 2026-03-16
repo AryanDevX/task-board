@@ -1,40 +1,30 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ProtectedRoute } from './components/ProtectedRoute';
+
+// Pages:
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { ProjectBoard } from './pages/ProjectBoard';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { Navigate } from 'react-router-dom';
 
 export default function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        {/* Login route */}
+        {/* Public routes */}
         <Route path="/login" element={<Login />} />
-        {/* Register new user: */}
         <Route path="/register" element={<Register />} />
-        {/* Dashboard route: */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        {/* Dynamic Project Route for different projects */}
-        <Route
-          path="/project/:projectId"
-          element={
-            // <ProtectedRoute>
-            <ProjectBoard />
-            // </ProtectedRoute>
-          }
-        />
-        {/* Any other path: */}
+
+        {/* Private Routes*/}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/project/:projectId" element={<ProjectBoard />} />
+        </Route>
+
+        {/*Redirect others to login*/}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }

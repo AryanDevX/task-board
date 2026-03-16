@@ -1,54 +1,88 @@
-import * as React from 'react';
-import { useAuth } from '../context/AuthContext.tsx';
-import { useState } from 'react';
-import { CreateProjectModal } from '../components/CreateProjectModal.tsx';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { type Project } from '../types/models';
+import { projectApi } from '../api/project.api';
+import styles from './Dashboard.module.css';
 
 export const Dashboard = () => {
-  const { user, dispatch } = useAuth();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const handleLogout = () => {
-    dispatch({ type: 'LOGOUT' });
+  const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+  //Anything not part of html calculation is done under useeffect.
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const data = await projectApi.getProjects();
+        setProjects(data);
+      } catch (error) {
+        console.error("Failed to load projects", error);
+      }
+    };
+
+    loadProjects();
+  }, []);
+
+  const getInitials = (name: string) => {
+    return name.substring(0, 2).toUpperCase();
   };
 
-  const handleCreateProject = (projectName: string) => {
-    console.log('Creating new project: ', projectName);
-    //ROHIT: Actually create a project using api.
-    setIsModalOpen(false);
-  };
   return (
-    <div>
-      <div>
-        <h1>Project Dashboard</h1>
-        <p>
-          Welcome, {user?.name || 'Guest'}! ({user?.role})
-        </p>
-        <button onClick={() => dispatch({ type: 'LOGOUT' })}>Log Out</button>
-      </div>
-      {user?.role == 'Global Admin' && (
-        <div>
-          <h3>Admin Control</h3>
-          <button onClick={() => setIsModalOpen(true)}>
-            + Create New Project
-          </button>
-        </div>
-      )}
-      <section>
-        <h2>Your Projects</h2>
-        <div>
-          <div>
-            <h3>Example Project TASK-BOARD</h3>
-            <p>2 Active Boards</p>
-          </div>
-        </div>
-      </section>
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <button className={styles.newProjectBtn}>
+          + New Project
+        </button>
 
-      {isModalOpen && (
-        <CreateProjectModal
-          onClose={() => setIsModalOpen(false)}
-          onSubmit={handleCreateProject}
-        />
-      )}
+        <div className={styles.avatarContainer}>
+          <button className={styles.avatarCircle} onClick={toggleDropdown}>
+            {user?.username ? getInitials(user.username) : 'U'}
+          </button>
+
+          {isDropdownOpen && (
+            <div className={styles.dropdownMenu}>
+              <div className={styles.dropdownHeader}>
+                <div className={styles.dropdownAvatar}>
+                  {user?.username ? getInitials(user.username) : 'U'}
+                </div>
+                <div className={styles.userInfo}>
+                  <h3>{user?.username}</h3>
+                  <p>{user?.email}</p>
+                </div>
+              </div>
+              <button className={styles.logoutBtn} onClick={handleLogout}>
+                Log out
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+
+      <main>
+        <h2>My Projects</h2>
+        
+        {projects.length === 0 ? (
+          <p>You don't have any projects yet. Click "New Project" to start!</p>
+        ) : (
+          <div className={styles.projectGrid}>
+            {projects.map((project) => (
+              <Link key={project.id} to={`/project/${project.id}`} className={styles.projectCard}>
+                <h3>{project.name}</h3>
+                <p>{project.description || 'No description provided.'}</p>
+              </Link>
+            ))}
+          </div>
+        )}
+      </main>
     </div>
   );
 };

@@ -5,7 +5,7 @@ export async function apiFetch<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
-    credentials: 'include', // allows sending cookies
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,

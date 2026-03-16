@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { prisma } from '../../lib/prisma.js';
 import { RequiredExtensionArgs } from '@prisma/client/runtime/client.js';
-import { AppError } from '../../types/appError';
+import { AppError } from '../../types/appError.js';
 
 export const getUserNotifications = async (
   req: Request,

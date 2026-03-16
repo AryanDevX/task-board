@@ -1,69 +1,86 @@
-import * as React from 'react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-//Extending FormElements by usernameInput and passwordInput and specifying their types.
-interface FormElements extends HTMLFormControlsCollection {
-  emailInput: HTMLInputElement;
-  usernameInput: HTMLInputElement;
-  passwordInput: HTMLInputElement;
-}
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { authApi } from '../api/auth.api';
+import styles from './Login.module.css';
 
 export const Register = () => {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  // const [isLoading, setIsLoading] = useState<boolean>(false);
-  // const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    // setIsLoading(true);
-    // setErrorMessage(null);
-    const elements = event.currentTarget.elements as FormElements;
-    //Pulling the values from typed elements:
-    const email = elements.emailInput.value;
-    const username = elements.usernameInput.value;
-    const password = elements.passwordInput.value;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
 
-    // try{
-    //     //ROHIT: Set it up according to backend.
-    //     await new Promise((resolve) => setTimeout(resolve, 1500));
-    //     // if(username == "unregistered_user"){
-    //     //     throw new Error("User not found in the database. Please register first.")
-    //     // }
-    //     navigate('/dashboard');
-    // }
-    // catch(err:any){
-    //     setErrorMessage(err.message || "Invalid credentials.");
-    // }
-    // finally {
-    //    setIsLoading(false);
-    // }
-
-    console.log('Wait we are registering you.');
+    try {
+      const user = await authApi.register({username, email, password});
+      login(user);
+      navigate('/dashboard');
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Something went wrong connecting to the server.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
+
   return (
-    <div className="login-box">
-      <h2>Task Board Register</h2>
-      {/* {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>} */}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '10px' }}>
-          <label htmlFor="emailInput">Email: </label>
-          <input id="emailInput" name="emailInput" type="text" required />
-        </div>
-        <div style={{ marginBottom: '10px' }}>
-          <label htmlFor="usernameInput">Username: </label>
-          <input id="usernameInput" name="usernameInput" type="text" required />
-        </div>
-        <div style={{ marginBottom: '10px' }}>
-          <label htmlFor="passwordInput">Password: </label>
+    <div className={styles.container}>
+      <form className={styles.formCard} onSubmit={handleSubmit}>
+        <h2 className={styles.title}>Create an Account</h2>
+        {error && <div className={styles.error}>{error}</div>}
+        <div className={styles.inputGroup}>
+          <label htmlFor="username">Username</label>
           <input
-            id="passwordInput"
-            name="passwordInput"
-            type="password"
+            id="username"
+            type="text"
+            className={styles.input}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
           />
         </div>
-        <button type="submit">Register</button>
+
+        <div className={styles.inputGroup}>
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            className={styles.input}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            className={styles.input}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        <button type="submit" className={styles.button} disabled={isLoading}>
+          {isLoading ? 'Creating account...' : 'Register'}
+        </button>
+        <div className={styles.registerLink}>
+          Already have an account? <Link to="/login">Log in</Link>
+        </div>
       </form>
     </div>
   );
