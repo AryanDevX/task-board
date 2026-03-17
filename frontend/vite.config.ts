@@ -11,7 +11,11 @@ export default defineConfig({
         target: 'http://localhost:5050',
         changeOrigin: true,
         // Optional: removes '/api' from the path before sending to backend
-        // rewrite: (path) => path.replace(/^\/api/, ''), 
+        // rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/uploads': {
+        target: 'http://localhost:5050',
+        changeOrigin: true,
       },
     },
   },

@@ -2,10 +2,20 @@
 export type GlobalRole = 'GLOBAL_ADMIN' | 'USER';
 export type ProjectRole = 'PROJECT_ADMIN' | 'PROJECT_MEMBER' | 'PROJECT_VIEWER';
 export type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-export type ActivityType = 'STATUS_CHANGE' | 'ASSIGNEE_CHANGE' | 'PRIORITY_CHANGE' | 'COMMENT_ADDED' | 'COMMENT_EDITED' | 'COMMENT_DELETED' | 'TASK_CREATED';
+export type ActivityType =
+  | 'STATUS_CHANGE'
+  | 'ASSIGNEE_CHANGE'
+  | 'PRIORITY_CHANGE'
+  | 'COMMENT_ADDED'
+  | 'COMMENT_EDITED'
+  | 'COMMENT_DELETED'
+  | 'TASK_CREATED';
 export type IssueType = 'STORY' | 'TASK' | 'BUG';
-export type NotificationType = 'TASK_ASSIGNED' | 'STATUS_CHANGED' | 'COMMENT_ADDED' | 'USER_MENTIONED';
-
+export type NotificationType =
+  | 'TASK_ASSIGNED'
+  | 'STATUS_CHANGED'
+  | 'COMMENT_ADDED'
+  | 'USER_MENTIONED';
 
 //Models:
 export interface User {
@@ -69,6 +79,14 @@ export interface Task {
   dueDate: string | null;
   resolvedAt: string | null;
   closedAt: string | null;
+}
+
+export interface ColumnWithTasks extends Column {
+  tasks: Task[];
+}
+
+export interface BoardDetails extends Board {
+  columns: ColumnWithTasks[];
 }
 
 export interface Comment {

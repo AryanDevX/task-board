@@ -5,10 +5,10 @@ import { AppError } from '../../types/appError.js';
 // Prevents teams from overloading a specific column.
 export const enforceWipLimit = async (columnId: number): Promise<void> => {
   const column = await prisma.column.findUnique({ where: { id: columnId } });
-  if (!column || column.wipLimit === null) return;
+  if(!column || column.wipLimit === null) return;
 
   const currentTaskCount = await prisma.task.count({ where: { columnId } });
-  if (currentTaskCount >= column.wipLimit) {
+  if(currentTaskCount >= column.wipLimit){
     throw new AppError(
       `WIP Limit Reached: The '${column.title}' column cannot accept more than ${column.wipLimit} tasks.`,
       400,
@@ -25,7 +25,7 @@ export const validateAssigneeMembership = async (
     where: { id: columnId },
     include: { board: { select: { projectId: true } } },
   });
-  if (!column) throw new AppError('Target column not found.', 404);
+  if(!column) throw new AppError('Target column not found.', 404);
 
   const membership = await prisma.projectMembership.findUnique({
     where: {
@@ -36,7 +36,7 @@ export const validateAssigneeMembership = async (
     },
   });
 
-  if (!membership) {
+  if(!membership){
     throw new AppError(
       'Validation Error: You cannot assign a task to a user who is not a member of this project.',
       400,
@@ -51,15 +51,15 @@ export const validateTaskHierarchy = async (
   parentId: number | null,
   issueType: string,
 ): Promise<void> => {
-  if (parentId) {
+  if(parentId){
     const parent = await prisma.task.findUnique({ where: { id: parentId } });
-    if (!parent || parent.issueType !== 'STORY') {
+    if(!parent || parent.issueType !== 'STORY'){
       throw new AppError(
         'Hierarchy Error: A task or bug can only be a child of a STORY.',
         400,
       );
     }
-    if (issueType === 'STORY') {
+    if(issueType === 'STORY'){
       throw new AppError(
         'Hierarchy Error: A STORY cannot be a child of another task.',
         400,
@@ -82,7 +82,7 @@ export const validateTransition = async (
     },
   });
 
-  if (!allowedTransition) {
+  if(!allowedTransition){
     throw new AppError(
       "Invalid status transition for this board's workflow.",
       400,
@@ -100,7 +100,7 @@ export const getResolutionDatesForColumn = async (
     include: { board: { include: { columns: { orderBy: { order: 'asc' } } } } },
   });
 
-  if (!targetColumn || targetColumn.board.columns.length === 0) {
+  if(!targetColumn || targetColumn.board.columns.length === 0){
     return { resolvedAt: null, closedAt: null };
   }
 
@@ -110,17 +110,17 @@ export const getResolutionDatesForColumn = async (
     columns.length > 2 ? columns[columns.length - 2] : lastColumn;
 
   // Task reached the final state:
-  if (targetColumn.id === lastColumn.id) {
+  if(targetColumn.id === lastColumn.id){
     return {
       resolvedAt: currentResolvedAt || new Date(),
       closedAt: new Date(),
     };
   }
   // Task reached the review or another corresponding state
-  else if (
+  else if(
     targetColumn.id === reviewColumn.id &&
     targetColumn.id !== lastColumn.id
-  ) {
+  ){
     return { resolvedAt: currentResolvedAt || new Date(), closedAt: null };
   }
 
@@ -145,10 +145,10 @@ export const syncStoryStatus = async (
     },
   });
 
-  if (!story || story.issueType !== 'STORY' || story.children.length === 0)
+  if(!story || story.issueType !== 'STORY' || story.children.length === 0)
     return;
   const boardColumns = story.column.board.columns;
-  if (boardColumns.length === 0) return;
+  if(boardColumns.length === 0) return;
 
   // Map column id's from 0 to N
   const colIndexMap = new Map(
@@ -161,15 +161,15 @@ export const syncStoryStatus = async (
   let derivedColumnId = story.columnId;
 
   // 1. All children in the exact same column -> Story moves there
-  if (Math.min(...childIndices) === Math.max(...childIndices)) {
+  if(Math.min(...childIndices) === Math.max(...childIndices)){
     derivedColumnId = boardColumns[Math.min(...childIndices)].id;
   }
   // 2. All children finished -> Story moves to Done
-  else if (Math.min(...childIndices) === boardColumns.length - 1) {
+  else if(Math.min(...childIndices) === boardColumns.length - 1){
     derivedColumnId = boardColumns[boardColumns.length - 1].id;
   }
   // 3. No work started -> Story stays in To Do
-  else if (Math.max(...childIndices) === 0) {
+  else if(Math.max(...childIndices) === 0){
     derivedColumnId = boardColumns[0].id;
   }
   // RULE 4: Mixed State -> Story enters the active workflow (In Progress)
@@ -178,7 +178,7 @@ export const syncStoryStatus = async (
   }
 
   // If story column not same as derived then update it:
-  if (story.columnId !== derivedColumnId) {
+  if(story.columnId !== derivedColumnId){
     const isFinal =
       derivedColumnId === boardColumns[boardColumns.length - 1].id;
     await prisma.task.update({

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { type Notification } from '../types/models'; 
+import { type Notification } from '../types/models';
 import styles from './NotificationCenter.module.css';
 
 export const NotificationCenter = () => {
@@ -10,12 +10,12 @@ export const NotificationCenter = () => {
 
   const handleNotificationClick = (notification: Notification) => {
     if (notification.taskId) {
-      navigate(`/project/${notification.taskId}`); 
+      navigate(`/project/${notification.taskId}`);
     }
     setIsOpen(false);
   };
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <div className={styles.container}>
@@ -33,8 +33,8 @@ export const NotificationCenter = () => {
               <p className={styles.emptyText}>All caught up!</p>
             ) : (
               notifications.map((n) => (
-                <div 
-                  key={n.id} 
+                <div
+                  key={n.id}
                   className={`${styles.item} ${!n.isRead ? styles.unread : ''}`}
                   onClick={() => handleNotificationClick(n)}
                 >

@@ -1,76 +1,221 @@
-.container {
-  padding: 2rem;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+.page {
+  max-width: 1200px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 1rem 2rem 2rem;
+  color: #111827;
 }
 
-.header {
+.topBar,
+.sectionHeader,
+.storyMeta,
+.boardCardHeader,
+.boardStats,
+.modalHeader {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-}
-
-.board {
-  display: flex;
-  gap: 1.5rem;
-  flex: 1;
-  overflow-x: auto; /* Horizontal scroll for columns */
-  padding-bottom: 1rem;
-}
-
-.column {
-  background-color: #f3f4f6;
-  width: 300px;
-  min-width: 300px;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-  max-height: 100%;
-}
-
-.column h3 {
-  margin-top: 0;
-  font-size: 1.1rem;
-  color: #374151;
-  display: flex;
   justify-content: space-between;
+  gap: 0.75rem;
 }
 
-.taskList {
-  flex: 1;
-  overflow-y: auto; /* Vertical scroll for tasks inside columns */
-  margin-top: 1rem;
+.topBar {
+  padding: 1rem 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
 }
 
-.taskCard {
-  background-color: white;
-  padding: 1rem;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 0.75rem;
+.backButton,
+.avatarButton,
+.primaryButton,
+.secondaryButton,
+.closeButton {
+  border: none;
   cursor: pointer;
+}
+
+.backButton,
+.primaryButton,
+.secondaryButton,
+.modalCard,
+.storyCard,
+.boardCard,
+.emptyCard,
+.inputGroup input,
+.inputGroup textarea,
+.inputGroup select {
   border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
 }
 
-.taskCard:hover {
-  border-color: #4f46e5;
+.backButton,
+.primaryButton,
+.secondaryButton {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
 }
 
-.addTaskBtn {
+.avatarButton {
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #4f46e5;
+  color: #fff;
+}
+
+.avatarImage {
   width: 100%;
-  padding: 0.5rem;
-  background: none;
-  border: 2px dashed #d1d5db;
-  border-radius: 6px;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.title,
+.sectionHeader h2,
+.modalHeader h3,
+.storyCard h3,
+.boardCard h3 {
+  margin: 0;
+}
+
+.title {
+  font-size: 2rem;
+}
+
+.subtitle,
+.storyMeta,
+.boardCard p,
+.storyCard p,
+.boardStats,
+.emptyCard,
+.formHint,
+.metaLine,
+.state {
   color: #6b7280;
-  cursor: pointer;
+}
+
+.subtitle {
+  margin: 0.4rem 0 0;
+}
+
+.section {
+  margin-top: 1.5rem;
+}
+
+.sectionHeader {
+  margin-bottom: 1rem;
+}
+
+.storyGrid,
+.boardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.storyCard,
+.boardCard,
+.emptyCard,
+.modalCard {
+  padding: 1rem;
+}
+
+.storyMeta,
+.boardStats,
+.metaLine {
+  font-size: 0.9rem;
+}
+
+.storyCard h3,
+.boardCard h3 {
   margin-top: 0.5rem;
 }
 
-.addTaskBtn:hover {
-  background-color: #e5e7eb;
-  color: #374151;
+.storyCard p,
+.boardCard p,
+.metaLine,
+.formHint,
+.emptyCard {
+  margin: 0.4rem 0 0;
+}
+
+.primaryButton,
+.secondaryButton {
+  background: #4f46e5;
+  color: #fff;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(17, 24, 39, 0.35);
+}
+
+.closeButton {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+}
+
+.modalForm,
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.modalForm {
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.inputGroup {
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.inputGroup input,
+.inputGroup textarea,
+.inputGroup select {
+  width: 100%;
+  padding: 0.8rem;
+  box-sizing: border-box;
+  font: inherit;
+}
+
+.inputGroup textarea {
+  resize: vertical;
+}
+
+.state {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .topBar,
+  .sectionHeader,
+  .storyMeta,
+  .boardCardHeader,
+  .boardStats {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .backButton,
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+  }
 }

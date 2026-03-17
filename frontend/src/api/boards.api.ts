@@ -1,45 +1,45 @@
-import { apiFetch } from "./client";
-import { type Board } from "../types/models";
+import { apiFetch } from './client';
+import { type Board, type BoardDetails } from '../types/models';
 
 export const boardApi = {
-
   // Get all boards for a project
   getBoardsByProject: (projectId: string): Promise<Board[]> =>
     apiFetch(`/projects/${projectId}/boards`),
 
   // Get a single board
-  getBoardById: (boardId: string , projectId:string ): Promise<Board> =>
+  getBoardById: (boardId: string, projectId: string): Promise<BoardDetails> =>
     apiFetch(`/projects/${projectId}/boards/${boardId}`),
 
   // Create a new board
   createBoard: (
     projectId: string,
     data: {
-      name: string;
+      title: string;
       description?: string;
-    }
+    },
   ): Promise<Board> =>
     apiFetch(`/projects/${projectId}/boards`, {
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify(data),
     }),
 
   // Update board
   updateBoard: (
-    boardId: string,projectId:string,
+    boardId: string,
+    projectId: string,
     data: {
-      name?: string;
+      title?: string;
       description?: string;
-    }
+    },
   ): Promise<Board> =>
     apiFetch(`/projects/${projectId}/boards/${boardId}`, {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(data),
     }),
 
   // Delete board
-  deleteBoard: (boardId: string , projectId:string ): Promise<void> =>
+  deleteBoard: (boardId: string, projectId: string): Promise<void> =>
     apiFetch(`/projects/${projectId}/boards/${boardId}`, {
-      method: "DELETE",
+      method: 'DELETE',
     }),
 };

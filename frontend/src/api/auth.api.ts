@@ -12,10 +12,7 @@ export const authApi = {
       body: JSON.stringify(data),
     }),
 
-  login: (data: {
-    email: string;
-    password: string;
-  }): Promise<User> =>
+  login: (data: { email: string; password: string }): Promise<User> =>
     apiFetch('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),

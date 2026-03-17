@@ -7,16 +7,17 @@ export const createBoard = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { projectId } = req.params;
-    if (!projectId) return next(new AppError('Project ID is required.', 400));
+    if(!projectId) return next(new AppError('Project ID is required.', 400));
     const newBoard = await boardService.createBoard(
       parseInt(projectId),
       req.body,
     );
 
     res.status(201).json(newBoard);
-  } catch (error) {
+  }
+  catch (error){
     next(error); // Forward errors to the global Express error handler
   }
 };
@@ -26,13 +27,14 @@ export const getBoards = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { projectId } = req.params;
-    if (!projectId) return next(new AppError('Project ID is required.', 400));
+    if(!projectId) return next(new AppError('Project ID is required.', 400));
 
     const boards = await boardService.getBoardsByProjectId(parseInt(projectId));
     res.status(200).json(boards);
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };
@@ -42,13 +44,14 @@ export const getBoardDetails = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { boardId } = req.params;
-    if (!boardId) return next(new AppError('Board ID is required.', 400));
+    if(!boardId) return next(new AppError('Board ID is required.', 400));
 
     const board = await boardService.getBoardById(parseInt(boardId));
     res.status(200).json(board);
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };
@@ -58,16 +61,17 @@ export const updateBoard = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { boardId } = req.params;
-    if (!boardId) return next(new AppError('Board ID is required.', 400));
+    if(!boardId) return next(new AppError('Board ID is required.', 400));
 
     const updatedBoard = await boardService.updateBoard(
       parseInt(boardId),
       req.body,
     );
     res.status(200).json(updatedBoard);
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };
@@ -77,15 +81,16 @@ export const deleteBoard = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { boardId } = req.params;
-    if (!boardId) return next(new AppError('Board ID is required.', 400));
+    if(!boardId) return next(new AppError('Board ID is required.', 400));
 
     const deletedBoard = await boardService.deleteBoard(parseInt(boardId));
     res
       .status(200)
       .json({ message: 'Board deleted successfully', deletedBoard });
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };

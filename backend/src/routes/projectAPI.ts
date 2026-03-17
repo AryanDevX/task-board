@@ -15,7 +15,8 @@ import {
 const router = express.Router();
 
 router.patch('/projects/:projectId',authenticateJWT,requireProjectRole(["PROJECT_ADMIN"]), updateProject)
-router.post('/projects/user/:userId', authenticateJWT, createProject);
+router.post('/projects/', authenticateJWT, createProject);
+router.get('/projects/:projectId', authenticateJWT, getProjects);
 router.get('/projects', authenticateJWT, getProjects);
 router.post('/projects/:projectId/archive',authenticateJWT,requireProjectRole(["PROJECT_ADMIN"]),projectArchive)
 router.post(

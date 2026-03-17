@@ -1,0 +1,78 @@
+import { useState } from 'react';
+import { type Project } from '../types/models';
+import { projectApi } from '../api/project.api';
+import styles from './CreateProjectModal.module.css';
+
+interface Props {
+  onClose: () => void;
+  onSuccess: (newProject: Project) => void;
+}
+
+export const CreateProjectModal = ({ onClose, onSuccess }: Props) => {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setIsSubmitting(true);
+
+    try {
+      const data = await projectApi.createProject({
+        projectname: name,
+        description,
+      });
+      onSuccess(data.project);
+      onClose();
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Something went wrong connecting to the server.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <h2>Create New Project</h2>
+        {error && <div className={styles.error}>{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className={styles.inputGroup}>
+            <label htmlFor="name">Project Name</label>
+            <input
+              id="name"
+              type="text"
+              className={styles.input}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+          <div className={styles.inputGroup}>
+            <label htmlFor="description">Description</label>
+            <input
+              id="description"
+              type="text"
+              className={styles.input}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          <button
+            type="submit"
+            className={styles.button}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Creating Project...' : 'Create'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};

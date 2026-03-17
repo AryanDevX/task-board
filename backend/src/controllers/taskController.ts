@@ -8,14 +8,15 @@ export const createTask = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
-    if (!req.user || !req.user.userId)
+  try{
+    if(!req.user || !req.user.userId)
       return next(new AppError('Unauthorized', 401));
 
     const newTask = await taskService.createTask(req.body, req.user.userId);
 
     res.status(201).json(newTask);
-  } catch (error) {
+  }
+  catch (error){
     next(error); // Passes errors to central error handling middleware
   }
 };
@@ -25,14 +26,15 @@ export const getTask = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { taskId } = req.params;
-    if (!taskId) return next(new AppError('Task ID is required.', 400));
+    if(!taskId) return next(new AppError('Task ID is required.', 400));
 
     const taskData = await taskService.getTaskWithTimeline(parseInt(taskId));
 
     res.status(200).json(taskData);
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };
@@ -42,9 +44,9 @@ export const updateTask = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { taskId } = req.params;
-    if (!req.user || !req.user.userId)
+    if(!req.user || !req.user.userId)
       return next(new AppError('Unauthorized', 401));
 
     const updatedTask = await taskService.updateTask(
@@ -54,7 +56,8 @@ export const updateTask = async (
     );
 
     res.status(200).json(updatedTask);
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };
@@ -64,8 +67,8 @@ export const moveTask = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
-      if (!req.user || !req.user.userId) {
+  try{
+      if(!req.user || !req.user.userId){
       return next(new AppError('Missing user authentication', 401));
     }
     const { taskId, userId } = req.params;
@@ -78,7 +81,8 @@ const { targetColumnId, newOrder } = req.body;
     );
 
     res.status(200).json(updatedTask);
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };
@@ -88,11 +92,11 @@ export const deleteTask = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { taskId } = req.params;
-    if (!req.user || !req.user.userId)
+    if(!req.user || !req.user.userId)
       return next(new AppError('Unauthorized', 401));
-    if (!taskId) return next(new AppError('Task ID is required.', 400));
+    if(!taskId) return next(new AppError('Task ID is required.', 400));
 
     const deletedTask = await taskService.deleteTask(
       parseInt(taskId),
@@ -100,7 +104,8 @@ export const deleteTask = async (
     );
 
     res.status(200).json({ message: 'Task deleted successfully', deletedTask });
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };

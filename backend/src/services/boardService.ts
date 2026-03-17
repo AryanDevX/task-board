@@ -6,7 +6,7 @@ import { CreateBoardDTO } from '../types/dtos.js';
 // Creates a new board under a specific project.
 export const createBoard = async (projectId: number, data: CreateBoardDTO) => {
   const { title, description } = data;
-  if (!title) throw new AppError('Board title is required.', 400);
+  if(!title) throw new AppError('Board title is required.', 400);
 
   const newBoard = await prisma.board.create({
     data: { title, description: description || null, projectId },
@@ -91,7 +91,7 @@ export const getBoardById = async (boardId: number) => {
     },
   });
 
-  if (!board) throw new AppError('Board not found.', 404);
+  if(!board) throw new AppError('Board not found.', 404);
   return board;
 };
 
@@ -102,7 +102,7 @@ export const updateBoard = async (boardId: number, data: CreateBoardDTO) => {
   const existingBoard = await prisma.board.findUnique({
     where: { id: boardId },
   });
-  if (!existingBoard) throw new AppError('Board not found.', 404);
+  if(!existingBoard) throw new AppError('Board not found.', 404);
 
   return await prisma.board.update({
     where: { id: boardId },
@@ -115,14 +115,15 @@ export const updateBoard = async (boardId: number, data: CreateBoardDTO) => {
 
 //Deleting a board:
 export const deleteBoard = async (boardId: number) => {
-  try {
+  try{
     return await prisma.board.delete({
       where: { id: boardId },
     });
-  } catch (error) {
+  }
+  catch (error){
     //Telling typeScript that this is a Prisma error
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2025') {
+    if(error instanceof Prisma.PrismaClientKnownRequestError){
+      if(error.code === 'P2025'){
         throw new AppError('Board not found.', 404);
       }
     }

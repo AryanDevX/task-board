@@ -18,18 +18,16 @@ export const Login = () => {
     setIsLoading(true);
 
     try {
-      const user = await authApi.login({email, password});
+      const user = await authApi.login({ email, password });
       login(user);
       navigate('/dashboard');
-    } 
-    catch (err) {
-      if(err instanceof Error){
+    } catch (err) {
+      if (err instanceof Error) {
         setError(err.message);
       } else {
         setError('Something went wrong connecting to the server.');
       }
-    } 
-    finally{
+    } finally {
       setIsLoading(false);
     }
   };

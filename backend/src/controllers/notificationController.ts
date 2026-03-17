@@ -8,8 +8,8 @@ export const getUserNotifications = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
-    if (!req.user || !req.user.userId) {
+  try{
+    if(!req.user || !req.user.userId){
       next(new AppError('Unauthorized', 401));
     }
     const { userId } = req.user as { userId: number };
@@ -25,7 +25,8 @@ export const getUserNotifications = async (
       },
     });
     res.status(200).json({ notifications });
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };
@@ -35,9 +36,9 @@ export const readNotfications = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { notificationId } = req.params;
-    if (!req.user || !req.user.userId) {
+    if(!req.user || !req.user.userId){
       next(new AppError('Unauthorized', 401));
     }
     const { userId } = req.user as { userId: number };
@@ -46,7 +47,7 @@ export const readNotfications = async (
         id: parseInt(notificationId),
       },
     });
-    if (!notification || notification.userId !== userId) {
+    if(!notification || notification.userId !== userId){
       return next(new AppError('Notification not found or unauthorized.', 404));
     }
     const updated = await prisma.notification.update({
@@ -58,7 +59,8 @@ export const readNotfications = async (
       },
     });
     res.status(200).json(updated);
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };

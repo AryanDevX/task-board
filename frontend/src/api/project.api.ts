@@ -2,21 +2,18 @@ import { apiFetch } from './client';
 import { type Project } from '../types/models';
 
 export const projectApi = {
-  getProjects: (): Promise<Project[]> => apiFetch('/projects'),
+  getProjects: (): Promise<{ projects: Project[] }> => apiFetch('/projects'),
 
-  createProject: (
-    userId: string,
-    data: {
-      projectname: string;
-      description?: string;
-    },
-  ): Promise<Project> =>
-    apiFetch(`/projects/user/${userId}`, {
+  createProject: (data: {
+    projectname: string;
+    description?: string;
+  }): Promise<{ message: string; project: Project }> =>
+    apiFetch(`/projects`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  getProject: (projectId?: string): Promise<Project> =>
+  getProject: (projectId?: string): Promise<{ projects: Project[] }> =>
     apiFetch(projectId ? `/projects/${projectId}` : '/projects'),
 
   updateProject: (

@@ -3,72 +3,68 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { type Project } from '../types/models';
 import { projectApi } from '../api/project.api';
+import { CreateProjectModal } from '../components/CreateProjectModal';
+import { getAvatarSrc, getInitials } from '../utils/avatar';
 import styles from './Dashboard.module.css';
 
 export const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const toggleDropdown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsDropdownOpen(!isDropdownOpen);
-  };
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
-  useEffect(() => {
-    if (!isDropdownOpen) return;
-    const closeMenu = () => setIsDropdownOpen(false);
-    window.addEventListener('click', closeMenu);
-    return () => window.removeEventListener('click', closeMenu);
-  }, [isDropdownOpen]);
+  const handleCreateProject = async (newProject: Project) => {
+    setProjects((prevProjects) => [newProject, ...prevProjects]);
+  };
 
   useEffect(() => {
     const loadProjects = async () => {
       try {
         const data = await projectApi.getProjects();
-        setProjects(data);
+        setProjects(data.projects);
       } catch (error) {
-        console.error("Failed to load projects", error);
+        console.error('Failed to load projects', error);
       }
     };
     loadProjects();
   }, []);
 
-  const getInitials = (name: string) => name.substring(0, 1).toUpperCase();
+  const avatarSrc = getAvatarSrc(user?.avatar);
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <button className={styles.newProjectBtn}>+ New Project</button>
+        <button
+          className={styles.newProjectBtn}
+          onClick={() => setIsModalOpen(true)}
+        >
+          + New Project
+        </button>
 
-        <div className={styles.avatarContainer}>
-          <button className={styles.avatarCircle} onClick={toggleDropdown}>
-            {user?.username ? getInitials(user.username) : 'U'}
+        <div className={styles.actions}>
+          <button className={styles.logoutBtn} onClick={handleLogout}>
+            Log out
           </button>
-
-          {isDropdownOpen && (
-            <div className={styles.dropdownMenu} onClick={(e) => e.stopPropagation()}>
-              <div className={styles.dropdownHeader}>
-                <div className={styles.dropdownAvatar}>
-                  {user?.username ? getInitials(user.username) : 'U'}
-                </div>
-                <div className={styles.userInfo}>
-                  <h3>{user?.username || 'User'}</h3>
-                  <p>{user?.email || 'No email set'}</p>
-                </div>
-              </div>
-              <button className={styles.logoutBtn} onClick={handleLogout}>
-                Log out
-              </button>
-            </div>
-          )}
+          <button
+            className={styles.avatarCircle}
+            onClick={() => navigate('/profile')}
+          >
+            {avatarSrc ? (
+              <img
+                className={styles.avatarImage}
+                src={avatarSrc}
+                alt={`${user?.username || 'User'} avatar`}
+              />
+            ) : (
+              getInitials(user?.username)
+            )}
+          </button>
         </div>
       </header>
 
@@ -79,7 +75,11 @@ export const Dashboard = () => {
         ) : (
           <div className={styles.projectGrid}>
             {projects.map((project) => (
-              <Link key={project.id} to={`/project/${project.id}`} className={styles.projectCard}>
+              <Link
+                key={project.id}
+                to={`/project/${project.id}`}
+                className={styles.projectCard}
+              >
                 <h3>{project.name}</h3>
                 <p>{project.description || 'No description provided.'}</p>
               </Link>
@@ -87,6 +87,12 @@ export const Dashboard = () => {
           </div>
         )}
       </main>
+      {isModalOpen && (
+        <CreateProjectModal
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={handleCreateProject}
+        />
+      )}
     </div>
   );
 };

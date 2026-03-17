@@ -1,5 +1,11 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useReducer, useContext, useEffect, type ReactNode } from 'react';
+import React, {
+  createContext,
+  useReducer,
+  useContext,
+  useEffect,
+  type ReactNode,
+} from 'react';
 import { type User } from '../types/models';
 import { authApi } from '../api/auth.api';
 
@@ -60,10 +66,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const restoreSession = async () => {
       try {
         //checking if user logged previously
-        const userData = await authApi.myProfile(); 
+        const userData = await authApi.myProfile();
         dispatch({ type: 'LOGIN', payload: userData });
       } catch (error) {
-        console.error("Session restore failed", error);
+        console.error('Session restore failed', error);
         dispatch({ type: 'SET_LOADING', payload: false });
       }
     };

@@ -10,9 +10,9 @@ export const createProject = async (
   res: Response,
   next: NextFunction,
 ) => {
-  try {
+  try{
 
-    if (!req.user || !req.user.userId) {
+    if(!req.user || !req.user.userId){
       return next(new AppError('Missing user authentication', 401));
     }
     const userId = req.user.userId;
@@ -36,23 +36,24 @@ export const createProject = async (
     return res
       .status(201)
       .json({ message: 'Project created successfully', project });
-  } catch (err) {
+  }
+  catch (err){
     next(err);
   }
 };
 
 export const updateProject = 
    async (req: Request, res: Response, next: NextFunction) => {
-    try {
+    try{
       const projectId= parseInt(req.params.projectId);
       const {description, projectname}=req.body;
       const project = await prisma.project.findUnique({
         where: { id: projectId, archived: false },
       });
-      if(!projectname) {
+      if(!projectname){
         return next(new AppError('name cannot be null',400));
       }
-      if (!project) {
+      if(!project){
         return next(new AppError('project not found', 404));
       }
 
@@ -60,7 +61,8 @@ export const updateProject =
         where: { id: projectId },
         data: { name:projectname,description },
       });
-    } catch (err) {
+    }
+    catch (err){
       next(err);
     }
   };
@@ -71,22 +73,23 @@ export const getProjects = async (
   res: Response,
   next: NextFunction,
 ) => {
-  try {
+  try{
     const projectId = req.params.projectId;
-    if (!req.user || !req.user.userId) {
+    if(!req.user || !req.user.userId){
       return next(new AppError('Missing user authentication', 401));
     }
     const userId= req.user.userId;
 
-    let projects;
-    if (!projectId) {
+    let memberships;
+    if(!projectId){
       // fetches archived and non archived together
-      projects = await prisma.projectMembership.findMany({
+      memberships = await prisma.projectMembership.findMany({
         where: { userId  },
         include: { project: true },
       });
-    } else {
-      projects = await prisma.projectMembership.findMany({
+    }
+    else {
+      memberships = await prisma.projectMembership.findMany({
         where: {
           userId,
           projectId: Number(projectId),
@@ -94,26 +97,27 @@ export const getProjects = async (
         include: { project: true },
       });
     }
-
+    const projects = memberships.map(membership => membership.project);
     return res.status(200).json({ projects });
-  } catch (err) {
+  }
+  catch (err){
     next(err);
   }
 };
 
 export const projectArchive = 
    async (req: Request, res: Response, next: NextFunction) => {
-    try {
+    try{
       const projectId= req.params.projectId;
       const project = await prisma.project.findUnique({
         where: { id: parseInt(projectId) },
       });
 
-      if (!project) {
+      if(!project){
         return next(new AppError('project not found', 404));
       }
 
-      if (project?.archived === true) {
+      if(project?.archived === true){
         return next(new AppError('Project already archived', 409));
       }
 
@@ -123,7 +127,8 @@ export const projectArchive =
       });
 
       return res.status(201).json({message:"Archived successfully"});
-    } catch (err) {
+    }
+    catch (err){
       next(err);
     }
   };

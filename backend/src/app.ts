@@ -11,6 +11,7 @@ import taskRoutes from './routes/taskRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import workflowTransitionRoutes from './routes/workflowTransitionsRoutes.js';
+import projectRoutes from './routes/projectAPI.js';
 import { User } from '@prisma/client';
 
 const app: Application = express();
@@ -32,6 +33,7 @@ app.use('/uploads', express.static('uploads'));
 //routes:
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api', projectRoutes);
 app.use('/api/projects/:projectId/boards', boardRoutes);
 app.use('/api/projects/:projectId/boards/:boardId/columns', columnRoutes);
 app.use(

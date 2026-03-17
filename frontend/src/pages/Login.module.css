@@ -1,9 +1,9 @@
-.container{
-    display:flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background: color #f3f4f3;
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: color #f3f4f3;
 }
 
 .formCard {

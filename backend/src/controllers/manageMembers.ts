@@ -9,12 +9,12 @@ export const addMember = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     
     const projectId = parseInt(req.params.projectId);
     const userId = req.params.userId;
 
-    if (!userId) {
+    if(!userId){
       return next(new AppError('Missing userId to add', 400));
     }
     //check if user exists
@@ -22,7 +22,7 @@ export const addMember = async (
       where: { id: parseInt(userId) },
     });
 
-    if (!user) {
+    if(!user){
       return next(new AppError('User not found', 404));
     }
 
@@ -31,7 +31,7 @@ export const addMember = async (
       where: { id: projectId },
     });
 
-    if (!project) {
+    if(!project){
       return next(new AppError('Project not found', 404));
     }
 
@@ -45,7 +45,7 @@ export const addMember = async (
       },
     });
 
-    if (existingMembership) {
+    if(existingMembership){
       return next(
         new AppError('User is already a member of this project', 400),
       );
@@ -63,7 +63,8 @@ export const addMember = async (
     });
 
     res.status(201).json({ message: 'Member added successfully', membership });
-  } catch (err) {
+  }
+  catch (err){
     next(err);
   }
 };
@@ -73,12 +74,12 @@ export const deleteMember = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
 
     const projectId = parseInt(req.params.projectId);
     const userId = req.params.id;
 
-    if (!userId) {
+    if(!userId){
       return next(new AppError('Missing userId to remove', 400));
     }
 
@@ -86,7 +87,7 @@ export const deleteMember = async (
       where: { id: parseInt(userId) },
     });
 
-    if (!user) {
+    if(!user){
       return next(new AppError('User not found', 404));
     }
 
@@ -94,7 +95,7 @@ export const deleteMember = async (
       where: { id: projectId },
     });
 
-    if (!project) {
+    if(!project){
       return next(new AppError('Project not found', 404));
     }
 
@@ -107,7 +108,7 @@ export const deleteMember = async (
       },
     });
 
-    if (!membership) {
+    if(!membership){
       return next(new AppError('User is not a member of this project', 400));
     }
 
@@ -121,7 +122,8 @@ export const deleteMember = async (
     });
 
     res.status(200).json({ message: 'Member removed successfully' });
-  } catch (err) {
+  }
+  catch (err){
     next(err);
   }
 };
@@ -131,7 +133,7 @@ export const updateRole = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const validRoles: ProjectRole[] = [
       'PROJECT_VIEWER',
       'PROJECT_ADMIN',
@@ -139,7 +141,7 @@ export const updateRole = async (
     ];
     const incomingRole = req.params.role;
 
-    if (!validRoles.includes(incomingRole as ProjectRole)) {
+    if(!validRoles.includes(incomingRole as ProjectRole)){
       res.status(400).json({ error: 'Invalid role' });
     }
 
@@ -148,7 +150,7 @@ export const updateRole = async (
     const projectId = parseInt(req.params.projectId);
     const username = req.params.username;
 
-    if (!username) {
+    if(!username){
       return next(new AppError('Missing userId to update', 400));
     }
 
@@ -156,7 +158,7 @@ export const updateRole = async (
       where: { username },
     });
 
-    if (!user) {
+    if(!user){
       return next(new AppError('User not found', 404));
     }
 
@@ -164,7 +166,7 @@ export const updateRole = async (
       where: { id: projectId },
     });
 
-    if (!project) {
+    if(!project){
       return next(new AppError('Project not found', 404));
     }
 
@@ -177,7 +179,7 @@ export const updateRole = async (
       },
     });
 
-    if (!membership) {
+    if(!membership){
       return next(new AppError('User is not a member of this project', 400));
     }
 
@@ -194,7 +196,8 @@ export const updateRole = async (
     });
 
     res.status(200).json({ message: 'Member Role updated successfully' });
-  } catch (err) {
+  }
+  catch (err){
     next(err);
   }
 };

@@ -4,12 +4,16 @@ export async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const isFormData = options.body instanceof FormData;
+  const headers = new Headers(options.headers);
+
+  if (!isFormData && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
     ...options,
   });
 

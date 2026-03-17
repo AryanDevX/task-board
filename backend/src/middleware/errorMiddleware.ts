@@ -9,7 +9,7 @@ export const errorMiddleware = async (
 ) => {
   console.error(err);
 
-  if (err instanceof AppError) {
+  if(err instanceof AppError){
     return res.status(err.status).json({
       message: err.message,
     });

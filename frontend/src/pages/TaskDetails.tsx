@@ -9,7 +9,12 @@ interface Props {
   onDelete: (taskId: number) => void;
 }
 
-export const TaskDetailsModal = ({ task, onClose, onUpdate, onDelete }: Props) => {
+export const TaskDetailsModal = ({
+  task,
+  onClose,
+  onUpdate,
+  onDelete,
+}: Props) => {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || '');
 
@@ -22,17 +27,19 @@ export const TaskDetailsModal = ({ task, onClose, onUpdate, onDelete }: Props) =
     <div className={styles.overlay} onClick={onClose}>
       {/* stopPropagation prevents clicking the modal itself from closing it */}
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <button className={styles.closeBtn} onClick={onClose}>&times;</button>
-        
+        <button className={styles.closeBtn} onClick={onClose}>
+          &times;
+        </button>
+
         <label className={styles.label}>Task Title</label>
-        <input 
+        <input
           className={styles.titleInput}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
 
         <label className={styles.label}>Description</label>
-        <textarea 
+        <textarea
           className={styles.descriptionArea}
           placeholder="Add a more detailed description..."
           value={description}
@@ -40,7 +47,10 @@ export const TaskDetailsModal = ({ task, onClose, onUpdate, onDelete }: Props) =
         />
 
         <div className={styles.footer}>
-          <button className={styles.deleteBtn} onClick={() => onDelete(task.id)}>
+          <button
+            className={styles.deleteBtn}
+            onClick={() => onDelete(task.id)}
+          >
             Delete Task
           </button>
           <button className={styles.saveBtn} onClick={handleSave}>

@@ -10,7 +10,7 @@ export const Register = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -20,9 +20,9 @@ export const Register = () => {
     setIsLoading(true);
 
     try {
-      const user = await authApi.register({username, email, password});
+      const user = await authApi.register({ username, email, password });
       login(user);
-      navigate('/dashboard');
+      navigate('/login');
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);

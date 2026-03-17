@@ -11,10 +11,10 @@ export const updateAvatar = async (
   res: Response,
   next: NextFunction,
 ) => {
-  try {
+  try{
     const userId = req.user?.userId;
 
-    if (!req.file) {
+    if(!req.file){
       return next(new AppError('No file uploaded', 400));
     }
     const avatarUrl = `/uploads/avatars/${req.file.filename}`;
@@ -28,7 +28,8 @@ export const updateAvatar = async (
       message: 'Avatar updated',
       avatar: user.avatar,
     });
-  } catch (err) {
+  }
+  catch (err){
     next(err);
   }
 };

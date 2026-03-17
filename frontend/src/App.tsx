@@ -5,7 +5,8 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
-import { ProjectBoard } from './pages/ProjectBoard';
+import { ProjectBoards } from './pages/ProjectBoard';
+import { Profile } from './pages/Profile';
 
 export default function App() {
   return (
@@ -19,7 +20,8 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/project/:projectId" element={<ProjectBoard />} />
+          <Route path="/project/:projectId" element={<ProjectBoards />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
 
         {/*Redirect others to login*/}

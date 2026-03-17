@@ -20,15 +20,16 @@ export const authenticateJWT = (
   const cookieToken = req.cookies?.accessToken as string | undefined;
   const token = bearerToken || cookieToken;
 
-  if (!token) {
+  if(!token){
     return next(new AppError('Token missing', 401));
   }
 
-  try {
+  try{
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
     req.user = decoded;
     next();
-  } catch (err) {
+  }
+  catch (err){
     next(err);
   }
 };

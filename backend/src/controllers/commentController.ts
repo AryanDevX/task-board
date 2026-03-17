@@ -10,14 +10,14 @@ export const getComments = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const taskIdParam = req.params.taskId;
-    if (!taskIdParam) {
+    if(!taskIdParam){
       return next(new AppError('Task ID is required.', 400));
     }
 
     const taskId = parseInt(taskIdParam);
-    if (Number.isNaN(taskId)) {
+    if(Number.isNaN(taskId)){
       return next(new AppError('Task ID must be a number.', 400));
     }
 
@@ -25,7 +25,7 @@ export const getComments = async (
       where: { id: taskId },
       select: { id: true },
     });
-    if (!task) {
+    if(!task){
       return next(new AppError('Task not found.', 404));
     }
 
@@ -38,7 +38,8 @@ export const getComments = async (
     });
 
     res.status(200).json(comments);
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };
@@ -48,14 +49,14 @@ export const createComment = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { content } = req.body;
     const taskId = req.params.taskId;
-    if (!req.user) {
+    if(!req.user){
       return next(new AppError('Unauthorized', 400));
     }
     const authorId = req.user.userId;
-    if (!content || !taskId) {
+    if(!content || !taskId){
       return next(new AppError('Task ID and content are required.', 400));
     }
     const newComment = await prisma.comment.create({
@@ -76,7 +77,7 @@ export const createComment = async (
 
     const notificationsToCreate: Prisma.NotificationCreateManyInput[] = [];
     const mentionMatches = content.match(/@([a-zA-Z0-9_]+)/g);
-    if (mentionMatches) {
+    if(mentionMatches){
       const usernames = mentionMatches.map((match: string) =>
         match.substring(1),
       );
@@ -98,11 +99,11 @@ export const createComment = async (
         });
       });
     }
-    if (task && task.assigneeId && task.assigneeId !== authorId) {
+    if(task && task.assigneeId && task.assigneeId !== authorId){
       const alreadMentioned = notificationsToCreate.some(
         (n) => n.userId === task.assigneeId,
       );
-      if (!alreadMentioned) {
+      if(!alreadMentioned){
         await prisma.notification.create({
           data: {
             userId: task.assigneeId,
@@ -113,7 +114,7 @@ export const createComment = async (
         });
       }
     }
-    if (notificationsToCreate.length > 0) {
+    if(notificationsToCreate.length > 0){
       await prisma.notification.createMany({
         data: notificationsToCreate,
       });
@@ -127,7 +128,8 @@ export const createComment = async (
       },
     });
     res.status(201).json(newComment);
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };
@@ -137,23 +139,23 @@ export const updateComment = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { commentId } = req.params;
     const { content } = req.body;
-    if (!req.user) {
+    if(!req.user){
       return next(new AppError('Unauthorized', 400));
     }
     const userId = req.user.userId;
-    if (!content) {
+    if(!content){
       return next(new AppError('Content is required.', 400));
     }
     const existingComment = await prisma.comment.findUnique({
       where: { id: parseInt(commentId) },
     });
-    if (!existingComment) {
+    if(!existingComment){
       return next(new AppError('Comment not found.', 404));
     }
-    if (existingComment.authorId !== userId) {
+    if(existingComment.authorId !== userId){
       return next(
         new AppError('Unauthorized: You can only edit your own comments.', 403),
       );
@@ -173,7 +175,8 @@ export const updateComment = async (
       },
     });
     res.status(200).json(updatedComment);
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };
@@ -183,16 +186,16 @@ export const deleteComment = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { commentId } = req.params;
     const userId = req.user?.userId;
     const existingComment = await prisma.comment.findUnique({
       where: { id: parseInt(commentId) },
     });
-    if (!existingComment) {
+    if(!existingComment){
       return next(new AppError('Comment not found.', 404));
     }
-    if (existingComment.authorId !== userId) {
+    if(existingComment.authorId !== userId){
       return next(
         new AppError(
           'Unauthorized: You can only delete your own comments.',
@@ -216,7 +219,8 @@ export const deleteComment = async (
     res
       .status(200)
       .json({ message: 'Comment deleted successfully', deletedComment });
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };

@@ -22,7 +22,7 @@ export const registerUser = async (
 ): Promise<void> => {
   const { username, email, password } = req.body;
 
-  try {
+  try{
     // Check if username or email already exists
     const existingUser = await prisma.user.findFirst({
       where: {
@@ -30,7 +30,7 @@ export const registerUser = async (
       },
     });
 
-    if (existingUser) {
+    if(existingUser){
       return next(new AppError('Username or email already exists', 400));
     }
 
@@ -54,7 +54,8 @@ export const registerUser = async (
         globalRole: newUser.globalRole,
       },
     });
-  } catch (err) {
+  }
+  catch (err){
     next(err);
   }
 };
@@ -67,18 +68,18 @@ export const loginUser = async (
 ): Promise<void> => {
   const { email, password } = req.body;
 
-  try {
+  try{
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
-    if (!user) {
+    if(!user){
       return next(new AppError('Invalid username or password', 400));
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
-    if (!isMatch) {
+    if(!isMatch){
       return next(new AppError('Invalid username or password', 400));
     }
 
@@ -118,7 +119,8 @@ export const loginUser = async (
       avatar: user.avatar,
       globalRole: user.globalRole,
     });
-  } catch (err) {
+  }
+  catch (err){
     next(err);
   }
 };
@@ -128,9 +130,9 @@ export const refreshUser = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) {
+    if(!refreshToken){
       return next(new AppError('Refresh Token missing', 401));
     }
 
@@ -140,7 +142,7 @@ export const refreshUser = async (
       where: { token: refreshToken },
     });
 
-    if (!dbtoken) {
+    if(!dbtoken){
       return next(new AppError('Token revoked', 403));
     }
 
@@ -153,7 +155,8 @@ export const refreshUser = async (
     res.cookie('accessToken', accessToken, cookieOptions);
 
     res.json({ message: 'token refreshed' });
-  } catch (err) {
+  }
+  catch (err){
     next(err);
   }
 };
@@ -163,10 +166,10 @@ export const logoutUser = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const token = req.cookies.refreshToken;
 
-    if (token) {
+    if(token){
       await prisma.refreshToken.deleteMany({
         where: { token },
       });
@@ -176,14 +179,15 @@ export const logoutUser = async (
     res.clearCookie('refreshToken', cookieOptions);
 
     res.json({ message: 'logged out' });
-  } catch (err) {
+  }
+  catch (err){
     next(err);
   }
 };
 
 export const myProfile= async (req:Request, res:Response ,next:NextFunction ):Promise<void> =>{
   try{
-     if (!req.user?.userId)
+     if(!req.user?.userId)
       return next(new AppError('Unauthorized', 401));
 
     const user = await prisma.user.findUnique({

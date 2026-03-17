@@ -7,7 +7,7 @@ export const getTransitions = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { boardId } = req.params;
     const transitions = await prisma.workflowTransition.findMany({
       where: { boardId: parseInt(boardId) },
@@ -19,7 +19,8 @@ export const getTransitions = async (
       },
     });
     res.status(200).json(transitions);
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };
@@ -29,24 +30,24 @@ export const updateTransitions = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try {
+  try{
     const { boardId } = req.params;
     const { transitions } = req.body;
-    if (!Array.isArray(transitions)) {
+    if(!Array.isArray(transitions)){
       return next(new AppError('Transitions must be an array', 400));
     }
     const board = await prisma.board.findUnique({
       where: { id: Number(boardId) },
       select: { projectId: true },
     });
-    if (!board) {
+    if(!board){
       return next(new AppError('Board not found.', 404));
     }
     await prisma.$transaction(async (tx) => {
       await tx.workflowTransition.deleteMany({
         where: { boardId: Number(boardId) },
       });
-      if (transitions.length > 0) {
+      if(transitions.length > 0){
         const dataToInsert = transitions.map((t) => ({
           projectId: board.projectId,
           boardId: Number(boardId),
@@ -63,7 +64,8 @@ export const updateTransitions = async (
       where: { boardId: Number(boardId) },
     });
     res.status(200).json({ updatedTransitions });
-  } catch (error) {
+  }
+  catch (error){
     next(error);
   }
 };
