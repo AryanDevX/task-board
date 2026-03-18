@@ -53,6 +53,7 @@ const handleTaskCreated = (task: Task) => {
       ))}
       {showModal && (
   <CreateTaskModal
+    order={tasks.length}
     columnId={String(column.id)}
     onClose={() => setShowModal(false)}
     onSuccess={handleTaskCreated}

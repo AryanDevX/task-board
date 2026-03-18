@@ -6,12 +6,13 @@ import { useParams } from "react-router-dom";
 import { type Task } from "../types/models";
 
 interface Props {
+  order: number;
   columnId: string;
   onClose: () => void;
   onSuccess: (task: Task) => void; 
 }
 
-export const CreateTaskModal = ({ columnId, onClose, onSuccess }: Props) => {
+export const CreateTaskModal = ({order, columnId, onClose, onSuccess }: Props) => {
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -37,6 +38,7 @@ export const CreateTaskModal = ({ columnId, onClose, onSuccess }: Props) => {
       assigneeId: form.assigneeId || undefined,
       parentId: form.parentId || undefined,
       dueDate: form.dueDate || undefined,
+      order
     } as TaskDTO;
 
     try {

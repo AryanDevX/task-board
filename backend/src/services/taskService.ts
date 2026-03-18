@@ -41,6 +41,14 @@ export const createTask = async (data: TaskDTO, reporterId: number) => {
   if(assigneeId)
     await validateAssigneeMembership(Number(assigneeId), Number(columnId));
 
+  // Safely determine the next order dynamically to prevent Unique Constraint Violations
+  const lastTask = await prisma.task.findFirst({
+    where: { columnId: Number(columnId) },
+    orderBy: { order: 'desc' },
+    select: { order: true },
+  });
+  const nextOrder = lastTask ? lastTask.order + 1 : 0;
+
   //Creating database:
   const newTask = await prisma.task.create({
     data: {
@@ -50,7 +58,7 @@ export const createTask = async (data: TaskDTO, reporterId: number) => {
       description: description || null,
       issueType: issueType || 'TASK',
       priority: priority || 'MEDIUM',
-      order: order || 0,
+      order: nextOrder,
       assigneeId: assigneeId ? Number(assigneeId) : null,
       parentId: parentId ? Number(parentId) : null,
       dueDate: dueDate ? new Date(dueDate) : null,
