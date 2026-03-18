@@ -1,16 +1,46 @@
 //Enums:
-export type GlobalRole = 'GLOBAL_ADMIN' | 'USER';
-export type ProjectRole = 'PROJECT_ADMIN' | 'PROJECT_MEMBER' | 'PROJECT_VIEWER';
-export type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-export type ActivityType =
-  | 'STATUS_CHANGE'
-  | 'ASSIGNEE_CHANGE'
-  | 'PRIORITY_CHANGE'
-  | 'COMMENT_ADDED'
-  | 'COMMENT_EDITED'
-  | 'COMMENT_DELETED'
-  | 'TASK_CREATED';
-export type IssueType = 'STORY' | 'TASK' | 'BUG';
+// 1. Global Roles
+export const GlobalRole = {
+  GlobalAdmin: 'GLOBAL_ADMIN',
+  User: 'USER',
+} as const;
+export type GlobalRole = (typeof GlobalRole)[keyof typeof GlobalRole];
+
+// 2. Project Roles
+export const ProjectRole = {
+  ProjectAdmin: 'PROJECT_ADMIN',
+  ProjectMember: 'PROJECT_MEMBER',
+  ProjectViewer: 'PROJECT_VIEWER',
+} as const;
+export type ProjectRole = (typeof ProjectRole)[keyof typeof ProjectRole];
+
+// 3. Priority Levels
+export const Priority = {
+  Low: 'LOW',
+  Medium: 'MEDIUM',
+  High: 'HIGH',
+  Critical: 'CRITICAL',
+} as const;
+export type Priority = (typeof Priority)[keyof typeof Priority];
+
+// 4. Activity Types
+export const ActivityType = {
+  StatusChange: 'STATUS_CHANGE',
+  AssigneeChange: 'ASSIGNEE_CHANGE',
+  PriorityChange: 'PRIORITY_CHANGE',
+  CommentAdded: 'COMMENT_ADDED',
+  CommentEdited: 'COMMENT_EDITED',
+  CommentDeleted: 'COMMENT_DELETED',
+  TaskCreated: 'TASK_CREATED',
+} as const;
+export type ActivityType = (typeof ActivityType)[keyof typeof ActivityType];
+
+export const IssueType = {
+  STORY: 'STORY',
+  TASK: 'TASK',
+  BUG: 'BUG',
+} as const;
+export type IssueType = (typeof IssueType)[keyof typeof IssueType];
 export type NotificationType =
   | 'TASK_ASSIGNED'
   | 'STATUS_CHANGED'

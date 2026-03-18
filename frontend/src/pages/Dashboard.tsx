@@ -75,14 +75,16 @@ export const Dashboard = () => {
         ) : (
           <div className={styles.projectGrid}>
             {projects.map((project) => (
+              <>
               <Link
                 key={project.id}
                 to={`/project/${project.id}`}
                 className={styles.projectCard}
               >
                 <h3>{project.name}</h3>
-                <p>{project.description || 'No description provided.'}</p>
               </Link>
+              <p >{project.description || 'No description provided.'}</p>
+              </>
             ))}
           </div>
         )}
