@@ -4,7 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import { type Project } from '../types/models';
 import { projectApi } from '../api/project.api';
 import { CreateProjectModal } from '../components/CreateProjectModal';
+import { NotificationCenter } from '../components/Notification';
 import { getAvatarSrc, getInitials } from '../utils/avatar';
+import { EditProjectModal } from '../components/EditProjectModal';
 import styles from './Dashboard.module.css';
 
 export const Dashboard = () => {
@@ -13,6 +15,18 @@ export const Dashboard = () => {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  
+  const isGlobalAdmin = () => {
+    if(!user) return false;
+    else if(user.globalRole==='GLOBAL_ADMIN') return true;
+    else return false;
+  }
+  const isAdmin = (project:Project) => {
+    if(isGlobalAdmin()) return true;
+    if(project.currentUserRole === 'PROJECT_ADMIN') return true;
+    else return false;
+  }
 
   const handleLogout = async () => {
     await logout();
@@ -23,12 +37,31 @@ export const Dashboard = () => {
     setProjects((prevProjects) => [newProject, ...prevProjects]);
   };
 
+  const handleUpdateSuccess = (updatedProject: Project) => {
+    setProjects((prevProjects) =>
+      prevProjects.map((p) => (p.id === updatedProject.id ? updatedProject : p))
+    );
+  };
+
+  const handleArchieveProject = async (projectId: string | number)=>{
+    try{
+      await projectApi.archiveProject(String(projectId));
+      setProjects((prevProjects) => prevProjects.filter((project) => project.id !== projectId));
+    }
+    catch(error){
+      console.error('Failed to archieve project', error);
+      alert('Failed to archieve project. Please try again later.');
+    }
+  }
+
   useEffect(() => {
     const loadProjects = async () => {
       try {
         const data = await projectApi.getProjects();
-        setProjects(data.projects);
-      } catch (error) {
+        const activeProjects = data.projects.filter((p: Project) => !p.archived);
+        setProjects(activeProjects);
+      } 
+      catch(error){
         console.error('Failed to load projects', error);
       }
     };
@@ -40,14 +73,16 @@ export const Dashboard = () => {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <button
-          className={styles.newProjectBtn}
-          onClick={() => setIsModalOpen(true)}
-        >
-          + New Project
-        </button>
-
+        {isGlobalAdmin() && (
+          <button
+            className={styles.newProjectBtn}
+            onClick={() => setIsModalOpen(true)}
+          >
+            + New Project
+          </button>
+        )}
         <div className={styles.actions}>
+          <NotificationCenter />
           <button className={styles.logoutBtn} onClick={handleLogout}>
             Log out
           </button>
@@ -75,24 +110,51 @@ export const Dashboard = () => {
         ) : (
           <div className={styles.projectGrid}>
             {projects.map((project) => (
-              <>
-              <Link
-                key={project.id}
-                to={`/project/${project.id}`}
-                className={styles.projectCard}
-              >
-                <h3>{project.name}</h3>
-              </Link>
-              <p >{project.description || 'No description provided.'}</p>
-              </>
+              <div key={project.id} className={styles.projectCardWrapper}>
+                <Link
+                  to={`/project/${project.id}`}
+                  className={styles.projectCard}
+                >
+                  <h3>{project.name}</h3>
+                </Link>
+                <p className={styles.projectDesc}>{project.description || 'No description provided.'}</p>
+                <div className={styles.projectMeta}>
+                  <p>Created: {new Date(project.createdAt).toLocaleDateString()}</p>
+                  <p>Updated: {new Date(project.updatedAt).toLocaleDateString()}</p>
+                </div>
+                {isAdmin(project) && (
+                  <div className={styles.cardActions}>
+                    <button
+                      onClick={() => setEditingProject(project)}
+                      className={styles.editBtn}
+                    >
+                      Update
+                    </button>
+                  <button
+                    onClick={() => handleArchieveProject(project.id)}
+                    className={styles.archieveBtn}
+                  >
+                    Archive
+                  </button>
+                </div>
+                )}
+              </div>
             ))}
           </div>
         )}
       </main>
+      
       {isModalOpen && (
         <CreateProjectModal
           onClose={() => setIsModalOpen(false)}
           onSuccess={handleCreateProject}
+        />
+      )}
+      {editingProject && (
+        <EditProjectModal
+          project={editingProject}
+          onClose={() => setEditingProject(null)}
+          onSuccess={handleUpdateSuccess}
         />
       )}
     </div>

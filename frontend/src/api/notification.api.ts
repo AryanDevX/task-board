@@ -2,16 +2,13 @@ import { apiFetch } from './client';
 import { type Notification } from '../types/models';
 
 export const notificationApi = {
-  // Get all notifications for current user
-  getNotifications: (projectId: string): Promise<Notification[]> =>
-    apiFetch(`/projects/${projectId}/notifications`),
+  //Get all notifications of current user:
+  getNotifications: (): Promise<{notifications: Notification[]}> =>
+    apiFetch(`/notifications`),
 
-  // Mark a single notification as read
-  markAsRead: (
-    notificationId: string,
-    projectId: string,
-  ): Promise<Notification> =>
-    apiFetch(`/projects/${projectId}/notifications/${notificationId}/read`, {
+  //Read notification of current user:
+  markAsRead: (notificationId: string): Promise<Notification> =>
+    apiFetch(`/notifications/${notificationId}/read`, {
       method: 'PUT',
     }),
 };

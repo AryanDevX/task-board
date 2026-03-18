@@ -2,7 +2,8 @@ import { ProjectRole } from '../../types/roles.js';
 import { prisma } from '../../lib/prisma.js';
 import { NextFunction, Request, Response } from 'express';
 import { AppError } from '../../types/appError.js';
-import app from '../app.js';
+
+const validRoles: ProjectRole[] = ['PROJECT_VIEWER', 'PROJECT_ADMIN', 'PROJECT_MEMBER'];
 
 export const addMember = async (
   req: Request,
@@ -13,6 +14,7 @@ export const addMember = async (
     
     const projectId = parseInt(req.params.projectId);
     const userId = req.params.userId;
+    const role = req.body;
 
     if(!userId){
       return next(new AppError('Missing userId to add', 400));
@@ -51,14 +53,14 @@ export const addMember = async (
       );
     }
 
-    const DEFAULT_ROLE: ProjectRole = 'PROJECT_VIEWER';
-
+    const finalRole = validRoles.includes(role as ProjectRole) ? (role as ProjectRole) : 'PROJECT_VIEWER';
+    
     // Add user as a PROJECT_VIEWER
     const membership = await prisma.projectMembership.create({
       data: {
         userId: user.id,
         projectId: project.id,
-        role: DEFAULT_ROLE,
+        role: finalRole,
       },
     });
 
@@ -134,11 +136,6 @@ export const updateRole = async (
   next: NextFunction,
 ): Promise<void> => {
   try{
-    const validRoles: ProjectRole[] = [
-      'PROJECT_VIEWER',
-      'PROJECT_ADMIN',
-      'PROJECT_MEMBER',
-    ];
     const incomingRole = req.params.role;
 
     if(!validRoles.includes(incomingRole as ProjectRole)){

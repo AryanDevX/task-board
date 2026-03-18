@@ -3,8 +3,6 @@ import { NextFunction, Request, Response } from 'express';
 import { getUsername } from '../utils/helpers.js';
 import { AppError } from '../../types/appError.js';
 
-//GET /projects/:projectId
-
 export const createProject = async (
   req: Request,
   res: Response,
@@ -94,10 +92,10 @@ export const getProjects = async (
           userId,
           projectId: Number(projectId),
         },
-        include: { project: true },
+        include: { project: true,  },
       });
     }
-    const projects = memberships.map(membership => membership.project);
+    const projects = memberships.map((membership) => ({...membership.project, userRole:membership.role,}));
     return res.status(200).json({ projects });
   }
   catch (err){

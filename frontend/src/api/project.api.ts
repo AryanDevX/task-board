@@ -1,5 +1,5 @@
 import { apiFetch } from './client';
-import { type Project } from '../types/models';
+import { type Project, type ProjectMembership } from '../types/models';
 
 export const projectApi = {
   getProjects: (): Promise<{ projects: Project[] }> => apiFetch('/projects'),
@@ -21,6 +21,7 @@ export const projectApi = {
     data: {
       projectname: string;
       description?: string;
+      
     },
   ): Promise<Project> =>
     apiFetch(`/projects/${projectId}`, {
@@ -32,4 +33,32 @@ export const projectApi = {
     apiFetch(`/projects/${projectId}/archive`, {
       method: 'POST',
     }),
+
+  addMember: (
+    projectId: string, 
+    userId: string,
+    role?:string,
+  ): Promise<{ message: string; membership: ProjectMembership }> =>
+    apiFetch(`/projects/${projectId}/members/${userId}`, {
+      method: 'POST',
+      body: JSON.stringify({role}),
+    }),
+
+  removeMember: (
+    projectId: string, 
+    userId: string
+  ): Promise<{ message: string }> =>
+    apiFetch(`/projects/${projectId}/members/${userId}`, {
+      method: 'DELETE',
+    }),
+
+  updateMemberRole: (
+    projectId: string, 
+    userId: string, 
+    role: 'PROJECT_ADMIN' | 'PROJECT_MEMBER' | 'PROJECT_VIEWER'
+  ): Promise<{ message: string }> =>
+    apiFetch(`/projects/${projectId}/members/${userId}/role/${role}`, {
+      method: 'PATCH',
+    }),
 };
+

@@ -1,6 +1,8 @@
 .container {
   padding: 1rem 2rem;
   max-width: 1200px;
+  width: 100%;            
+  box-sizing: border-box;  
   margin: 0 auto;
 }
 
@@ -13,6 +15,118 @@
   border-bottom: 1px solid #f3f4f6;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto; 
+}
+
+.projectGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.projectCardWrapper {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s;
+  overflow: hidden; 
+}
+
+.projectCardWrapper:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.projectCard {
+  text-decoration: none;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.projectCard h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.projectCard:hover h3 {
+  color: #4f46e5;
+}
+
+.projectDesc {
+  color: #6b7280;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  flex-grow: 1;
+  word-break: break-word; 
+}
+
+/* New class for timestamps */
+.projectMeta {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.projectMeta p {
+  margin: 0;
+}
+
+/* New wrapper to align the Update and Archive buttons */
+.cardActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: auto; /* Pushes the buttons to the very bottom of the card */
+}
+
+/* New class for the Update button */
+.editBtn {
+  background: transparent;
+  color: #4f46e5;
+  border: 1px solid #4f46e5;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1; /* Makes both buttons take up equal half-width */
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.editBtn:hover {
+  background: #4f46e5;
+  color: white;
+}
+
+.archieveBtn {
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1; /* Makes both buttons take up equal half-width */
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.archieveBtn:hover {
+  background: #ef4444;
+  color: white;
+}
+
 .newProjectBtn {
   background-color: #4f46e5;
   color: white;
@@ -22,9 +136,7 @@
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  transition:
-    background-color 0.2s,
-    transform 0.1s;
+  transition: background-color 0.2s, transform 0.1s;
 }
 
 .newProjectBtn:hover {
@@ -33,12 +145,6 @@
 
 .newProjectBtn:active {
   transform: scale(0.98);
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
 }
 
 .avatarCircle {
@@ -79,6 +185,7 @@
   color: #ef4444;
   font-size: 0.9rem;
   font-weight: 500;
+  transition: background-color 0.2s;
 }
 
 .logoutBtn:hover {

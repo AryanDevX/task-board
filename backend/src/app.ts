@@ -41,7 +41,7 @@ app.use(
   taskRoutes,
 );
 app.use('/api/projects/:projectId/tasks/:taskId/comments', commentRoutes);
-app.use('/api/projects/:projectId/notifications', notificationRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/boards/:boardId/workflows', workflowTransitionRoutes);
 
 // test route

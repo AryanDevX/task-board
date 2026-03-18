@@ -65,6 +65,7 @@ export interface Project {
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  currentUserRole: 'PROJECT_ADMIN' | 'PROJECT_MEMBER' | 'PROJECT_VIEWER';
 }
 
 export interface ProjectMembership {
@@ -150,6 +151,8 @@ export interface Notification {
   id: number;
   userId: number;
   taskId: number | null;
+  taskTitle?: string | null;
+  projectId?: number | null;
   type: NotificationType;
   message: string;
   isRead: boolean;

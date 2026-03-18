@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import { prisma } from '../../lib/prisma.js';
-import { RequiredExtensionArgs } from '@prisma/client/runtime/client.js';
 import { AppError } from '../../types/appError.js';
 
 export const getUserNotifications = async (
@@ -10,7 +9,7 @@ export const getUserNotifications = async (
 ): Promise<void> => {
   try{
     if(!req.user || !req.user.userId){
-      next(new AppError('Unauthorized', 401));
+      return next(new AppError('Unauthorized', 401));
     }
     const { userId } = req.user as { userId: number };
     const notifications = await prisma.notification.findMany({
@@ -21,10 +20,29 @@ export const getUserNotifications = async (
         createdAt: 'desc',
       },
       include: {
-        task: { select: { title: true } },
+        task: {
+          select: {
+            title: true,
+            column: {
+              select: {
+                board: {
+                  select: {
+                    projectId: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
-    res.status(200).json({ notifications });
+    res.status(200).json({
+      notifications: notifications.map((notification) => ({
+        ...notification,
+        taskTitle: notification.task?.title ?? null,
+        projectId: notification.task?.column.board.projectId ?? null,
+      })),
+    });
   }
   catch (error){
     next(error);
@@ -39,7 +57,7 @@ export const readNotfications = async (
   try{
     const { notificationId } = req.params;
     if(!req.user || !req.user.userId){
-      next(new AppError('Unauthorized', 401));
+      return next(new AppError('Unauthorized', 401));
     }
     const { userId } = req.user as { userId: number };
     const notification = await prisma.notification.findUnique({

@@ -5,10 +5,6 @@ import { type Board } from "../types/models";
 import { useNavigate } from "react-router-dom";
 import { CreateBoardModal } from "../components/CreateBoardModal";
 
-
-// TODO: Replace 'any' with your actual Board type from models
-
-
 export const ProjectBoard = () => {
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
