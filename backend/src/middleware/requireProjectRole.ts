@@ -20,14 +20,14 @@ export const requireProjectRole = (allowedRoles: string[]) => {
           },
         },
       });
+      if(req.user?.globalRole=='GLOBAL_ADMIN') {return next();}
 
-      if(!membership){
+      if(!membership ){
         return next(new AppError('Not part of project', 403));
       }
 
       if(
-        !allowedRoles.includes(membership.role) &&
-        req.user?.globalRole != 'GLOBAL_ADMIN'
+        !allowedRoles.includes(membership.role) 
       ){
         return next(new AppError('Insufficient permissions', 403));
       }

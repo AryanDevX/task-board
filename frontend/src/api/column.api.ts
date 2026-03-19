@@ -1,8 +1,10 @@
 import { apiFetch  } from "./client";
 import { type Column } from "../types/models";
-
+import { type CreateColumnDTO } from "../types/dtos";
 export const columnApi = {
-  getColumns: (boardId: string , projectId:string ):(Promise<Column[]>) =>
+  getColumns: ( projectId:string ,boardId: string ):(Promise<Column[]>) =>
     apiFetch(`/projects/${projectId}/boards/${boardId}/columns`),
 
+  createColumn: (projectId:string, boardId:string ,data:CreateColumnDTO ):(Promise<Column>)=>
+    apiFetch(`/projects/${projectId}/boards/${boardId}/columns` , {method:'POST',  body: JSON.stringify(data),}),
 };
