@@ -1,5 +1,5 @@
 import {  useState } from "react";
-// import { taskApi } from "../api/tasks.api";
+import { taskApi } from "../api/tasks.api";
 import { type Column as ColumnType, type Task } from "../types/models";
 import { CreateTaskModal } from "../components/CreateTaskModal";
 // import { useParams } from "react-router-dom";
@@ -9,30 +9,35 @@ interface Props {
   column: ColumnType;
   tasks:Task[];
   onTaskCreated:(task:Task )=>void;
+  onTaskMove:(taskId:number, newColumnId:number)=>void;
+  onTaskDelete:(taskId:string )=>void;
+  onColumnDelete:(columnId:string)=>void;
 }
 
-export default function Column({ column,tasks,onTaskCreated }: Props) {
+export default function Column({ column,tasks,onTaskCreated , onTaskMove, onTaskDelete, onColumnDelete}: Props) {
 
   const [showModal, setShowModal] = useState(false);
 
-  // useEffect(() => {
-  //   const fetchTasks = async () => {
-  //     try {
-  //       const data = await taskApi.getTasks(projectId!, boardId!, String(column.id));
-  //       setTasks(data);
-  //     } catch (err) {
-  //       console.error("Failed to fetch tasks:", err);
-  //     }
-  //   };
-  //   fetchTasks();
-  // }, [column.id, projectId, boardId]);
+  const handleDragOver = (e: React.DragEvent) => {
+  e.preventDefault(); 
+};
+
+const handleDrop = (e: React.DragEvent) => {
+  e.preventDefault();
+
+  const taskId = e.dataTransfer.getData("taskId");
+
+  onTaskMove(parseInt(taskId), column.id);
+};
+
 
   return (
-    <div className={styles.modalCard} style={{ minWidth: "280px", background: "#f9fafb" }}>
+    <div className={styles.modalCard} style={{ minWidth: "280px", background: "#f9fafb" }} onDragOver={handleDragOver} onDrop={handleDrop}>
       {/* Column Header */}
       <div className={styles.sectionHeader} style={{ marginBottom: "1rem" }}>
         <h3 style={{ fontSize: "1.1rem", fontWeight: 700 }}>{column.title}</h3>
       </div>
+      <button onClick={()=>onColumnDelete(String(column.id))}>x</button>
 
       {/* Task List */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -42,7 +47,14 @@ export default function Column({ column,tasks,onTaskCreated }: Props) {
           </p>
         ) : (
           tasks.map((task) => (
-            <article key={task.id} className={styles.storyCard} style={{ cursor: "pointer" }}>
+            <article key={task.id} 
+            className={styles.storyCard}
+             style={{ cursor: "grab" }} 
+              draggable
+             onDragStart={(e) => {
+            e.dataTransfer.setData("taskId", String(task.id));
+                }}>
+                <button onClick={()=>{onTaskDelete(String(task.id))}}> x </button>
               <div className={styles.storyMeta}>
                 <span className={styles.metaLine}>#{task.id}</span>
                 <span style={{ 

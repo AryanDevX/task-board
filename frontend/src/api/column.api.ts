@@ -7,4 +7,7 @@ export const columnApi = {
 
   createColumn: (projectId:string, boardId:string ,data:CreateColumnDTO ):(Promise<Column>)=>
     apiFetch(`/projects/${projectId}/boards/${boardId}/columns` , {method:'POST',  body: JSON.stringify(data),}),
+
+  deleteColumn:(projectId:string, boardId:string ,columnId:string ):(Promise<void>)=>
+    apiFetch(`/projects/${projectId}/boards/${boardId}/columns/${columnId}` , {method:'DELETE'}),
 };

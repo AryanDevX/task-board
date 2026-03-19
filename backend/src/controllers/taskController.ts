@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { AppError } from '../../types/appError.js';
 import * as taskService from '../services/taskService.js';
 import { MoveTaskDTO } from '../types/dtos.js';
+import { prisma } from '../../lib/prisma.js';
 
 export const createTask = async (
   req: Request,
@@ -21,24 +22,52 @@ export const createTask = async (
   }
 };
 
-export const getTask = async (
+// export const getTask = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction,
+// ): Promise<void> => {
+//   try{
+//     const { taskId } = req.params;
+//     if(!taskId) return next(new AppError('Task ID is required.', 400));
+
+//     const taskData = await taskService.getTaskWithTimeline(parseInt(taskId));
+
+//     res.status(200).json(taskData);
+//   }
+//   catch (error){
+//     next(error);
+//   }
+// };
+export const getTasks = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try{
-    const { taskId } = req.params;
-    if(!taskId) return next(new AppError('Task ID is required.', 400));
-
-    const taskData = await taskService.getTaskWithTimeline(parseInt(taskId));
+  try {
+    const { columnId } = req.params;
+    if (!columnId) {
+      return next(new AppError('Column ID is required.', 400));
+    }
+    const parsedId = parseInt(columnId, 10);
+    
+    if (isNaN(parsedId)) {
+      return next(new AppError('Column ID must be a valid number.', 400));
+    }
+    const taskData = await prisma.task.findMany({
+      where: {
+        columnId: parsedId, 
+      },
+      orderBy: {
+        order: 'asc',
+      }
+    });
 
     res.status(200).json(taskData);
-  }
-  catch (error){
+  } catch (error) {
     next(error);
   }
 };
-
 export const updateTask = async (
   req: Request,
   res: Response,

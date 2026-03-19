@@ -23,4 +23,36 @@ export const taskApi = {
       },
     ),
 
+
+    moveTask:  (
+    projectId: string,
+    boardId: string,
+    columnId: string,
+    taskId: string ,
+    targetColumnId: string,
+    newOrder: string 
+  ): Promise<Task> =>
+    apiFetch(
+      `/projects/${projectId}/boards/${boardId}/columns/${columnId}/tasks/${taskId}/move`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({
+         targetColumnId, newOrder
+        }),
+      },
+    ),
+
+      deleteTask: (
+    projectId: string,
+    boardId: string,
+    columnId: string,
+    taskId: string 
+  ): Promise<Task> =>
+    apiFetch(
+      `/projects/${projectId}/boards/${boardId}/columns/${columnId}/tasks/${taskId}`,
+      {
+        method: 'DELETE',
+      },
+    ),
+
 };

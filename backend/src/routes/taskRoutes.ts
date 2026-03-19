@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
   createTask,
-  getTask,
+  getTasks,
   updateTask,
   moveTask,
   deleteTask,
@@ -22,10 +22,10 @@ router.post(
 
 //read
 router.get(
-  '/:taskId',
+  '/',
   authenticateJWT,
   requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER', 'PROJECT_VIEWER']),
-  getTask,
+  getTasks,
 );
 
 //update:

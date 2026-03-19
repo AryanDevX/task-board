@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import { columnApi } from "../api/column.api";
 import { type Column as Columntype } from "../types/models";
 import Column from "./Column";
-import styles from "./ProjectBoard.module.css"; // Using your shared CSS
+import styles from "./ProjectBoard.module.css"; 
 import { CreateColumnModal } from "../components/CreateColumnModal";
-import type { Task } from "../types/models";
+import type { Board, Task } from "../types/models";
+import { taskApi } from "../api/tasks.api";
 
 export const BoardPage = () => {
   const navigate = useNavigate();
@@ -24,6 +25,23 @@ export const BoardPage = () => {
     setTasks(prev=>[...prev, task]);
 
   }
+const handleTaskMove = async (taskId: number,  newColumnId: number) => {
+  const newcol=columns.find(col=> col.id===newColumnId);
+ // const currTask=tasks.find(t=>t.id===taskId)
+  //const columnId=String(currTask?.columnId);
+  const newtasks=tasks.filter(t=> t.columnId===newColumnId);
+  if(newcol?.wipLimit && newtasks.length>=newcol?.wipLimit){ alert(`Wip Limit of Column ${newcol.title} exceeded`);return;}
+  setTasks(prev =>
+    prev.map(task =>
+        task.id === taskId
+        ? { ...task, columnId: newColumnId }
+        : task
+    )
+  );
+
+  // sync with backend
+  //await taskApi.moveTask(projectId!, boardId!,columnId, taskId, newColumnId, newOrder );
+};
 
   useEffect(() => {
     if (!boardId || !projectId) return;
@@ -33,6 +51,12 @@ export const BoardPage = () => {
         setLoading(true);
         const data = await columnApi.getColumns(boardId , projectId);
         setColumns(data);
+      const taskPromises = data.map((col: Columntype) => 
+      taskApi.getTasks(projectId!, boardId!, String(col.id))
+    );
+    const results = await Promise.all(taskPromises);
+    const allTasks = results.flat(); 
+    setTasks(allTasks);
       } catch (err) {
         console.error(err);
       } finally {
@@ -42,6 +66,27 @@ export const BoardPage = () => {
 
     fetchColumns();
   }, [boardId, projectId]);
+
+  const handleTaskDelete = async ( taskId: string) => {
+  try {
+    const currTask=tasks.find(t=>String(t.id)===taskId);
+    const columnId=String(currTask?.columnId);
+    await taskApi.deleteTask(projectId!,boardId!,columnId!,taskId);
+    setTasks((prev) => prev.filter((t) => t.id !== parseInt(taskId)));
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const handleColumnDelete = async (columnId: string) => {
+  try {
+    await columnApi.deleteColumn(projectId!, boardId!, columnId);
+
+    setColumns((prev) => prev.filter((c) => String(c.id) !== columnId));
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   if (loading) return <div className={styles.state}>Loading columns...</div>;
 
@@ -88,11 +133,14 @@ export const BoardPage = () => {
           </div>
         ) : (
           columns.map((col) => (
-            <div key={col.id} style={{ minWidth: "300px" }}>
+            <div key={col.id} style={{ minWidth: "300px" }} >
               <Column 
               column={col} 
               tasks={tasks.filter(t=>t.columnId===col.id)}
               onTaskCreated= {handleTaskCreator }
+              onTaskMove={handleTaskMove}
+              onTaskDelete={handleTaskDelete}
+              onColumnDelete={handleColumnDelete}
               />
             </div>
           ))
