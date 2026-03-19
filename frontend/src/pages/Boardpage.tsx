@@ -80,6 +80,9 @@ const handleTaskMove = async (taskId: number,  newColumnId: number) => {
 
 const handleColumnDelete = async (columnId: string) => {
   try {
+    const val=tasks.filter(t=>String(t.columnId)===columnId);
+    if(val.length!==0){alert(" Column is Not empty"); return;
+    }
     await columnApi.deleteColumn(projectId!, boardId!, columnId);
 
     setColumns((prev) => prev.filter((c) => String(c.id) !== columnId));
