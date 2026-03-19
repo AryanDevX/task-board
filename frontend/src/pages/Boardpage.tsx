@@ -5,7 +5,7 @@ import { type Column as Columntype } from "../types/models";
 import Column from "./Column";
 import styles from "./ProjectBoard.module.css"; 
 import { CreateColumnModal } from "../components/CreateColumnModal";
-import type { Board, Task } from "../types/models";
+import type {  Task } from "../types/models";
 import { taskApi } from "../api/tasks.api";
 
 export const BoardPage = () => {
@@ -25,22 +25,45 @@ export const BoardPage = () => {
     setTasks(prev=>[...prev, task]);
 
   }
-const handleTaskMove = async (taskId: number,  newColumnId: number) => {
-  const newcol=columns.find(col=> col.id===newColumnId);
- // const currTask=tasks.find(t=>t.id===taskId)
-  //const columnId=String(currTask?.columnId);
-  const newtasks=tasks.filter(t=> t.columnId===newColumnId);
-  if(newcol?.wipLimit && newtasks.length>=newcol?.wipLimit){ alert(`Wip Limit of Column ${newcol.title} exceeded`);return;}
-  setTasks(prev =>
-    prev.map(task =>
-        task.id === taskId
-        ? { ...task, columnId: newColumnId }
-        : task
-    )
-  );
 
-  // sync with backend
-  //await taskApi.moveTask(projectId!, boardId!,columnId, taskId, newColumnId, newOrder );
+const handleTaskMove = async (taskId: string, sourceColumnId: string, targetColumnId: string, newOrder: number) => {
+  const targetCol = columns.find(col => String(col.id) === targetColumnId);
+  const targetColTasks = tasks.filter(t => String(t.columnId) === targetColumnId);
+
+  // Enforce WIP limits locally before moving
+  if (
+    targetCol?.wipLimit && 
+    ((sourceColumnId !== targetColumnId && targetColTasks.length >= targetCol.wipLimit) ||
+    (sourceColumnId === targetColumnId && targetColTasks.length > targetCol.wipLimit))
+  ) {
+    alert(`Wip Limit of Column ${targetCol.title} exceeded`);
+    return;
+  }
+
+  // Optimistic UI Update (updates local state instantly)
+  setTasks(prev => {
+    const updated = prev.map(task => 
+      String(task.id) === taskId 
+        ? { ...task, columnId: Number(targetColumnId), order: newOrder } 
+        : task
+    );
+    return updated.sort((a, b) => a.order - b.order);
+  });
+
+  try {
+    // Sync with backend (Ensure this matches your actual taskApi parameter signature)
+    await taskApi.moveTask(
+      projectId!, 
+      boardId!, 
+      sourceColumnId, 
+      taskId, 
+      targetColumnId, 
+      String(newOrder)
+    );
+  } catch (error) {
+    console.error("Failed to move task:", error);
+    // Optionally: Re-fetch tasks here to revert state if the API fails
+  }
 };
 
   useEffect(() => {
@@ -49,7 +72,7 @@ const handleTaskMove = async (taskId: number,  newColumnId: number) => {
     const fetchColumns = async () => {
       try {
         setLoading(true);
-        const data = await columnApi.getColumns(boardId , projectId);
+        const data = await columnApi.getColumns(projectId , boardId);
         setColumns(data);
       const taskPromises = data.map((col: Columntype) => 
       taskApi.getTasks(projectId!, boardId!, String(col.id))

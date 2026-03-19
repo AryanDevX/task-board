@@ -10,4 +10,5 @@ export const columnApi = {
 
   deleteColumn:(projectId:string, boardId:string ,columnId:string ):(Promise<void>)=>
     apiFetch(`/projects/${projectId}/boards/${boardId}/columns/${columnId}` , {method:'DELETE'}),
+  
 };
