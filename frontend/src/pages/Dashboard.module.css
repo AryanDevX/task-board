@@ -69,7 +69,6 @@
   word-break: break-word; 
 }
 
-/* New class for timestamps */
 .projectMeta {
   font-size: 0.8rem;
   color: #9ca3af;
@@ -83,14 +82,12 @@
   margin: 0;
 }
 
-/* New wrapper to align the Update and Archive buttons */
 .cardActions {
   display: flex;
   gap: 0.75rem;
-  margin-top: auto; /* Pushes the buttons to the very bottom of the card */
+  margin-top: auto;
 }
 
-/* New class for the Update button */
 .editBtn {
   background: transparent;
   color: #4f46e5;
@@ -100,7 +97,7 @@
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  flex: 1; /* Makes both buttons take up equal half-width */
+  flex: 1;
   transition: background-color 0.2s, color 0.2s;
 }
 
@@ -118,7 +115,7 @@
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  flex: 1; /* Makes both buttons take up equal half-width */
+  flex: 1;
   transition: background-color 0.2s, color 0.2s;
 }
 
@@ -190,4 +187,18 @@
 
 .logoutBtn:hover {
   background-color: #fef2f2;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.adminActions {
+  display: flex;
+  gap: 1rem; 
 }

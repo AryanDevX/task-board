@@ -10,7 +10,8 @@ import { requireProjectRole } from '../middleware/requireProjectRole.js';
 import {
   addMember,
   deleteMember,
-  updateRole,
+  getMembers,
+  updateMember,
 } from '../controllers/manageMembers.js';
 const router = express.Router();
 
@@ -18,24 +19,30 @@ router.patch('/projects/:projectId',authenticateJWT,requireProjectRole(["PROJECT
 router.post('/projects/', authenticateJWT, createProject);
 router.get('/projects/:projectId', authenticateJWT, getProjects);
 router.get('/projects', authenticateJWT, getProjects);
+router.get(
+  '/projects/:projectId/members',
+  authenticateJWT,
+  requireProjectRole(['PROJECT_ADMIN']),
+  getMembers,
+);
 router.post('/projects/:projectId/archive',authenticateJWT,requireProjectRole(["PROJECT_ADMIN"]),projectArchive)
 router.post(
-  '/projects/:projectId/members/:userId',
+  '/projects/:projectId/members/:email',
   authenticateJWT,
   requireProjectRole(['PROJECT_ADMIN']),
   addMember,
 );
 router.delete(
-  '/projects/:projectId/members/:userId',
+  '/projects/:projectId/members/:email',
   authenticateJWT,
   requireProjectRole(['PROJECT_ADMIN']),
   deleteMember,
 );
 router.patch(
-  '/projects/:projectId/members/:userId/role/:role',
+  '/projects/:projectId/members/:email/',
   authenticateJWT,
   requireProjectRole(['PROJECT_ADMIN']),
-  updateRole,
+  updateMember,
 );
 
 export default router;

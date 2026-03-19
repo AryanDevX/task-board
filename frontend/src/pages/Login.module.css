@@ -37,7 +37,7 @@
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
-  box-sizing: border-box; /*To make sure that padding does not past 100% width */
+  box-sizing: border-box;
 }
 
 .button {

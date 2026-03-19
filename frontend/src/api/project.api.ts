@@ -1,5 +1,5 @@
 import { apiFetch } from './client';
-import { type Project, type ProjectMembership } from '../types/models';
+import { type Project, type ProjectMember, type ProjectMembership } from '../types/models';
 
 export const projectApi = {
   getProjects: (): Promise<{ projects: Project[] }> => apiFetch('/projects'),
@@ -21,13 +21,15 @@ export const projectApi = {
     data: {
       projectname: string;
       description?: string;
-      
     },
   ): Promise<Project> =>
     apiFetch(`/projects/${projectId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+
+  getMembers: (projectId: string): Promise<{ members: ProjectMember[] }> =>
+    apiFetch(`/projects/${projectId}/members`),
 
   archiveProject: (projectId: string): Promise<Project> =>
     apiFetch(`/projects/${projectId}/archive`, {
@@ -36,29 +38,29 @@ export const projectApi = {
 
   addMember: (
     projectId: string, 
-    userId: string,
-    role?:string,
+    email: string,
+    role:string,
   ): Promise<{ message: string; membership: ProjectMembership }> =>
-    apiFetch(`/projects/${projectId}/members/${userId}`, {
+    apiFetch(`/projects/${projectId}/members/${email}`, {
       method: 'POST',
-      body: JSON.stringify({role}),
+      body: JSON.stringify({email, role}),
     }),
 
   removeMember: (
     projectId: string, 
-    userId: string
+    email: string
   ): Promise<{ message: string }> =>
-    apiFetch(`/projects/${projectId}/members/${userId}`, {
+    apiFetch(`/projects/${projectId}/members/${email}`, {
       method: 'DELETE',
     }),
 
   updateMemberRole: (
     projectId: string, 
-    userId: string, 
-    role: 'PROJECT_ADMIN' | 'PROJECT_MEMBER' | 'PROJECT_VIEWER'
+    email: string, 
+    role: string,
   ): Promise<{ message: string }> =>
-    apiFetch(`/projects/${projectId}/members/${userId}/role/${role}`, {
+    apiFetch(`/projects/${projectId}/members/${email}/`, {
       method: 'PATCH',
+      body: JSON.stringify({role}),
     }),
 };
-

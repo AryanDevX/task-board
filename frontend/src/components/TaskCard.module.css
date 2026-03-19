@@ -1,10 +1,10 @@
 .card {
-  background-color: #ffffff; /* White background */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Small box shadow */
-  border-radius: 6px; /* Rounded corners */
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
   padding: 12px;
-  margin-bottom: 10px; /* Space between cards */
-  cursor: grab; /* UI for your drag-and-drop requirement! */
+  margin-bottom: 10px;
+  cursor: grab;
   border: 1px solid #e2e8f0;
 }
 

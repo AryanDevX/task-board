@@ -55,11 +55,13 @@ export const updateProject =
         return next(new AppError('project not found', 404));
       }
 
-     return  await prisma.project.update({
+     const updatedProject = await prisma.project.update({
         where: { id: projectId },
         data: { name:projectname,description },
       });
+      res.status(200).json(updatedProject);
     }
+
     catch (err){
       next(err);
     }

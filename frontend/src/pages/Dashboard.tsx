@@ -7,6 +7,7 @@ import { CreateProjectModal } from '../components/CreateProjectModal';
 import { NotificationCenter } from '../components/Notification';
 import { getAvatarSrc, getInitials } from '../utils/avatar';
 import { EditProjectModal } from '../components/EditProjectModal';
+import { ManageUsersModal } from '../components/ManageUsersModal';
 import styles from './Dashboard.module.css';
 
 export const Dashboard = () => {
@@ -16,6 +17,7 @@ export const Dashboard = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [isManageUsersOpen, setIsManageUsersOpen] = useState(false);
   
   const isGlobalAdmin = () => {
     if(!user) return false;
@@ -24,7 +26,7 @@ export const Dashboard = () => {
   }
   const isAdmin = (project:Project) => {
     if(isGlobalAdmin()) return true;
-    if(project.currentUserRole === 'PROJECT_ADMIN') return true;
+    if(project.userRole === 'PROJECT_ADMIN') return true;
     else return false;
   }
 
@@ -74,12 +76,21 @@ export const Dashboard = () => {
     <div className={styles.container}>
       <header className={styles.header}>
         {isGlobalAdmin() && (
-          <button
-            className={styles.newProjectBtn}
-            onClick={() => setIsModalOpen(true)}
-          >
-            + New Project
-          </button>
+          <div className={styles.adminActions}>
+            <button
+              className={styles.newProjectBtn}
+              onClick={() => setIsModalOpen(true)}
+            >
+              + New Project
+            </button>  
+            <button
+              className={styles.newProjectBtn} 
+              onClick={() => setIsManageUsersOpen(true)}
+            >
+              Manage Users
+            </button>
+          </div>
+          
         )}
         <div className={styles.actions}>
           <NotificationCenter />
@@ -155,6 +166,11 @@ export const Dashboard = () => {
           project={editingProject}
           onClose={() => setEditingProject(null)}
           onSuccess={handleUpdateSuccess}
+        />
+      )}
+      {isManageUsersOpen && (
+        <ManageUsersModal 
+          onClose={() => setIsManageUsersOpen(false)} 
         />
       )}
     </div>

@@ -65,7 +65,7 @@ export interface Project {
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
-  currentUserRole: 'PROJECT_ADMIN' | 'PROJECT_MEMBER' | 'PROJECT_VIEWER';
+  userRole: 'PROJECT_ADMIN' | 'PROJECT_MEMBER' | 'PROJECT_VIEWER';
 }
 
 export interface ProjectMembership {
@@ -73,6 +73,11 @@ export interface ProjectMembership {
   userId: number;
   projectId: number;
   role: ProjectRole;
+}
+
+export interface ProjectMember extends ProjectMembership {
+  email: string;
+  username: string;
 }
 
 export interface Board {

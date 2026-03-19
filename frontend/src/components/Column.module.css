@@ -1,12 +1,12 @@
 .column {
-  width: 300px; /* Fixed width */
-  min-width: 300px; /* Handling many columns */
+  width: 300px;
+  min-width: 300px;
   background-color: #f1f5f9;
   padding: 16px;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  max-height: 100%; /* Avoiding growth more than screen height */
+  max-height: 100%;
 }
 
 .header {
@@ -19,7 +19,7 @@
 
 .taskContainer {
   display: flex;
-  flex-direction: column; /* vertical scrolling */
+  flex-direction: column;
   flex-grow: 1;
   overflow-y: auto;
 }
