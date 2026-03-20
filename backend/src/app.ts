@@ -42,7 +42,7 @@ app.use(
 );
 app.use('/api/projects/:projectId/tasks/:taskId/comments', commentRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/boards/:boardId/workflows', workflowTransitionRoutes);
+app.use('/api/projects/:projectId/boards/:boardId/workflows', workflowTransitionRoutes);
 
 // test route
 app.get('/', (req, res) => {

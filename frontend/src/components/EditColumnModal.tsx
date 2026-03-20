@@ -1,0 +1,80 @@
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { type Column } from '../types/models';
+import styles from '../pages/ProjectBoard.module.css';
+import { apiFetch } from '../api/client';
+
+interface EditColumnModalProps {
+  column: Column;
+  onClose: () => void;
+  onSuccess: (updatedColumn: Column) => void;
+}
+
+export const EditColumnModal = ({ column, onClose, onSuccess }: EditColumnModalProps) => {
+  const { projectId, boardId } = useParams<{ projectId: string; boardId: string }>();
+  const [title, setTitle] = useState(column.title);
+  const [wipLimit, setWipLimit] = useState<string>(column.wipLimit ? String(column.wipLimit) : '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !boardId || !projectId) return;
+
+    try {
+      setIsSubmitting(true);
+      setError(null);
+
+      const updatedColumn = await apiFetch<Column>(`/projects/${projectId}/boards/${boardId}/columns/${column.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          wipLimit: wipLimit !== '' ? Number(wipLimit) : null
+        })
+      });
+
+      onSuccess(updatedColumn);
+      onClose();
+    } catch (err) {
+      setError('Failed to update column.');
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h3>Edit Column</h3>
+          <button className={styles.closeButton} onClick={onClose} type="button">×</button>
+        </div>
+
+        <form className={styles.modalForm} onSubmit={handleSubmit}>
+          <div className={styles.inputGroup}>
+            <label htmlFor="title">Column Title</label>
+            <input id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
+          </div>
+
+          <div>
+            <label htmlFor="wipLimit">WIP Limit (Optional)</label>
+            <input id="wipLimit" type="number" min="1" value={wipLimit} onChange={(e) => setWipLimit(e.target.value)} placeholder="No limit" />
+          </div>
+
+          {error && <p style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '0.5rem' }}>{error}</p>}
+
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+            <button type="button" className={styles.secondaryButton} onClick={onClose} style={{ flex: 1, background: '#f3f4f6', color: '#374151' }}>
+              Cancel
+            </button>
+            <button type="submit" className={styles.primaryButton} disabled={isSubmitting || !title.trim()} style={{ flex: 2 }}>
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
