@@ -5,7 +5,7 @@ import { CreateColumnDTO, UpdateColumnDTO } from '../types/dtos.js';
 
 //creating a column on a board:
 export const createColumn = async (boardId: number, data: CreateColumnDTO) => {
-  const { title, order, wipLimit } = data;
+  const { title, order, wipLimit, status } = data;
 
   if(!title) throw new AppError('Column title is required.', 400);
 
@@ -15,6 +15,7 @@ export const createColumn = async (boardId: number, data: CreateColumnDTO) => {
       boardId,
       order: order !== undefined ? Number(order) : 0,
       wipLimit: wipLimit ? Number(wipLimit) : null,
+      status: status || 'TODO',
     },
   });
 };
@@ -32,7 +33,7 @@ export const getColumnsByBoardId = async (boardId: number) => {
 
 //Updating column:
 export const updateColumn = async (columnId: number, data: UpdateColumnDTO) => {
-  const { title, wipLimit, order } = data;
+  const { title, wipLimit, order, status } = data;
 
   const oldColumn = await prisma.column.findUnique({ where: { id: columnId } });
   if(!oldColumn) throw new AppError('Column not found.', 404);
@@ -70,6 +71,7 @@ export const updateColumn = async (columnId: number, data: UpdateColumnDTO) => {
         where: { id: columnId },
         data: {
           title: title || oldColumn.title,
+          status: status !== undefined ? status : oldColumn.status,
           wipLimit:
             wipLimit !== undefined
               ? wipLimit
@@ -93,6 +95,7 @@ export const updateColumn = async (columnId: number, data: UpdateColumnDTO) => {
     include: { tasks: { orderBy: { order: 'asc' } } },
     data: {
       title,
+      status,
       wipLimit:
         wipLimit !== undefined
           ? wipLimit

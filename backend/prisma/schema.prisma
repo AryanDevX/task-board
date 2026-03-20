@@ -132,6 +132,7 @@ model Column {
   order    Int
   boardId  Int
   wipLimit Int?
+  status   String @default("ToDo")
 
   //relations
   board           Board                @relation(fields: [boardId], references: [id], onDelete: Cascade)

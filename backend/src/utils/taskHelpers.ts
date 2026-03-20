@@ -97,30 +97,19 @@ export const getResolutionDatesForColumn = async (
 ): Promise<{ resolvedAt: Date | null; closedAt: Date | null }> => {
   const targetColumn = await prisma.column.findUnique({
     where: { id: columnId },
-    include: { board: { include: { columns: { orderBy: { order: 'asc' } } } } },
   });
 
-  if(!targetColumn || targetColumn.board.columns.length === 0){
+  if(!targetColumn){
     return { resolvedAt: null, closedAt: null };
   }
 
-  const columns = targetColumn.board.columns;
-  const lastColumn = columns[columns.length - 1];
-  const reviewColumn =
-    columns.length > 2 ? columns[columns.length - 2] : lastColumn;
-
-  // Task reached the final state:
-  if(targetColumn.id === lastColumn.id){
+  if(targetColumn.status === 'DONE'){
     return {
       resolvedAt: currentResolvedAt || new Date(),
       closedAt: new Date(),
     };
   }
-  // Task reached the review or another corresponding state
-  else if(
-    targetColumn.id === reviewColumn.id &&
-    targetColumn.id !== lastColumn.id
-  ){
+  else if(targetColumn.status === 'IN_REVIEW'){
     return { resolvedAt: currentResolvedAt || new Date(), closedAt: null };
   }
 
@@ -136,7 +125,9 @@ export const syncStoryStatus = async (
   const story = await prisma.task.findUnique({
     where: { id: storyId },
     include: {
-      children: true,
+      children: {
+        include: { column: true }
+      },
       column: {
         include: {
           board: { include: { columns: { orderBy: { order: 'asc' } } } },
@@ -150,37 +141,26 @@ export const syncStoryStatus = async (
   const boardColumns = story.column.board.columns;
   if(boardColumns.length === 0) return;
 
-  // Map column id's from 0 to N
-  const colIndexMap = new Map(
-    boardColumns.map((col, index) => [col.id, index]),
-  );
-  const childIndices = story.children.map(
-    (c) => colIndexMap.get(c.columnId) ?? 0,
-  );
+  const childStatuses = story.children.map((c) => c.column.status);
+  const allDone = childStatuses.every((s) => s === 'DONE');
+  const allTodo = childStatuses.every((s) => s === 'TODO');
 
-  let derivedColumnId = story.columnId;
+  let targetStatus = 'TODO';
+  if(allDone){
+    targetStatus = 'DONE';
+  } else if(allTodo){
+    targetStatus = 'TODO';
+  } else {
+    targetStatus = 'IN_PROGRESS';
+  }
 
-  // 1. All children in the exact same column -> Story moves there
-  if(Math.min(...childIndices) === Math.max(...childIndices)){
-    derivedColumnId = boardColumns[Math.min(...childIndices)].id;
-  }
-  // 2. All children finished -> Story moves to Done
-  else if(Math.min(...childIndices) === boardColumns.length - 1){
-    derivedColumnId = boardColumns[boardColumns.length - 1].id;
-  }
-  // 3. No work started -> Story stays in To Do
-  else if(Math.max(...childIndices) === 0){
-    derivedColumnId = boardColumns[0].id;
-  }
-  // RULE 4: Mixed State -> Story enters the active workflow (In Progress)
-  else {
-    derivedColumnId = boardColumns[boardColumns.length > 1 ? 1 : 0].id;
-  }
+  // Find the first column on the board matching the target status
+  const derivedColumn = boardColumns.find((col) => col.status === targetStatus) || boardColumns[0];
+  const derivedColumnId = derivedColumn.id;
 
   // If story column not same as derived then update it:
   if(story.columnId !== derivedColumnId){
-    const isFinal =
-      derivedColumnId === boardColumns[boardColumns.length - 1].id;
+    const isFinal = derivedColumn.status === 'DONE';
     await prisma.task.update({
       where: { id: storyId },
       data: {

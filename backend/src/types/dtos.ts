@@ -10,12 +10,14 @@ export interface CreateColumnDTO {
   title: string;
   order?: number | string;
   wipLimit?: number | string;
+  status?: string;
 }
 
 export interface UpdateColumnDTO {
   title?: string;
   order?: number | string;
   wipLimit?: number | string;
+  status?: string;
 }
 
 export interface TaskDTO {

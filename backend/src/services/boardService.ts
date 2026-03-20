@@ -13,16 +13,16 @@ export const createBoard = async (projectId: number, data: CreateBoardDTO) => {
   });
   const columns = await prisma.$transaction([
     prisma.column.create({
-      data: { title: 'To Do', order: 0, boardId: newBoard.id },
+      data: { title: 'To Do', order: 0, boardId: newBoard.id, status: 'TODO' },
     }),
     prisma.column.create({
-      data: { title: 'In Progress', order: 1, boardId: newBoard.id },
+      data: { title: 'In Progress', order: 1, boardId: newBoard.id, status: 'IN_PROGRESS' },
     }),
     prisma.column.create({
-      data: { title: 'Review', order: 2, boardId: newBoard.id },
+      data: { title: 'Review', order: 2, boardId: newBoard.id, status: 'IN_REVIEW' },
     }),
     prisma.column.create({
-      data: { title: 'Done', order: 3, boardId: newBoard.id },
+      data: { title: 'Done', order: 3, boardId: newBoard.id, status: 'DONE' },
     }),
   ]);
   await prisma.workflowTransition.createMany({

@@ -5,16 +5,17 @@ import { IssueType, Priority, type ProjectMember } from "../types/models";
 import type { TaskDTO } from "../types/dtos";
 import { useParams } from "react-router-dom";
 import { type Task } from "../types/models";
-import styles from "../styles/index.module.css";
+import styles from "../pages/ProjectBoard.module.css";
 
 interface Props {
   order: number;
   columnId: string;
+  stories: Task[];
   onClose: () => void;
   onSuccess: (task: Task) => void; 
 }
 
-export const CreateTaskModal = ({order, columnId, onClose, onSuccess }: Props) => {
+export const CreateTaskModal = ({order, columnId, stories, onClose, onSuccess }: Props) => {
   const membersPerPage = 10;
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [isMembersLoading, setIsMembersLoading] = useState(true);
@@ -23,8 +24,8 @@ export const CreateTaskModal = ({order, columnId, onClose, onSuccess }: Props) =
   const [form, setForm] = useState({
     title: "",
     description: "",
-    issueType: IssueType.TASK,
-    priority: Priority.Medium,
+    issueType: IssueType.TASK as IssueType,
+    priority: Priority.Medium as Priority,
     assigneeId: "",
     parentId: "",
     dueDate: "",
@@ -89,38 +90,42 @@ export const CreateTaskModal = ({order, columnId, onClose, onSuccess }: Props) =
     }
   };
 
-  return (
-    <div className={styles.surfaceCard}>
-      <h3 className={styles.cardTitle}>Create Task</h3>
+  const isStory = form.issueType === IssueType.STORY ;
 
-      <div className={styles.form}>
-        <div className={styles.fieldGroup}>
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalCard} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', width: '100%' }}>
+        <div className={styles.modalHeader}>
+          <h3>Create Task</h3>
+          <button className={styles.closeButton} onClick={onClose} type="button">×</button>
+        </div>
+
+        <div className={styles.modalForm}>
+          <div className={styles.inputGroup}>
           <label htmlFor="task-title">Title</label>
           <input
             id="task-title"
-            className={styles.input}
             placeholder="Title"
             value={form.title}
             onChange={(e) => handleChange("title", e.target.value)}
           />
         </div>
 
-        <div className={styles.fieldGroup}>
+          <div className={styles.inputGroup}>
           <label htmlFor="task-description">Description</label>
           <textarea
             id="task-description"
-            className={`${styles.input} ${styles.textarea}`}
             placeholder="Description"
             value={form.description}
             onChange={(e) => handleChange("description", e.target.value)}
+              rows={3}
           />
         </div>
 
-        <div className={styles.fieldGroup}>
+          <div className={styles.inputGroup}>
           <label htmlFor="task-issue-type">Issue Type</label>
           <select
             id="task-issue-type"
-            className={styles.input}
             value={form.issueType}
             onChange={(e) => handleChange("issueType", e.target.value)}
           >
@@ -132,11 +137,10 @@ export const CreateTaskModal = ({order, columnId, onClose, onSuccess }: Props) =
           </select>
         </div>
 
-        <div className={styles.fieldGroup}>
+          <div className={styles.inputGroup}>
           <label htmlFor="task-priority">Priority</label>
           <select
             id="task-priority"
-            className={styles.input}
             value={form.priority}
             onChange={(e) => handleChange("priority", e.target.value)}
           >
@@ -148,11 +152,12 @@ export const CreateTaskModal = ({order, columnId, onClose, onSuccess }: Props) =
           </select>
         </div>
 
-        <div className={styles.fieldGroup}>
+          {!isStory && (
+            <>
+              <div className={styles.inputGroup}>
           <label htmlFor="task-assignee">Assignee</label>
           <select
             id="task-assignee"
-            className={styles.input}
             value={form.assigneeId}
             onChange={(e) => handleChange("assigneeId", e.target.value)}
             disabled={isMembersLoading}
@@ -164,8 +169,8 @@ export const CreateTaskModal = ({order, columnId, onClose, onSuccess }: Props) =
               </option>
             ))}
           </select>
-          <div className={styles.inlineControls}>
-            <p className={styles.helperText}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                  <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>
               {members.length === 0
                 ? "No project users available."
                 : `Showing ${Math.min(pageStart + 1, members.length)}-${Math.min(
@@ -173,10 +178,10 @@ export const CreateTaskModal = ({order, columnId, onClose, onSuccess }: Props) =
                     members.length,
                   )} of ${members.length} project users`}
             </p>
-            <div className={styles.inlineControls}>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
                 type="button"
-                className={styles.smallButton}
+                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
                 onClick={() => setMembersPage((page) => Math.max(1, page - 1))}
                 disabled={membersPage === 1 || isMembersLoading}
               >
@@ -184,7 +189,7 @@ export const CreateTaskModal = ({order, columnId, onClose, onSuccess }: Props) =
               </button>
               <button
                 type="button"
-                className={styles.smallButton}
+                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
                 onClick={() => setMembersPage((page) => Math.min(totalMemberPages, page + 1))}
                 disabled={membersPage === totalMemberPages || isMembersLoading}
               >
@@ -192,42 +197,47 @@ export const CreateTaskModal = ({order, columnId, onClose, onSuccess }: Props) =
               </button>
             </div>
           </div>
-          <p className={styles.helperText}>
+                <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.25rem' }}>
             {isMembersLoading
               ? "Loading project users..."
               : membersError || "Only users already added to this project can be assigned."}
           </p>
         </div>
 
-        <div className={styles.fieldGroup}>
-          <label htmlFor="task-parent">Parent Task ID</label>
-          <input
-            id="task-parent"
-            className={styles.input}
-            placeholder="Parent Task ID"
-            value={form.parentId}
-            onChange={(e) => handleChange("parentId", e.target.value)}
-          />
-        </div>
+              <div className={styles.inputGroup}>
+                <label htmlFor="task-parent">Parent Issue</label>
+                <select
+                  id="task-parent"
+                  value={form.parentId}
+                  onChange={(e) => handleChange("parentId", e.target.value)}
+                >
+                  <option value="">None (Standalone)</option>
+                  {stories.map(story => (
+                    <option key={story.id} value={story.id}>{story.title}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
 
-        <div className={styles.fieldGroup}>
+          <div className={styles.inputGroup}>
           <label htmlFor="task-due-date">Due Date</label>
           <input
             id="task-due-date"
-            className={styles.input}
             type="date"
             value={form.dueDate}
             onChange={(e) => handleChange("dueDate", e.target.value)}
           />
         </div>
 
-        <div className={styles.buttonRow}>
-          <button className={styles.primaryButton} onClick={handleSubmit} type="button">
-            Create
-          </button>
-          <button className={styles.secondaryButton} onClick={onClose} type="button">
-            Cancel
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+            <button className={styles.secondaryButton} onClick={onClose} type="button" style={{ flex: 1, background: '#f3f4f6', color: '#374151' }}>
+              Cancel
+            </button>
+            <button className={styles.primaryButton} onClick={handleSubmit} type="button" style={{ flex: 2 }}>
+              Create Task
+            </button>
+          </div>
         </div>
       </div>
     </div>

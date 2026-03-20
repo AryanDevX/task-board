@@ -6,6 +6,14 @@ export const GlobalRole = {
 } as const;
 export type GlobalRole = (typeof GlobalRole)[keyof typeof GlobalRole];
 
+export const ColumnStatus ={
+  ToDo: 'ToDo',
+  InReview: 'InReview',
+  InProgress: 'InProgress',
+  Done: 'Done'
+} as const;
+
+export type ColumnStatus =(typeof ColumnStatus)[keyof typeof ColumnStatus];
 // 2. Project Roles
 export const ProjectRole = {
   ProjectAdmin: 'PROJECT_ADMIN',
