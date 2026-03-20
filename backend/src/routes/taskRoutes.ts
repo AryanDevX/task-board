@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   createTask,
+  getTask,
   getTasks,
   updateTask,
   moveTask,
@@ -26,6 +27,13 @@ router.get(
   authenticateJWT,
   requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER', 'PROJECT_VIEWER']),
   getTasks,
+);
+
+router.get(
+  '/:taskId',
+  authenticateJWT,
+  requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER', 'PROJECT_VIEWER']),
+  getTask,
 );
 
 //update:

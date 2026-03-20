@@ -1,10 +1,18 @@
-import type { Task } from '../types/models';
+import type { Task, TaskDetails } from '../types/models';
 import { apiFetch } from './client';
 import { type MoveTaskDTO, type TaskDTO, type UpdateTaskDTO } from '../types/dtos';
 
 export const taskApi = {
   getTasks: ( projectId:string , boardId:string,columnId: string  ):Promise<Task[]> =>
     apiFetch(`/projects/${projectId}/boards/${boardId}/columns/${columnId}/tasks`),
+
+  getTask: (
+    projectId: string,
+    boardId: string,
+    columnId: string,
+    taskId: string,
+  ): Promise<TaskDetails> =>
+    apiFetch(`/projects/${projectId}/boards/${boardId}/columns/${columnId}/tasks/${taskId}`),
 
   createTask: (
     projectId: string,

@@ -22,23 +22,23 @@ export const createTask = async (
   }
 };
 
-// export const getTask = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction,
-// ): Promise<void> => {
-//   try{
-//     const { taskId } = req.params;
-//     if(!taskId) return next(new AppError('Task ID is required.', 400));
+export const getTask = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try{
+    const { taskId } = req.params;
+    if(!taskId) return next(new AppError('Task ID is required.', 400));
 
-//     const taskData = await taskService.getTaskWithTimeline(parseInt(taskId));
+    const taskData = await taskService.getTaskWithTimeline(parseInt(taskId));
 
-//     res.status(200).json(taskData);
-//   }
-//   catch (error){
-//     next(error);
-//   }
-// };
+    res.status(200).json(taskData);
+  }
+  catch (error){
+    next(error);
+  }
+};
 
 export const getTasks = async (
   req: Request,

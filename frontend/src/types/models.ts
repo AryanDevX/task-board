@@ -133,6 +133,10 @@ export interface Task {
   closedAt: string | null;
 }
 
+export interface TaskDetails extends Task {
+  activityTimeline: import('./dtos').TimelineEntry[];
+}
+
 export interface ColumnWithTasks extends Column {
   tasks: Task[];
 }

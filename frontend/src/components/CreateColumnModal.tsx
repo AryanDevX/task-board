@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { columnApi } from '../api/column.api';
 import { type Column } from '../types/models';
-import styles from '../pages/ProjectBoard.module.css';
+import styles from '../styles/index.module.css';
 import {type  CreateColumnDTO } from '../types/dtos';
 
 interface CreateColumnModalProps {
@@ -50,9 +50,9 @@ export const CreateColumnModal = ({projectId, nextOrder = 0, onClose, onSuccess 
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
-      <div 
-        className={styles.modalCard} 
-        onClick={(e) => e.stopPropagation()} // Prevents closing when clicking inside the form
+      <div
+        className={styles.modalCard}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className={styles.modalHeader}>
           <h3>Add New Column</h3>
@@ -90,7 +90,7 @@ export const CreateColumnModal = ({projectId, nextOrder = 0, onClose, onSuccess 
   </div>
 
   {/* WIP Limit - Number Input */}
-  <div>
+  <div className={styles.inputGroup}>
     <label htmlFor="wipLimit">WIP Limit (Optional)</label>
     <input
       id="wipLimit"
@@ -102,22 +102,20 @@ export const CreateColumnModal = ({projectId, nextOrder = 0, onClose, onSuccess 
     />
   </div>
 
-          {error && <p style={{ color: '#ef4444', fontSize: '0.9rem' }}>{error}</p>}
+          {error && <p className={styles.error}>{error}</p>}
 
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-            <button 
-              type="button" 
-              className={styles.secondaryButton} 
+          <div className={styles.buttonRow}>
+            <button
+              type="button"
+              className={styles.secondaryButton}
               onClick={onClose}
-              style={{ flex: 1, background: '#f3f4f6', color: '#374151' }}
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
-              className={styles.primaryButton} 
+            <button
+              type="submit"
+              className={styles.primaryButton}
               disabled={isSubmitting || !title.trim()}
-              style={{ flex: 2 }}
             >
               {isSubmitting ? 'Adding...' : 'Add Column'}
             </button>

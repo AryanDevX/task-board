@@ -1,75 +1,81 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { type Column as ColumnType, type Task } from "../types/models";
 import { CreateTaskModal } from "../components/CreateTaskModal";
-import styles from "./ProjectBoard.module.css"; 
 import { EditColumnModal } from "../components/EditColumnModal";
-
+import styles from "./ProjectBoard.module.css";
+import modalStyles from "../styles/index.module.css";
 
 interface Props {
   column: ColumnType;
   tasks:Task[];
   allTasks: Task[];
   onTaskCreated:(task:Task )=>void;
+  onTaskUpdated: (task: Task) => void;
   onTaskMove:(taskId:string , sourceColumnId:string , targetColumnId:string , newOrder:number)=>void;
   onTaskDelete:(taskId:string )=>void;
   onColumnDelete:(columnId:string)=>void;
   onColumnMove?:(columnId:string, newOrder:number)=>void;
   onColumnUpdate: (column: ColumnType) => void;
-
 }
 
 
-export default function Column({ column,tasks,allTasks,onTaskCreated , onTaskMove, onTaskDelete, onColumnDelete, onColumnMove, onColumnUpdate}: Props) {
+export default function Column({ column,tasks,allTasks,onTaskCreated , onTaskUpdated,onTaskMove, onTaskDelete, onColumnDelete, onColumnMove, onColumnUpdate}: Props) {
 
   const [showModal, setShowModal] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
+  useEffect(() => {
+    if (!selectedTask) return;
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [selectedTask]);
 
-const handleDrop = (e: any, targetTask?: Task, isBelow?: boolean) => {
-  e.preventDefault();
-  e.stopPropagation();
-  const dataStr = e.dataTransfer.getData("text/plain");
-  if (!dataStr) return;
-  
-  const data = JSON.parse(dataStr);
-  
-  if (data.type === "column" && onColumnMove) {
-    onColumnMove(data.columnId, column.order);
-    return;
-  }
+  const handleDrop = (e: React.DragEvent<HTMLElement>, targetTask?: Task, isBelow?: boolean) => {    e.preventDefault();
+    e.stopPropagation();
+    const dataStr = e.dataTransfer.getData("text/plain");
+    if (!dataStr) return;
+    
+    const data = JSON.parse(dataStr);
+    
+    if (data.type === "column" && onColumnMove) {
+      onColumnMove(data.columnId, column.order);
+      return;
+    }
 
-  const { taskId, sourceColumnId, sourceOrder } = data;
-  if (!taskId) return;
-  const targetColumnId = String(column.id);
-  
-  // Prevent dragging a task onto itself
-  if (targetTask && String(targetTask.id) === String(taskId)) {
-    return;
-  }
-  
-  let newOrder = tasks.length;
-  if (targetTask !== undefined) {
-    const isSameColumn = String(sourceColumnId) === targetColumnId;
-    if (isSameColumn && sourceOrder !== undefined) {
-      if (sourceOrder < targetTask.order) { // Moving task down
-        newOrder = isBelow ? targetTask.order : targetTask.order - 1;
-      } else { // Moving task up
+    const { taskId, sourceColumnId, sourceOrder } = data;
+    if (!taskId) return;
+    const targetColumnId = String(column.id);
+    
+    if (targetTask && String(targetTask.id) === String(taskId)) {
+      return;
+    }
+    
+    let newOrder = tasks.length;
+    if (targetTask !== undefined) {
+      const isSameColumn = String(sourceColumnId) === targetColumnId;
+      if (isSameColumn && sourceOrder !== undefined) {
+        if (sourceOrder < targetTask.order) {
+          newOrder = isBelow ? targetTask.order : targetTask.order - 1;
+        } else {
+          newOrder = isBelow ? targetTask.order + 1 : targetTask.order;
+        }
+      } else {
         newOrder = isBelow ? targetTask.order + 1 : targetTask.order;
       }
-    } else { // Moving across different columns
-      newOrder = isBelow ? targetTask.order + 1 : targetTask.order;
     }
-  }
-  
-  onTaskMove(String(taskId), String(sourceColumnId), targetColumnId, Math.max(0, newOrder));
-};
+    
+    onTaskMove(String(taskId), String(sourceColumnId), targetColumnId, Math.max(0, newOrder));
+  };
 
   return (
-    <div 
-      className={styles.modalCard} 
-      style={{ minWidth: "280px", background: "#f9fafb" }} 
+    <div
+      className={styles.columnContainer}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData("text/plain", JSON.stringify({ type: "column", columnId: String(column.id) }));
@@ -77,12 +83,14 @@ const handleDrop = (e: any, targetTask?: Task, isBelow?: boolean) => {
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => handleDrop(e)}
     >
-      {/* Column Header */}
-      <div className={styles.sectionHeader} style={{ marginBottom: "1rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>{column.title}</h3>
+      <div className={styles.columnHeader}>
+        <div className={styles.columnHeading}>
+          <h3 className={styles.columnTitle}>{column.title}</h3>
           {column.wipLimit !== null && (
-            <span style={{ fontSize: "0.8rem", color: tasks.length > column.wipLimit ? "#ef4444" : "#6b7280", fontWeight: 600 }}>
+            <span
+              className={styles.wipBadge}
+              style={{ color: tasks.length > column.wipLimit ? "#dc2626" : undefined }}
+            >
               WIP: {tasks.length} / {column.wipLimit}
             </span>
           )}
@@ -108,14 +116,13 @@ const handleDrop = (e: any, targetTask?: Task, isBelow?: boolean) => {
         </div>
       </div>
 
-      {/* Task List */}
       <div 
-        style={{ display: "flex", flexDirection: "column", gap: "0.75rem", minHeight: "100px" }}
+        className={styles.taskList}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e)}
       >
         {tasks.length === 0 ? (
-          <p className={styles.formHint} style={{ textAlign: "center", padding: "1rem" }}>
+          <p className={`${modalStyles.helperText} ${styles.emptyColumnText}`}>
             No tasks yet
           </p>
         ) : (
@@ -176,9 +183,9 @@ const handleDrop = (e: any, targetTask?: Task, isBelow?: boolean) => {
                   {task.priority}
                 </span>
               </div>
-              <h4 style={{ margin: "0.5rem 0", fontSize: "0.95rem" }}>{task.title}</h4>
+              <h4 className={styles.taskTitle}>{task.title}</h4>
               {task.description && (
-                <p className={styles.storyMeta} style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                <p className={styles.taskDescription}>
                   {task.description}
                 </p>
               )}
@@ -209,20 +216,20 @@ const handleDrop = (e: any, targetTask?: Task, isBelow?: boolean) => {
         )}
       </div>
 
-      {/* Add Task Button at bottom */}
-      <button 
-        className={styles.secondaryButton} 
-        style={{ width: "100%", marginTop: "1rem", padding: "0.5rem" }}
-        onClick={() => {
-          if (column.wipLimit !== null && tasks.length >= column.wipLimit) {
-            alert(`WIP limit of ${column.wipLimit} reached for ${column.title}.`);
-            return;
-          }
-          setShowModal(!showModal);
-        }}
-      >
-        + Add another card
-      </button>
+      <div className={styles.addTaskWrapper}>
+        <button 
+          className={`${modalStyles.secondaryButton} ${modalStyles.fullWidth}`}
+          onClick={() => {
+            if (column.wipLimit !== null && tasks.length >= column.wipLimit) {
+              alert(`WIP limit of ${column.wipLimit} reached for ${column.title}.`);
+              return;
+            }
+            setShowModal(!showModal);
+          }}
+        >
+          + Add another card
+        </button>
+      </div>
 
       {showModal && (
         <CreateTaskModal
@@ -240,6 +247,24 @@ const handleDrop = (e: any, targetTask?: Task, isBelow?: boolean) => {
           onClose={() => setShowEditModal(false)}
           onSuccess={onColumnUpdate}
         />
+      )}
+
+      {selectedTask && (
+        <div className={modalStyles.modalOverlay} onClick={() => setSelectedTask(null)}>
+          <div className={modalStyles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <CreateTaskModal
+              order={selectedTask.order}
+              columnId={String(column.id)}
+              task={selectedTask}
+              stories={[]} 
+              onClose={() => setSelectedTask(null)}
+              onSuccess={(updatedTask) => {
+                onTaskUpdated(updatedTask);
+                setSelectedTask(null);
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

@@ -63,6 +63,12 @@ export const BoardPage = () => {
 
   const handleColumnUpdate = (updatedCol: Columntype) => {
     setColumns(prev => prev.map(c => c.id === updatedCol.id ? updatedCol : c));
+  }; 
+
+  const handleTaskUpdated = (updatedTask: Task) => {
+    setTasks((prev) =>
+      prev.map((task) => (task.id === updatedTask.id ? updatedTask : task)),
+    );
   };
 
 const handleTaskMove = async (taskId: string, sourceColumnId: string, targetColumnId: string, newOrder: number) => {
@@ -320,6 +326,7 @@ const handleColumnDelete = async (columnId: string) => {
               allTasks={tasks}
               onTaskCreated= {handleTaskCreator }
               onTaskMove={handleTaskMove}
+               onTaskUpdated={handleTaskUpdated}
               onTaskDelete={handleTaskDelete}
               onColumnDelete={handleColumnDelete}
               onColumnMove={handleColumnMove}
