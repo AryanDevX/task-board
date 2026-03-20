@@ -18,7 +18,7 @@ export const createTask = async (
     res.status(201).json(newTask);
   }
   catch (error){
-    next(error); // Passes errors to central error handling middleware
+    next(error);
   }
 };
 
@@ -39,6 +39,7 @@ export const createTask = async (
 //     next(error);
 //   }
 // };
+
 export const getTasks = async (
   req: Request,
   res: Response,

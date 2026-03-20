@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/auth.api';
-import styles from './Login.module.css';
+import styles from '../styles/index.module.css';
 
 export const Register = () => {
   const [username, setUsername] = useState('');
@@ -35,11 +35,11 @@ export const Register = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <form className={styles.formCard} onSubmit={handleSubmit}>
-        <h2 className={styles.title}>Create an Account</h2>
+    <div className={styles.pageCenter}>
+      <form className={styles.authCard} onSubmit={handleSubmit}>
+        <h2 className={styles.cardTitle}>Create an Account</h2>
         {error && <div className={styles.error}>{error}</div>}
-        <div className={styles.inputGroup}>
+        <div className={styles.fieldGroup}>
           <label htmlFor="username">Username</label>
           <input
             id="username"
@@ -51,7 +51,7 @@ export const Register = () => {
           />
         </div>
 
-        <div className={styles.inputGroup}>
+        <div className={styles.fieldGroup}>
           <label htmlFor="email">Email</label>
           <input
             id="email"
@@ -63,7 +63,7 @@ export const Register = () => {
           />
         </div>
 
-        <div className={styles.inputGroup}>
+        <div className={styles.fieldGroup}>
           <label htmlFor="password">Password</label>
           <input
             id="password"
@@ -75,10 +75,14 @@ export const Register = () => {
           />
         </div>
 
-        <button type="submit" className={styles.button} disabled={isLoading}>
+        <button
+          type="submit"
+          className={`${styles.primaryButton} ${styles.fullWidth}`}
+          disabled={isLoading}
+        >
           {isLoading ? 'Creating account...' : 'Register'}
         </button>
-        <div className={styles.registerLink}>
+        <div className={styles.linkText}>
           Already have an account? <Link to="/login">Log in</Link>
         </div>
       </form>

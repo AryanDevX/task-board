@@ -1,4 +1,4 @@
-import {  useState } from "react";
+import { useState, type DragEvent } from "react";
 import { type Column as ColumnType, type Task } from "../types/models";
 import { CreateTaskModal } from "../components/CreateTaskModal";
 import styles from "./ProjectBoard.module.css"; 
@@ -15,12 +15,9 @@ interface Props {
 
 
 export default function Column({ column,tasks,onTaskCreated , onTaskMove, onTaskDelete, onColumnDelete}: Props) {
-
   const [showModal, setShowModal] = useState(false);
 
-
-
-const handleDrop = (e: any, dropOrder?: number) => {
+const handleDrop = (e: DragEvent<HTMLElement>, dropOrder?: number) => {
   e.preventDefault();
   e.stopPropagation();
   const dataStr = e.dataTransfer.getData("text/plain");

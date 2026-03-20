@@ -25,6 +25,8 @@ export const NotificationCenter = () => {
     };
 
     void loadNotifications();
+    const intervalId = setInterval(loadNotifications, 6000000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleNotificationClick = async (notification: Notification) => {

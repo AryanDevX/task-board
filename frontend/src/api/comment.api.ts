@@ -1,25 +1,25 @@
 import { apiFetch } from './client';
-import { type Comment } from '../types/models';
+import { type CommentWithAuthor } from '../types/dtos';
 
 export const commentApi = {
-  // Get all comments for a task
-  getCommentsByTask: (taskId: string, projectId: string): Promise<Comment[]> =>
-    apiFetch(`projects/${projectId}/tasks/${taskId}/comments`),
+  getCommentsByTask: (
+    taskId: string,
+    projectId: string,
+  ): Promise<CommentWithAuthor[]> =>
+    apiFetch(`/projects/${projectId}/tasks/${taskId}/comments`),
 
-  // Create a comment
   createComment: (
     taskId: string,
     projectId: string,
     data: {
       content: string;
     },
-  ): Promise<Comment> =>
-    apiFetch(`projects/${projectId}/tasks/${taskId}/comments`, {
+  ): Promise<CommentWithAuthor> =>
+    apiFetch(`/projects/${projectId}/tasks/${taskId}/comments`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  // Update a comment
   updateComment: (
     commentId: string,
     projectId: string,
@@ -27,19 +27,18 @@ export const commentApi = {
     data: {
       content: string;
     },
-  ): Promise<Comment> =>
-    apiFetch(`projects/${projectId}/tasks/${taskId}/comments/${commentId}`, {
+  ): Promise<CommentWithAuthor> =>
+    apiFetch(`/projects/${projectId}/tasks/${taskId}/comments/${commentId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
 
-  // Delete a comment
   deleteComment: (
     commentId: string,
     taskId: string,
     projectId: string,
-  ): Promise<void> =>
-    apiFetch(`projects/${projectId}/tasks/${taskId}/comments/${commentId}`, {
+  ): Promise<{ message: string }> =>
+    apiFetch(`/projects/${projectId}/tasks/${taskId}/comments/${commentId}`, {
       method: 'DELETE',
     }),
 };

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { type Project } from '../types/models';
 import { projectApi } from '../api/project.api';
-import styles from './CreateProjectModal.module.css';
+import styles from '../styles/index.module.css';
 
 interface Props {
   onClose: () => void;
@@ -38,12 +38,12 @@ export const CreateProjectModal = ({ onClose, onSuccess }: Props) => {
   };
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <h2>Create New Project</h2>
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <h2 className={styles.cardTitle}>Create New Project</h2>
         {error && <div className={styles.error}>{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <div className={styles.inputGroup}>
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <div className={styles.fieldGroup}>
             <label htmlFor="name">Project Name</label>
             <input
               id="name"
@@ -54,7 +54,7 @@ export const CreateProjectModal = ({ onClose, onSuccess }: Props) => {
               required
             />
           </div>
-          <div className={styles.inputGroup}>
+          <div className={styles.fieldGroup}>
             <label htmlFor="description">Description</label>
             <input
               id="description"
@@ -66,7 +66,7 @@ export const CreateProjectModal = ({ onClose, onSuccess }: Props) => {
           </div>
           <button
             type="submit"
-            className={styles.button}
+            className={`${styles.primaryButton} ${styles.fullWidth}`}
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Creating Project...' : 'Create'}
