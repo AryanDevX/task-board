@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { boardApi } from "../api/boards.api";
 import { type Board } from "../types/models";
 import { CreateBoardModal } from "../components/CreateBoardModal";
+import { NotificationCenter } from "../components/Notification";
 import styles from "./ProjectBoard.module.css"; 
 
 export const ProjectBoard = () => {
@@ -50,6 +51,7 @@ export const ProjectBoard = () => {
         >
           ← Dashboard
         </button>
+        <NotificationCenter />
       </header>
 
       {/* Section Header */}

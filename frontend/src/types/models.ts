@@ -56,6 +56,14 @@ export interface User {
   globalRole: GlobalRole;
 }
 
+export interface PaginatedResponse<T> {
+  items: T[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface Project {
   id: number;
   name: string;

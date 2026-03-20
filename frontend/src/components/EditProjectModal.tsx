@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { type Project, type ProjectRole } from '../types/models';
 import { projectApi } from '../api/project.api';
+import sharedStyles from '../styles/index.module.css';
+import { OrganizationUsersBrowser } from './OrganizationUsersBrowser';
 import styles from './EditProjectModal.module.css';
 
 interface EditProjectModalProps {
@@ -23,7 +25,6 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
 
   const [initialMembers, setInitialMembers] = useState<ProjectMemberPayload[]>([]);
   const [activeMembers, setActiveMembers] = useState<ProjectMemberPayload[]>([]);
-  const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberRole, setNewMemberRole] = useState<ProjectRole>('PROJECT_MEMBER');
 
   const { user } = useAuth();
@@ -52,18 +53,16 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
     void fetchMembers();
   }, [project.id]);
 
-  const handleAddMember = () => {
-    const normalizedEmail = newMemberEmail.trim().toLowerCase();
+  const handleAddOrganizationUser = (email: string) => {
+    const normalizedEmail = email.trim().toLowerCase();
     if(!normalizedEmail) return;
 
     if(activeMembers.some((member) => member.email.toLowerCase() === normalizedEmail)) {
-      alert('This user is already in the list!');
+      alert('This user is already in the project.');
       return;
     }
 
-    setActiveMembers([...activeMembers, { email: normalizedEmail, role: newMemberRole }]);
-    setNewMemberEmail('');
-    setNewMemberRole('PROJECT_MEMBER');
+    setActiveMembers((prev) => [...prev, { email: normalizedEmail, role: newMemberRole }]);
   };
 
   const handleRemoveMember = (emailToRemove: string) => {
@@ -115,26 +114,26 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
   };
 
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <h2>Edit Project & Team</h2>
-        <form onSubmit={handleSubmit}>
+    <div className={sharedStyles.modalOverlay}>
+      <div className={sharedStyles.modalCard}>
+        <h2 className={sharedStyles.cardTitle}>Edit Project & Team</h2>
+        <form className={sharedStyles.form} onSubmit={handleSubmit}>
           
-          <div className={styles.inputGroup}>
+          <div className={sharedStyles.fieldGroup}>
             <label>Project Name</label>
             <input
               type="text"
-              className={styles.input}
+              className={sharedStyles.input}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
           </div>
 
-          <div className={styles.inputGroup}>
+          <div className={sharedStyles.fieldGroup}>
             <label>Description</label>
             <textarea
-              className={styles.input}
+              className={`${sharedStyles.input} ${sharedStyles.textarea}`}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -145,15 +144,8 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
           <h3>Users in Project</h3>
           
           <div className={styles.memberInputRow}>
-            <input
-              type="email"
-              className={styles.input}
-              placeholder="User's email address"
-              value={newMemberEmail}
-              onChange={(e) => setNewMemberEmail(e.target.value)}
-            />
             <select 
-              className={styles.input}
+              className={sharedStyles.input}
               value={newMemberRole} 
               onChange={(e) => setNewMemberRole(e.target.value as ProjectRole)}
             >
@@ -161,13 +153,25 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
               <option value="PROJECT_ADMIN">Admin</option>
               <option value="PROJECT_VIEWER">Viewer</option>
             </select>
-            <button 
-              type="button" 
-              className={styles.addBtn}
-              onClick={handleAddMember}
-            >Add
-            </button>
           </div>
+
+          <OrganizationUsersBrowser
+            title="Browse organization users and add them to this project."
+            pageSize={10}
+            emptyMessage="No available organization users found."
+            filterUsers={(user) =>
+              !activeMembers.some((member) => member.email.toLowerCase() === user.email.toLowerCase())
+            }
+            renderAction={(user) => (
+              <button
+                type="button"
+                className={styles.addBtn}
+                onClick={() => handleAddOrganizationUser(user.email)}
+              >
+                Add
+              </button>
+            )}
+          />
 
           {isMembersLoading ? (
             <p className={styles.loadingText}>Loading team members...</p>
@@ -180,7 +184,7 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
                   
                   <div className={styles.memberActions}>
                     <select
-                      className={`${styles.input} ${styles.roleSelect}${styles[member.role]}`}
+                      className={`${sharedStyles.input} ${styles.roleSelect} ${styles[member.role] || ''}`}
                       value={member.role}
                       onChange={(e) => handleRoleChange(member.email, e.target.value as ProjectRole)}
                     >
@@ -211,7 +215,7 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
           <div className={styles.modalActions}>
             <button 
               type="button" 
-              className={styles.cancelBtn} 
+              className={sharedStyles.secondaryButton} 
               onClick={onClose} 
               disabled={isLoading}
             >
@@ -219,7 +223,7 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
             </button>
             <button 
               type="submit" 
-              className={`${styles.button} ${styles.submitBtn}`} 
+              className={sharedStyles.primaryButton} 
               disabled={isLoading}
             >
               {isLoading ? 'Saving...' : 'Save Changes'}

@@ -1,6 +1,6 @@
 import type { Task } from '../types/models';
 import { apiFetch } from './client';
-import { type TaskDTO } from '../types/dtos';
+import { type MoveTaskDTO, type TaskDTO, type UpdateTaskDTO } from '../types/dtos';
 
 export const taskApi = {
   getTasks: ( projectId:string , boardId:string,columnId: string  ):Promise<Task[]> =>
@@ -23,36 +23,50 @@ export const taskApi = {
       },
     ),
 
-
-    moveTask:  (
+  updateTask: (
     projectId: string,
     boardId: string,
     columnId: string,
-    taskId: string ,
+    taskId: string,
+    data: UpdateTaskDTO,
+  ): Promise<Task> =>
+    apiFetch(
+      `/projects/${projectId}/boards/${boardId}/columns/${columnId}/tasks/${taskId}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      },
+    ),
+
+  moveTask: (
+    projectId: string,
+    boardId: string,
+    columnId: string,
+    taskId: string,
     targetColumnId: string,
-    newOrder: string 
+    newOrder: string | number,
   ): Promise<Task> =>
     apiFetch(
       `/projects/${projectId}/boards/${boardId}/columns/${columnId}/tasks/${taskId}/move`,
       {
         method: 'PATCH',
         body: JSON.stringify({
-         targetColumnId, newOrder
-        }),
+          targetColumnId,
+          newOrder,
+        } satisfies MoveTaskDTO),
       },
     ),
 
-      deleteTask: (
+  deleteTask: (
     projectId: string,
     boardId: string,
     columnId: string,
-    taskId: string 
-  ): Promise<Task> =>
+    taskId: string,
+  ): Promise<{ message: string; deletedTask: Task }> =>
     apiFetch(
       `/projects/${projectId}/boards/${boardId}/columns/${columnId}/tasks/${taskId}`,
       {
         method: 'DELETE',
       },
     ),
-
 };

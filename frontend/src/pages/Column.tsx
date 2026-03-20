@@ -1,4 +1,4 @@
-import {  useState } from "react";
+import { useState } from "react";
 import { type Column as ColumnType, type Task } from "../types/models";
 import { CreateTaskModal } from "../components/CreateTaskModal";
 import styles from "./ProjectBoard.module.css"; 

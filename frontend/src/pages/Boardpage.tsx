@@ -12,7 +12,7 @@ import { WorkflowSettingsModal } from "../components/WorkflowSettingsModal";
 
 export const BoardPage = () => {
   const navigate = useNavigate();
-  const { boardId, projectId } = useParams<{ boardId: string; projectId: string }>();
+  const { boardId, projectId } = useParams<{ projectId: string, boardId: string; }>();
   const [addModal ,SetAddModal]= useState(false);
    const [tasks, setTasks] = useState<Task[]>([]);
   const [columns, setColumns] = useState<Columntype[]>([]);

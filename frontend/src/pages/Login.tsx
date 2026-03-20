@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import styles from './Login.module.css';
+import styles from '../styles/index.module.css';
 import { authApi } from '../api/auth.api';
 
 export const Login = () => {
@@ -33,13 +33,13 @@ export const Login = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <form className={styles.formCard} onSubmit={handleSubmit}>
-        <h2 className={styles.title}>Log in to task board</h2>
+    <div className={styles.pageCenter}>
+      <form className={styles.authCard} onSubmit={handleSubmit}>
+        <h2 className={styles.cardTitle}>Log in to task board</h2>
 
         {error && <div className={styles.error}>{error}</div>}
 
-        <div className={styles.inputGroup}>
+        <div className={styles.fieldGroup}>
           <label htmlFor="email">Email</label>
           <input
             id="email"
@@ -51,7 +51,7 @@ export const Login = () => {
           />
         </div>
 
-        <div className={styles.inputGroup}>
+        <div className={styles.fieldGroup}>
           <label htmlFor="password">Password</label>
           <input
             id="password"
@@ -63,10 +63,14 @@ export const Login = () => {
           />
         </div>
 
-        <button type="submit" className={styles.button} disabled={isLoading}>
+        <button
+          type="submit"
+          className={`${styles.primaryButton} ${styles.fullWidth}`}
+          disabled={isLoading}
+        >
           {isLoading ? 'Logging in...' : 'Login'}
         </button>
-        <div className={styles.registerLink}>
+        <div className={styles.linkText}>
           Don't have an account? <Link to="/register">Register here</Link>
         </div>
       </form>
