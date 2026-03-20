@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { columnApi } from "../api/column.api";
 import { type Column as Columntype } from "../types/models";
 import Column from "./Column";
-import styles from "./ProjectBoard.module.css"; 
+import styles from '../styles/index.module.css';
 import { CreateColumnModal } from "../components/CreateColumnModal";
 import type {  Task, WorkflowTransition } from "../types/models";
 import { taskApi } from "../api/tasks.api";
