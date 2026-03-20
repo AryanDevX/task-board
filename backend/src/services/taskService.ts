@@ -151,6 +151,15 @@ export const updateTask = async (
   });
   if(!oldTask) throw new AppError('Task not found.', 404);
 
+  if (issueType && issueType !== oldTask.issueType) {
+    if (
+      !(oldTask.issueType === 'TASK' && issueType === 'BUG') &&
+      !(oldTask.issueType === 'BUG' && issueType === 'TASK')
+    ) {
+      throw new AppError('Issue type conversion is only allowed between TASK and BUG.', 400);
+    }
+  }
+
   // Checking hierarchy:
   const targetParentId =
     parentId !== undefined

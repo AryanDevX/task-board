@@ -333,12 +333,19 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
             className={styles.input}
             value={form.issueType}
             onChange={(e) => handleChange("issueType", e.target.value)}
+            disabled={isEditing && task?.issueType === IssueType.STORY}
           >
-            {Object.values(IssueType).map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
+            {Object.values(IssueType).map((type) => {
+              if (isEditing && task) {
+                if (task.issueType === IssueType.STORY && type !== IssueType.STORY) return null;
+                if (task.issueType !== IssueType.STORY && type === IssueType.STORY) return null;
+              }
+              return (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              );
+            })}
           </select>
         </div>
 
