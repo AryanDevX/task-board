@@ -59,13 +59,13 @@ export const WorkflowSettingsModal = ({ projectId, boardId, columns, transitions
 
   return (
     <div className={sharedStyles.modalOverlay} onClick={onClose}>
-      <div className={sharedStyles.modalCard} onClick={e => e.stopPropagation()} style={{ maxWidth: '500px', width: '100%' }}>
+      <div className={`${sharedStyles.modalCard} ${styles.workflowModal}`} onClick={e => e.stopPropagation()}>
         <div className={sharedStyles.modalHeader}>
           <h3>Workflow Transitions</h3>
           <button className={sharedStyles.closeButton} type="button" onClick={onClose}>×</button>
         </div>
         
-        <div style={{ marginTop: '1rem' }}>
+        <div className={styles.workflowBody}>
           <p className={sharedStyles.formHint}>Define allowed task movements between columns.</p>
           
           <ul className={styles.transitionList}>
@@ -79,15 +79,15 @@ export const WorkflowSettingsModal = ({ projectId, boardId, columns, transitions
           </ul>
 
           <div className={styles.transitionComposer}>
-            <div className={sharedStyles.inputGroup} style={{ flex: 1 }}>
+            <div className={`${sharedStyles.inputGroup} ${styles.transitionField}`}>
               <label>From</label>
               <select value={fromCol} onChange={e => setFromCol(e.target.value)}>{columns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
             </div>
-            <div className={sharedStyles.inputGroup} style={{ flex: 1 }}>
+            <div className={`${sharedStyles.inputGroup} ${styles.transitionField}`}>
               <label>To</label>
               <select value={toCol} onChange={e => setToCol(e.target.value)}>{columns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
             </div>
-            <button onClick={handleAdd} disabled={isSubmitting} className={sharedStyles.primaryButton} style={{ padding: '0.8rem 1rem' }}>
+            <button onClick={handleAdd} disabled={isSubmitting} className={`${sharedStyles.primaryButton} ${styles.transitionSubmitButton}`}>
               {isSubmitting ? '...' : 'Add'}
             </button>
           </div>

@@ -10,10 +10,12 @@ interface EditColumnModalProps {
   onSuccess: (updatedColumn: Column) => void;
 }
 
+type ColumnWithStatus = Column & { status?: string };
+
 export const EditColumnModal = ({ column, onClose, onSuccess }: EditColumnModalProps) => {
   const { projectId, boardId } = useParams<{ projectId: string; boardId: string }>();
   const [title, setTitle] = useState(column.title);
-  const [status, setStatus] = useState<string>((column as any).status || 'TODO');
+  const [status, setStatus] = useState<string>((column as ColumnWithStatus).status || 'TODO');
   const [wipLimit, setWipLimit] = useState<string>(column.wipLimit ? String(column.wipLimit) : '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

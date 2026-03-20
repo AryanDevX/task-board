@@ -124,14 +124,13 @@ export const Dashboard = () => {
           </div>
           
         )}
-        <div className={styles.actions}>
+          <div className={styles.actions}>
             <button
-            className={styles.newProjectBtn}
-            onClick={() => setShowArchived(!showArchived)}
-            style={{ backgroundColor: showArchived ? '#6b7280' : undefined }}
-          >
-            {showArchived ? 'Active Projects' : 'Archived Projects'}
-          </button>
+              className={`${styles.newProjectBtn} ${showArchived ? styles.archiveToggleActive : ""}`}
+              onClick={() => setShowArchived(!showArchived)}
+            >
+              {showArchived ? 'Active Projects' : 'Archived Projects'}
+            </button>
           <NotificationCenter />
           <button className={styles.logoutBtn} onClick={handleLogout}>
             Log out

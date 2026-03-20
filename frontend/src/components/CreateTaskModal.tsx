@@ -5,7 +5,7 @@ import { projectApi } from "../api/project.api";
 import { IssueType, Priority, type ProjectMember } from "../types/models";
 import type { CommentWithAuthor, TaskDTO, TimelineEntry, UpdateTaskDTO } from "../types/dtos";
 import { useParams } from "react-router-dom";
-import { type Task , type User} from "../types/models";
+import { type Task, type User } from "../types/models";
 import { useAuth } from "../context/AuthContext";
 import styles from "../styles/index.module.css";
 
@@ -19,20 +19,17 @@ interface Props {
 }
 
 export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, task }: Props) => {
-
   const { projectId, boardId } = useParams<{ projectId: string; boardId: string }>();
   const isEditing = Boolean(task);
-
   const { user } = useAuth();
 
-  //Managing members
+  // Managing members
   const membersPerPage = 10;
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [isMembersLoading, setIsMembersLoading] = useState(true);
-  const [membersError, setMembersError] = useState<string | null>(null);
   const [membersPage, setMembersPage] = useState(1);
 
-  //comments and timeline (only when edit)
+  // Comments and timeline
   const [comments, setComments] = useState<CommentWithAuthor[]>([]);
   const [commentInput, setCommentInput] = useState("");
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
@@ -40,11 +37,11 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
   const [isTimelineLoading, setIsTimelineLoading] = useState(false);
   const [timelineError, setTimelineError] = useState<string | null>(null);
 
-  //edit and delete:
+  // Edit and delete comments
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editCommentContent, setEditCommentContent] = useState("");
 
-  //main form
+  // Main form
   const [form, setForm] = useState({
     title: task?.title ?? "",
     description: task?.description ?? "",
@@ -55,27 +52,24 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
     dueDate: task?.dueDate ? task.dueDate.slice(0, 10) : "",
   });
 
-  //fetching project members for assignee.
+  // Fetching project members for assignee
   useEffect(() => {
     if (!projectId) return;
     const loadMembers = async () => {
       try {
         setIsMembersLoading(true);
-        setMembersError(null);
         const response = await projectApi.getMembers(projectId);
         setMembers(response.members);
       } catch (err) {
         console.error("Failed to load project members:", err);
-        setMembersError("Failed to load project users.");
       } finally {
         setIsMembersLoading(false);
       }
     };
-
     void loadMembers();
   }, [projectId]);
 
-  //setting the correct task details as task change.
+  // Setting the correct task details as task change
   useEffect(() => {
     setForm({
       title: task?.title ?? "",
@@ -88,9 +82,8 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
     });
   }, [task]);
 
-  //fetching task comments and activity timeline (during update).
+  // Fetching task comments and activity timeline
   useEffect(() => {
-    //if creating a new task then clear old things.
     if (!task || !projectId || !boardId) {
       setComments([]);
       setCommentInput("");
@@ -105,14 +98,8 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
       try {
         setIsTimelineLoading(true);
         setTimelineError(null);
-        //fetching both task details and comments.
         const [taskDetails, taskComments] = await Promise.all([
-          taskApi.getTask(
-            projectId,
-            boardId,
-            columnId,
-            String(task.id),
-          ),
+          taskApi.getTask(projectId, boardId, columnId, String(task.id)),
           commentApi.getCommentsByTask(String(task.id), projectId),
         ]);
         setComments(taskComments);
@@ -124,22 +111,15 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
         setIsTimelineLoading(false);
       }
     };
-
     void loadTaskDetails();
   }, [task, projectId, boardId, columnId]);
 
-  //refetching if new comment added:
+  //fetching activity and comments any change in comment.
   const refreshTaskActivity = async () => {
     if (!task || !projectId || !boardId) return;
-
     try {
       const [taskDetails, taskComments] = await Promise.all([
-        taskApi.getTask(
-          projectId,
-          boardId,
-          columnId,
-          String(task.id),
-        ),
+        taskApi.getTask(projectId, boardId, columnId, String(task.id)),
         commentApi.getCommentsByTask(String(task.id), projectId),
       ]);
       setComments(taskComments);
@@ -153,11 +133,62 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  //Rich text helpers:
+
+  //Remove this:
   const stripHtml = (value: string) => {
     const doc = new DOMParser().parseFromString(value, "text/html");
     return doc.body.textContent?.trim() ?? "";
   };
 
+  const isCommentEmpty = (html: string) => {
+    return html.replace(/<[^>]*>?/gm, '').trim().length === 0;
+  };
+
+  // Expanded Native HTML tag injector
+  const applyFormatting = (
+    tag: string, 
+    elementId: string, //tag specific id
+    currentValue: string, 
+    setValue: (val: string) => void //react state update func. To save new text
+  ) => {
+    const textarea = document.getElementById(elementId) as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = currentValue.substring(start, end);
+    let newText = "";
+    if(tag === 'a'){
+      //Asking link from the user:
+      const url = prompt("Enter the link URL (e.g., https://google.com):", "https://");
+      if (!url) return; 
+      newText = 
+        currentValue.substring(0, start) + 
+        `<a href="${url}" target="_blank" rel="noopener noreferrer">${selectedText || 'link'}</a>` + 
+        currentValue.substring(end);
+    } 
+    else if(tag === 'ul' || tag === 'ol'){
+      const listItems = selectedText 
+        ? selectedText.split('\n').map(line => `<li>${line}</li>`).join('\n') 
+        : '<li>List item</li>';
+      newText = 
+        currentValue.substring(0, start) + 
+        `\n<${tag}>\n${listItems}\n</${tag}>\n` + 
+        currentValue.substring(end);
+    } else {
+      // For b, i, u, s, code, blockquote
+      newText = 
+        currentValue.substring(0, start) + 
+        `<${tag}>${selectedText}</${tag}>` + 
+        currentValue.substring(end);
+    }
+
+    setValue(newText);
+    setTimeout(() => textarea.focus(), 0);
+  };
+
+  //making prety for user:
   const formatTimelineEvent = (entry: TimelineEntry) => {
     switch (entry.field) {
       case "TASK_CREATED": return "created this task.";
@@ -172,7 +203,7 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
   };
 
   const handleAddComment = async () => {
-    if (!task || !projectId || !commentInput.trim()) return;
+    if (!task || !projectId || isCommentEmpty(commentInput)) return;
     try {
       setIsCommentSubmitting(true);
       const createdComment = await commentApi.createComment(String(task.id), projectId, {
@@ -181,16 +212,17 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
       setCommentInput("");
       setComments((prev) => [createdComment, ...prev]);
       await refreshTaskActivity();
-    } catch (err) {
+    } 
+    catch(err){
       console.error("Failed to add comment:", err);
-    } finally {
+    }
+    finally{
       setIsCommentSubmitting(false);
     }
   };
 
-  //handles for edit and delete:
   const handleEditSubmit = async (commentId: string) => {
-    if (!editCommentContent.trim() || !projectId || !task) return;
+    if (isCommentEmpty(editCommentContent) || !projectId || !task) return;
     try {
       await commentApi.updateComment(commentId, projectId, String(task.id), { 
         content: editCommentContent.trim() 
@@ -207,7 +239,6 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
     if (!projectId || !task) return;
     if (!window.confirm("Are you sure you want to delete this comment?")) return;
     try {
-      // deleteComment params: commentId, taskId, projectId
       await commentApi.deleteComment(commentId, String(task.id), projectId);
       setComments((prev) => prev.filter(c => String(c.id) !== commentId));
       await refreshTaskActivity();
@@ -217,15 +248,17 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
     }
   };
 
+  //pages calculation and showing limited members per page so assignee selection:
   const totalMemberPages = Math.max(1, Math.ceil(members.length / membersPerPage));
   const pageStart = (membersPage - 1) * membersPerPage;
   const pagedMembers = members.slice(pageStart, pageStart + membersPerPage);
   const selectedMember = members.find((member) => String(member.userId) === form.assigneeId);
-
+  //keep the previosly 
   const visibleMembers = selectedMember && !pagedMembers.some((member) => member.userId === selectedMember.userId)
       ? [selectedMember, ...pagedMembers]
       : pagedMembers;
 
+  
   const handleSubmit = async () => {
     if (!form.title.trim()) {
       alert("Title is required");
@@ -269,6 +302,7 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
       <h3 className={styles.cardTitle}>{isEditing ? "Update Task" : "Create Task"}</h3>
 
       <div className={styles.form}>
+        {/* --- STANDARD TASK FIELDS --- */}
         <div className={styles.fieldGroup}>
           <label htmlFor="task-title">Title</label>
           <input
@@ -343,16 +377,17 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
                 ))}
               </select>
               
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>
+              {/* Pagination controls for members list */}
+              <div className={styles.paginationControls}>
+                <p className={styles.paginationText}>
                   {members.length === 0
                     ? "No project users available."
                     : `Showing ${Math.min(pageStart + 1, members.length)}-${Math.min(pageStart + membersPerPage, members.length)} of ${members.length} project users`}
                 </p>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div className={styles.paginationButtons}>
                   <button
                     type="button"
-                    style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
+                    className={styles.tinyButton}
                     onClick={() => setMembersPage((page) => Math.max(1, page - 1))}
                     disabled={membersPage === 1 || isMembersLoading}
                   >
@@ -360,7 +395,7 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
                   </button>
                   <button
                     type="button"
-                    style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
+                    className={styles.tinyButton}
                     onClick={() => setMembersPage((page) => Math.min(totalMemberPages, page + 1))}
                     disabled={membersPage === totalMemberPages || isMembersLoading}
                   >
@@ -368,11 +403,6 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
                   </button>
                 </div>
               </div>
-              <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                {isMembersLoading
-                  ? "Loading project users..."
-                  : membersError || "Only users already added to this project can be assigned."}
-              </p>
             </div>
 
             <div className={styles.fieldGroup}>
@@ -412,25 +442,40 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
           </button>
         </div>
 
+        {/* --- COMMENTS & TIMELINE SECTION --- */}
         {isEditing && (
           <section className={styles.timelineSection}>
             <h4 className={styles.timelineTitle}>Comments</h4>
+            
+            {/* CREATE NEW COMMENT COMPOSER */}
             <div className={styles.commentComposer}>
+              
+              {/* functionalities added for rich text support */}
+              <div className={styles.richTextToolbar}>
+                <button type="button" className={`${styles.richTextButton} ${styles.boldButton}`} onClick={() => applyFormatting('b', 'create-comment-textarea', commentInput, setCommentInput)}>B</button>
+                <button type="button" className={`${styles.richTextButton} ${styles.italicButton}`} onClick={() => applyFormatting('i', 'create-comment-textarea', commentInput, setCommentInput)}>I</button>
+                <button type="button" className={`${styles.richTextButton} ${styles.underlineButton}`} onClick={() => applyFormatting('u', 'create-comment-textarea', commentInput, setCommentInput)}>U</button>
+                <button type="button" className={`${styles.richTextButton} ${styles.strikethroughButton}`} onClick={() => applyFormatting('s', 'create-comment-textarea', commentInput, setCommentInput)}>S</button>
+                <button type="button" className={`${styles.richTextButton} ${styles.codeButton}`} onClick={() => applyFormatting('code', 'create-comment-textarea', commentInput, setCommentInput)}>&lt;/&gt;</button>
+                <button type="button" className={styles.richTextButton} onClick={() => applyFormatting('blockquote', 'create-comment-textarea', commentInput, setCommentInput)}>&quot;</button>
+                <button type="button" className={styles.richTextButton} onClick={() => applyFormatting('ul', 'create-comment-textarea', commentInput, setCommentInput)}>• List</button>
+                <button type="button" className={styles.richTextButton} onClick={() => applyFormatting('a', 'create-comment-textarea', commentInput, setCommentInput)}>🔗 Link</button>
+              </div>
+              
               <textarea
+                id="create-comment-textarea"
                 className={`${styles.input} ${styles.textarea}`}
-                placeholder="Add a comment..."
+                placeholder="Add a comment... (Use toolbar to format)"
                 value={commentInput}
                 onChange={(e) => setCommentInput(e.target.value)}
+                rows={3}
               />
               <div className={styles.commentComposerActions}>
-                <span className={styles.helperText}>
-                  {commentInput.trim().length} characters
-                </span>
                 <button
                   className={styles.primaryButton}
                   type="button"
                   onClick={handleAddComment}
-                  disabled={isCommentSubmitting || !commentInput.trim()}
+                  disabled={isCommentSubmitting || isCommentEmpty(commentInput)}
                 >
                   {isCommentSubmitting ? "Posting..." : "Add Comment"}
                 </button>
@@ -442,8 +487,7 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
             ) : (
               <div className={styles.timelineList}>
                 {comments.map((comment) => {
-                  //Is user comment:
-                  const isMyComment = user && (String(user.id) === String(comment.author.id) || String((user as User ).id) === String(comment.author.id));
+                  const isMyComment = user && (String(user.id) === String(comment.author.id) || String((user as User).id) === String(comment.author.id));
 
                   return (
                     <article key={comment.id} className={styles.timelineItem}>
@@ -457,13 +501,36 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
                       {/* --- EDIT COMMENT RENDER --- */}
                       {editingCommentId === String(comment.id) ? (
                         <div className={styles.commentComposer}>
+                          
+                          {/* Expanded rich text toolbar for editing comments */}
+                          <div className={styles.richTextToolbar}>
+                            {/* Bold button - demonstrates bold formatting */}
+                            <button type="button" className={`${styles.richTextButton} ${styles.boldButton}`} onClick={() => applyFormatting('b', 'edit-comment-textarea', editCommentContent, setEditCommentContent)}>B</button>
+                            {/* Italic button - demonstrates italic formatting */}
+                            <button type="button" className={`${styles.richTextButton} ${styles.italicButton}`} onClick={() => applyFormatting('i', 'edit-comment-textarea', editCommentContent, setEditCommentContent)}>I</button>
+                            {/* Underline button - demonstrates underline formatting */}
+                            <button type="button" className={`${styles.richTextButton} ${styles.underlineButton}`} onClick={() => applyFormatting('u', 'edit-comment-textarea', editCommentContent, setEditCommentContent)}>U</button>
+                            {/* Strikethrough button - demonstrates strikethrough formatting */}
+                            <button type="button" className={`${styles.richTextButton} ${styles.strikethroughButton}`} onClick={() => applyFormatting('s', 'edit-comment-textarea', editCommentContent, setEditCommentContent)}>S</button>
+                            {/* Code button - demonstrates code/monospace formatting */}
+                            <button type="button" className={`${styles.richTextButton} ${styles.codeButton}`} onClick={() => applyFormatting('code', 'edit-comment-textarea', editCommentContent, setEditCommentContent)}>&lt;/&gt;</button>
+                            {/* Blockquote button */}
+                            <button type="button" className={styles.richTextButton} onClick={() => applyFormatting('blockquote', 'edit-comment-textarea', editCommentContent, setEditCommentContent)}>&quot;</button>
+                            {/* List button */}
+                            <button type="button" className={styles.richTextButton} onClick={() => applyFormatting('ul', 'edit-comment-textarea', editCommentContent, setEditCommentContent)}>• List</button>
+                            {/* Link button */}
+                            <button type="button" className={styles.richTextButton} onClick={() => applyFormatting('a', 'edit-comment-textarea', editCommentContent, setEditCommentContent)}>🔗 Link</button>
+                          </div>
+                          
                           <textarea
+                            id="edit-comment-textarea"
                             className={`${styles.input} ${styles.textarea}`}
                             value={editCommentContent}
                             onChange={(e) => setEditCommentContent(e.target.value)}
                             rows={3}
                           />
-                          <div className={styles.buttonRow} style={{ marginTop: "8px", justifyContent: "flex-start" }}>
+                          {/* Action buttons for saving or canceling comment edit */}
+                          <div className={`${styles.buttonRow} ${styles.editActionRow}`}>
                             <button 
                               className={styles.primaryButton}
                               type="button"
@@ -482,27 +549,28 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
                         </div>
                       ) : (
                         <>
-                          <p className={styles.timelineComment}>
-                            {stripHtml(comment.content) || "Comment content unavailable."}
-                          </p>
+                          {/* RENDER THE ACTUAL HTML SAFELY */}
+                          <div 
+                            className={styles.timelineComment}
+                            dangerouslySetInnerHTML={{ __html: comment.content }}
+                          />
                           
-                          {/* Show Edit/Delete ONLY if the current user wrote it */}
+                          {/* Edit and delete buttons for user's own comments */}
                           {isMyComment && (
-                            <div className={styles.buttonRow} style={{ marginTop: '8px', gap: '8px', justifyContent: 'flex-start' }}>
+                            <div className={`${styles.buttonRow} ${styles.editActionRow}`}>
                               <button
                                 type="button"
                                 className={styles.smallButton}
                                 onClick={() => {
                                   setEditingCommentId(String(comment.id));
-                                  setEditCommentContent(stripHtml(comment.content));
+                                  setEditCommentContent(comment.content); // Use actual content for editing
                                 }}
                               >
                                 Edit
                               </button>
                               <button
                                 type="button"
-                                className={styles.smallButton}
-                                style={{ color: '#dc2626', borderColor: '#fca5a5', backgroundColor: 'transparent' }}
+                                className={`${styles.smallButton} ${styles.deleteActionButton}`}
                                 onClick={() => handleDeleteComment(String(comment.id))}
                               >
                                 Delete
@@ -536,6 +604,7 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
                     </div>
                     {entry.type === "comment" ? (
                       <p className={styles.timelineComment}>
+                        {/* STRIP HTML FOR THE PREVIEW TIMELINE */}
                         {stripHtml(entry.content ?? "") || "Comment content unavailable."}
                       </p>
                     ) : (

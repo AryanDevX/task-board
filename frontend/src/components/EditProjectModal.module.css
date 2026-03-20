@@ -17,10 +17,10 @@
 
 .addBtn {
   padding: 0 1.25rem;
-  background-color: #10b981;
+  background-color: #4f46e5;
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.95rem;
@@ -28,7 +28,7 @@
 }
 
 .addBtn:hover { 
-  background-color: #059669; 
+  background-color: #4338ca; 
 }
 
 .memberList {
@@ -56,7 +56,9 @@
   padding: 0.35rem 0.5rem;
   font-size: 0.85rem;
   width: auto;
-  background-color: #f9fafb;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
 }
 
 .removeBtn {

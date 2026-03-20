@@ -2,24 +2,37 @@ import { useEffect, useState } from "react";
 import { type Column as ColumnType, type Task } from "../types/models";
 import { CreateTaskModal } from "../components/CreateTaskModal";
 import { EditColumnModal } from "../components/EditColumnModal";
-import styles from "./ProjectBoard.module.css";
+import pageStyles from "./ProjectBoard.module.css";
+import styles from "./Column.module.css";
 import modalStyles from "../styles/index.module.css";
+
+type ColumnWithStatus = ColumnType & { status?: string };
 
 interface Props {
   column: ColumnType;
-  tasks:Task[];
-  allTasks: Task[];
-  onTaskCreated:(task:Task )=>void;
+  tasks: Task[];
+  allTasks: Task[]; // Added from his version to track parent/child relationships
+  onTaskCreated: (task: Task) => void;
   onTaskUpdated: (task: Task) => void;
-  onTaskMove:(taskId:string , sourceColumnId:string , targetColumnId:string , newOrder:number)=>void;
-  onTaskDelete:(taskId:string )=>void;
-  onColumnDelete:(columnId:string)=>void;
-  onColumnMove?:(columnId:string, newOrder:number)=>void;
+  onTaskMove: (taskId: string, sourceColumnId: string, targetColumnId: string, newOrder: number) => void;
+  onTaskDelete: (taskId: string) => void;
+  onColumnDelete: (columnId: string) => void;
+  onColumnMove?: (columnId: string, newOrder: number) => void;
   onColumnUpdate: (column: ColumnType) => void;
 }
 
-
-export default function Column({ column,tasks,allTasks,onTaskCreated , onTaskUpdated,onTaskMove, onTaskDelete, onColumnDelete, onColumnMove, onColumnUpdate}: Props) {
+export default function Column({ 
+  column, 
+  tasks, 
+  allTasks,
+  onTaskCreated, 
+  onTaskUpdated,
+  onTaskMove, 
+  onTaskDelete, 
+  onColumnDelete, 
+  onColumnMove, 
+  onColumnUpdate 
+}: Props) {
 
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -36,7 +49,8 @@ export default function Column({ column,tasks,allTasks,onTaskCreated , onTaskUpd
     };
   }, [selectedTask]);
 
-  const handleDrop = (e: React.DragEvent<HTMLElement>, targetTask?: Task, isBelow?: boolean) => {    e.preventDefault();
+  const handleDrop = (e: React.DragEvent<HTMLElement>, targetTask?: Task, isBelow?: boolean) => {    
+    e.preventDefault();
     e.stopPropagation();
     const dataStr = e.dataTransfer.getData("text/plain");
     if (!dataStr) return;
@@ -73,6 +87,12 @@ export default function Column({ column,tasks,allTasks,onTaskCreated , onTaskUpd
     onTaskMove(String(taskId), String(sourceColumnId), targetColumnId, Math.max(0, newOrder));
   };
 
+  // Helper to safely strip HTML tags for the task card preview (Your version)
+  const stripHtml = (html: string) => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.body.textContent?.trim() ?? "";
+  };
+
   return (
     <div
       className={styles.columnContainer}
@@ -88,35 +108,21 @@ export default function Column({ column,tasks,allTasks,onTaskCreated , onTaskUpd
           <h3 className={styles.columnTitle}>{column.title}</h3>
           {column.wipLimit !== null && (
             <span
-              className={styles.wipBadge}
-              style={{ color: tasks.length > column.wipLimit ? "#dc2626" : undefined }}
+              className={`${styles.wipBadge} ${tasks.length > column.wipLimit ? styles.wipExceeded : ""}`}
             >
               WIP: {tasks.length} / {column.wipLimit}
             </span>
           )}
         </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button onClick={() => setShowEditModal(true)} style={{ cursor: "pointer", border: "none", background: "none", color: "#3b82f6", fontWeight: 600 }}>Edit</button>
-          <button 
-            onClick={() => onColumnDelete(String(column.id))} 
-            style={{
-              background: "transparent",
-              border: "none",
-              color: "#9ca3af",
-              cursor: "pointer",
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-              lineHeight: 1
-            }}
-            onMouseOver={(e) => e.currentTarget.style.color = "#ef4444"}
-            onMouseOut={(e) => e.currentTarget.style.color = "#9ca3af"}
-          >
-            ×
-          </button>
+        
+        {/* Using your clean CSS classes instead of his inline styles */}
+        <div className={styles.columnActions}>
+          <button className={styles.iconActionBtn} onClick={() => setShowEditModal(true)}>Edit</button>
+          <button className={`${styles.iconActionBtn} ${styles.deleteBtn}`} onClick={() => onColumnDelete(String(column.id))}>x</button>
         </div>
       </div>
 
-      <div 
+        <div 
         className={styles.taskList}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e)}
@@ -127,96 +133,99 @@ export default function Column({ column,tasks,allTasks,onTaskCreated , onTaskUpd
           </p>
         ) : (
           tasks.map((task) => (
-            <article key={task.id} 
-            className={styles.storyCard}
-             style={{ cursor: "grab", position: "relative", zIndex: 0 }} 
+            <article 
+              key={task.id} 
+              className={styles.taskCard}
               draggable
-                onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const isBelowMidpoint = e.clientY > rect.top + rect.height / 2;
-                    handleDrop(e, task, isBelowMidpoint);
-                  }}
-               onDragStart={(e) => {
-           if (task.issueType === 'STORY') {
-             e.preventDefault();
-             alert("Stories cannot be dragged directly. They automatically follow their sub-issues.");
-             return;
-           }
-             e.stopPropagation();
-             e.dataTransfer.setData("text/plain",
-                JSON.stringify({ type: 'task', taskId: task.id,  sourceColumnId: task.columnId, sourceOrder: task.order }) );}}>
-              <button onClick={()=>{
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const isBelowMidpoint = e.clientY > rect.top + rect.height / 2;
+                handleDrop(e, task, isBelowMidpoint);
+              }}
+              onDragStart={(e) => {
+                // MERGED: Prevent Stories from being dragged directly
                 if (task.issueType === 'STORY') {
-                  const hasChildren = allTasks.some(t => t.parentId === task.id);
-                  if (hasChildren) {
-                    alert("Cannot delete a story that has active sub-issues.");
-                    return;
-                  }
+                  e.preventDefault();
+                  alert("Stories cannot be dragged directly. They automatically follow their sub-issues.");
+                  return;
                 }
-                onTaskDelete(String(task.id));
+                e.stopPropagation();
+                e.dataTransfer.setData("text/plain",
+                  JSON.stringify({ type: 'task', taskId: task.id, sourceColumnId: task.columnId, sourceOrder: task.order })
+                );
               }}
-              style={{
-                position: "absolute",
-                top: "0.5rem",
-                right: "0.5rem",
-                background: "transparent",
-                border: "none",
-                color: "#9ca3af",
-                cursor: "pointer",
-                fontSize: "1.2rem",
-                fontWeight: "bold",
-                lineHeight: 1
-              }}
-              onMouseOver={(e) => e.currentTarget.style.color = "#ef4444"}
-              onMouseOut={(e) => e.currentTarget.style.color = "#9ca3af"}
+              onClick={() => setSelectedTask(task)} // Opening modal from your version
+            >
+              <button 
+                className={styles.taskDeleteBtn}
+                onClick={(e) => { 
+                  e.stopPropagation();
+                  // MERGED: Prevent deleting a Story if it has active sub-issues
+                  if (task.issueType === 'STORY') {
+                    const hasChildren = allTasks.some(t => t.parentId === task.id);
+                    if (hasChildren) {
+                      alert("Cannot delete a story that has active sub-issues.");
+                      return;
+                    }
+                  }
+                  onTaskDelete(String(task.id)); 
+                }}
               >
-                ×
+                x
               </button>
-              <div className={styles.storyMeta} style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                <span style={{ 
-                  textTransform: 'uppercase', 
-                  fontSize: '10px', 
-                  fontWeight: 800,
-                  color: task.priority === 'CRITICAL' ? '#ef4444' : '#6b7280'
-                }}>
+              
+              <div className={styles.taskMeta}>
+                <span className={task.priority === "CRITICAL" ? styles.priorityCritical : styles.priorityDefault}>
                   {task.priority}
                 </span>
+                
+                <span
+                  className={
+                    task.issueType === 'BUG'
+                      ? styles.issueTypeBug
+                      : task.issueType === 'STORY'
+                        ? styles.issueTypeStory
+                        : styles.issueTypeTask
+                  }
+                >
+                  {task.issueType}
+                </span>
               </div>
+              
               <h4 className={styles.taskTitle}>{task.title}</h4>
+              
               {task.description && (
                 <p className={styles.taskDescription}>
-                  {task.description}
+                  {/* Applied stripHtml to ensure clean text preview */}
+                  {stripHtml(task.description)}
                 </p>
               )}
-            {task.issueType === 'STORY' && (
-              <div style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "#6b7280", fontWeight: 600, display: "flex", gap: "0.5rem" }}>
-              <span style={{ background: "#e5e7eb", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>{allTasks.filter(t => t.parentId === task.id).length} Sub-issues</span>
-                <span style={{ background: "#dbeafe", color: "#1e40af", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>{(column as any).status || "TODO"}</span>
-              </div>
-            )}
-            {task.issueType !== 'STORY' && task.dueDate && (
-              <div style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "#9ca3af", fontWeight: 500 }}>
-                Due: {new Date(task.dueDate).toLocaleDateString()}
-              </div>
-            )}
-            <span style={{ 
-              position: "absolute",
-              bottom: "0.5rem",
-              right: "0.5rem",
-              textTransform: 'uppercase', 
-              fontSize: '10px', 
-              fontWeight: 800,
-              color: task.issueType === 'BUG' ? '#ef4444' : task.issueType === 'STORY' ? '#8b5cf6' : '#eab308'
-            }}>
-              {task.issueType}
-            </span>
+
+              {/* MERGED: Sub-issues tracker for Stories */}
+              {task.issueType === 'STORY' && (
+                <div className={styles.storyMeta}>
+                  <span className={styles.storyCountChip}>
+                    {allTasks.filter(t => t.parentId === task.id).length} Sub-issues
+                  </span>
+                  <span className={styles.storyStatusChip}>
+                    {(column as ColumnWithStatus).status || "TODO"}
+                  </span>
+                </div>
+              )}
+              
+              {/* MERGED: Due Date Display for Tasks and Bugs */}
+              {task.issueType !== 'STORY' && task.dueDate && (
+                <div className={styles.dueDate}>
+                  📅 Due: {new Date(task.dueDate).toLocaleDateString()}
+                </div>
+              )}
             </article>
           ))
         )}
       </div>
 
-      <div className={styles.addTaskWrapper}>
+      <div className={pageStyles.addTaskWrapper}>
         <button 
           className={`${modalStyles.secondaryButton} ${modalStyles.fullWidth}`}
           onClick={() => {
@@ -231,16 +240,18 @@ export default function Column({ column,tasks,allTasks,onTaskCreated , onTaskUpd
         </button>
       </div>
 
+      {/* CREATE MODAL */}
       {showModal && (
         <CreateTaskModal
           order={tasks.length}
           columnId={String(column.id)}
-          stories={allTasks.filter((t) => t.issueType === 'STORY')}
+          stories={allTasks.filter((t) => t.issueType === 'STORY')} // MERGED: Pass only Stories here
           onClose={() => setShowModal(false)}
           onSuccess={onTaskCreated}
         />
       )}
 
+      {/* EDIT COLUMN MODAL */}
       {showEditModal && (
         <EditColumnModal
           column={column}
@@ -249,6 +260,7 @@ export default function Column({ column,tasks,allTasks,onTaskCreated , onTaskUpd
         />
       )}
 
+      {/* TASK DETAILS MODAL */}
       {selectedTask && (
         <div className={modalStyles.modalOverlay} onClick={() => setSelectedTask(null)}>
           <div className={modalStyles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -256,7 +268,7 @@ export default function Column({ column,tasks,allTasks,onTaskCreated , onTaskUpd
               order={selectedTask.order}
               columnId={String(column.id)}
               task={selectedTask}
-              stories={[]} 
+              stories={allTasks.filter((t) => t.issueType === 'STORY')} // MERGED: Ensure stories list is passed during update too
               onClose={() => setSelectedTask(null)}
               onSuccess={(updatedTask) => {
                 onTaskUpdated(updatedTask);

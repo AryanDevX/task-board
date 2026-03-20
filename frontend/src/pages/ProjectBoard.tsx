@@ -77,8 +77,7 @@ export const ProjectBoard = () => {
             {boards.map((board) => (
               <article
                 key={board.id}
-                className={styles.boardCard}
-                style={{ cursor: "pointer" }}
+                className={`${styles.boardCard} ${styles.clickableCard}`}
                 onClick={() => navigate(`/project/${projectId}/boards/${board.id}`)}
               >
                 <div className={styles.boardCardHeader}>

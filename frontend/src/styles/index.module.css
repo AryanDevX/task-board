@@ -77,14 +77,14 @@
 .surfaceCard {
   background-color: #ffffff;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
 }
 
 .authCard,
 .modalCard {
   width: min(100%, 460px);
   padding: 2rem;
-  border-radius: 12px;
+  border-radius: 16px;
 }
 
 .modalCard {
@@ -93,8 +93,8 @@
 }
 
 .surfaceCard {
-  padding: 1rem;
-  border-radius: 10px;
+  padding: 1.25rem;
+  border-radius: 16px;
 }
 
 .modalOverlay {
@@ -106,8 +106,8 @@
   justify-content: center;
   padding: 1rem;
   overflow-y: auto;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(2px);
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(6px);
 }
 
 .modalContent {
@@ -179,7 +179,7 @@
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 10px;
   box-sizing: border-box;
   background-color: #ffffff;
   color: #111827;
@@ -215,7 +215,7 @@
 .primaryButton,
 .secondaryButton {
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   padding: 0.875rem 1rem;
   font-size: 1rem;
   font-weight: 600;
@@ -235,13 +235,13 @@
 }
 
 .secondaryButton {
-  background-color: #f3f4f6;
+  background-color: #ffffff;
   color: #374151;
   border: 1px solid #d1d5db;
 }
 
 .secondaryButton:hover:not(:disabled) {
-  background-color: #e5e7eb;
+  background-color: #f8fafc;
 }
 
 .primaryButton:disabled,
@@ -356,12 +356,116 @@
 .smallButton {
   padding: 0.5rem 0.75rem;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 10px;
   background-color: #ffffff;
   color: #374151;
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.paginationText {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.paginationButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tinyButton {
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tinyButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.richTextToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.richTextButton {
+  min-width: 2.5rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.richTextButton:hover,
+.tinyButton:hover:not(:disabled),
+.smallButton:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #9ca3af;
+}
+
+.boldButton {
+  font-weight: 800;
+}
+
+.italicButton {
+  font-style: italic;
+}
+
+.underlineButton {
+  text-decoration: underline;
+}
+
+.strikethroughButton {
+  text-decoration: line-through;
+}
+
+.codeButton {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.editActionRow {
+  margin-top: 0.75rem;
+}
+
+.deleteActionButton {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fff5f5;
+}
+
+.deleteActionButton:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #fca5a5;
 }
 
 .smallButton:disabled {
@@ -400,5 +504,19 @@
 
   .buttonRow {
     flex-direction: column;
+  }
+
+  .paginationControls,
+  .commentComposerActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .paginationButtons {
+    width: 100%;
+  }
+
+  .tinyButton {
+    flex: 1;
   }
 }
