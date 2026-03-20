@@ -17,7 +17,6 @@ export const CreateColumnModal = ({projectId, nextOrder = 0, onClose, onSuccess 
   const { boardId } = useParams<{ boardId: string  }>();
   const [title, setTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [order, setOrder]= useState(String(nextOrder));
   const [wipLimit, setWipLimit]= useState<string>();
   const [error, setError] = useState<string | null>(null);
 
@@ -27,7 +26,7 @@ export const CreateColumnModal = ({projectId, nextOrder = 0, onClose, onSuccess 
 
     const data = {
       title: title.trim(), 
-      order: order !== '' ? Number(order) : nextOrder,
+      order: nextOrder,
       wipLimit: wipLimit ? Number(wipLimit) : undefined
     } as CreateColumnDTO;
 
@@ -70,18 +69,6 @@ export const CreateColumnModal = ({projectId, nextOrder = 0, onClose, onSuccess 
       onChange={(e) => setTitle(e.target.value)}
       placeholder="e.g. Done"
       required
-    />
-  </div>
-
-  {/* Order - Number Input */}
-  <div>
-    <label htmlFor="order">Display Order</label>
-    <input
-      id="order"
-      type="number"
-      min="0"
-      value={order}
-      onChange={(e) => setOrder(e.target.value)}
     />
   </div>
 

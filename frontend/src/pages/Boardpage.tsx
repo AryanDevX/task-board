@@ -5,8 +5,10 @@ import { type Column as Columntype } from "../types/models";
 import Column from "./Column";
 import styles from "./ProjectBoard.module.css"; 
 import { CreateColumnModal } from "../components/CreateColumnModal";
-import type {  Task } from "../types/models";
+import type {  Task, WorkflowTransition } from "../types/models";
 import { taskApi } from "../api/tasks.api";
+import { apiFetch } from "../api/client";
+import { WorkflowSettingsModal } from "../components/WorkflowSettingsModal";
 
 export const BoardPage = () => {
   const navigate = useNavigate();
@@ -14,7 +16,9 @@ export const BoardPage = () => {
   const [addModal ,SetAddModal]= useState(false);
    const [tasks, setTasks] = useState<Task[]>([]);
   const [columns, setColumns] = useState<Columntype[]>([]);
+  const [transitions, setTransitions] = useState<WorkflowTransition[]>([]);
   const [loading, setLoading] = useState(false);
+  const [workflowModalOpen, setWorkflowModalOpen] = useState(false);
 
   const handleColumnCreator= (col:Columntype)=>{
     setColumns((prev)=>[...prev,col]);
@@ -23,10 +27,25 @@ export const BoardPage = () => {
 
   const handleTaskCreator= (task:Task)=>{
     setTasks(prev=>[...prev, task]);
-
   }
 
+  const handleColumnUpdate = (updatedCol: Columntype) => {
+    setColumns(prev => prev.map(c => c.id === updatedCol.id ? updatedCol : c));
+  };
+
 const handleTaskMove = async (taskId: string, sourceColumnId: string, targetColumnId: string, newOrder: number) => {
+  
+  // Prevent invalid status transitions according to the board's workflow
+  if (sourceColumnId !== targetColumnId) {
+    const isValidTransition = transitions.some(
+      (t) => String(t.fromColumnId) === sourceColumnId && String(t.toColumnId) === targetColumnId
+    );
+    if (!isValidTransition) {
+      alert("Invalid workflow transition. Moving to this column is not permitted.");
+      return;
+    }
+  }
+
   const targetCol = columns.find(col => String(col.id) === targetColumnId);
   const targetColTasks = tasks.filter(t => String(t.columnId) === targetColumnId);
 
@@ -40,18 +59,37 @@ const handleTaskMove = async (taskId: string, sourceColumnId: string, targetColu
     return;
   }
 
-  // Optimistic UI Update (updates local state instantly)
+  //  UI Update (updates local state instantly)
   setTasks(prev => {
-    const updated = prev.map(task => 
-      String(task.id) === taskId 
-        ? { ...task, columnId: Number(targetColumnId), order: newOrder } 
-        : task
-    );
-    return updated.sort((a, b) => a.order - b.order);
+    const taskToMove = prev.find(t => String(t.id) === taskId);
+    if (!taskToMove) return prev;
+
+    const otherTasks = prev.filter(t => String(t.id) !== taskId);
+    const modifiedTask = { ...taskToMove, columnId: Number(targetColumnId) };
+
+    const targetColTasks = otherTasks
+      .filter(t => String(t.columnId) === targetColumnId)
+      .sort((a, b) => a.order - b.order);
+
+    // Insert the dragged task into the calculated visual index
+    targetColTasks.splice(newOrder, 0, modifiedTask);
+    const finalizedTarget = targetColTasks.map((t, idx) => ({ ...t, order: idx }));
+    const nonTargetTasks = otherTasks.filter(t => String(t.columnId) !== targetColumnId);
+
+    if (sourceColumnId !== targetColumnId) {
+      const sourceColTasks = nonTargetTasks
+        .filter(t => String(t.columnId) === sourceColumnId)
+        .sort((a, b) => a.order - b.order)
+        .map((t, idx) => ({ ...t, order: idx })); // Resequence source column
+      const rest = nonTargetTasks.filter(t => String(t.columnId) !== sourceColumnId);
+      return [...rest, ...sourceColTasks, ...finalizedTarget];
+    }
+
+    return [...nonTargetTasks, ...finalizedTarget];
   });
 
   try {
-    // Sync with backend (Ensure this matches your actual taskApi parameter signature)
+    // Sync with backend
     await taskApi.moveTask(
       projectId!, 
       boardId!, 
@@ -62,7 +100,35 @@ const handleTaskMove = async (taskId: string, sourceColumnId: string, targetColu
     );
   } catch (error) {
     console.error("Failed to move task:", error);
-    // Optionally: Re-fetch tasks here to revert state if the API fails
+  }
+};
+
+const handleColumnMove = async (columnId: string, newOrder: number) => {
+  const draggedCol = columns.find(c => String(c.id) === columnId);
+  if (!draggedCol || draggedCol.order === newOrder) return;
+
+  setColumns(prev => {
+    const sorted = [...prev].sort((a, b) => a.order - b.order);
+    const oldIndex = sorted.findIndex(c => String(c.id) === columnId);
+    if (oldIndex === -1) return prev;
+    
+    let targetIndex = sorted.findIndex(c => c.order === newOrder);
+    
+    const [removed] = sorted.splice(oldIndex, 1);
+    if (targetIndex === -1) targetIndex = sorted.length; // If dropped at the far end
+    
+    sorted.splice(targetIndex, 0, removed);
+    return sorted.map((c, i) => ({ ...c, order: i })); // Reset indices sequentially
+  });
+
+  try {
+    await apiFetch(`/projects/${projectId}/boards/${boardId}/columns/${columnId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ order: newOrder })
+    });
+  } catch (error) {
+    console.error("Failed to move column:", error);
   }
 };
 
@@ -80,6 +146,9 @@ const handleTaskMove = async (taskId: string, sourceColumnId: string, targetColu
     const results = await Promise.all(taskPromises);
     const allTasks = results.flat(); 
     setTasks(allTasks);
+    
+    const transData = await apiFetch<WorkflowTransition[]>(`/projects/${projectId}/boards/${boardId}/workflows`);
+    setTransitions(transData);
       } catch (err) {
         console.error(err);
       } finally {
@@ -109,6 +178,9 @@ const handleColumnDelete = async (columnId: string) => {
     await columnApi.deleteColumn(projectId!, boardId!, columnId);
 
     setColumns((prev) => prev.filter((c) => String(c.id) !== columnId));
+    setTransitions((prev) => 
+      prev.filter((t) => String(t.fromColumnId) !== columnId && String(t.toColumnId) !== columnId)
+    );
   } catch (err) {
     console.error(err);
   }
@@ -128,7 +200,12 @@ const handleColumnDelete = async (columnId: string) => {
         </button>
         
         <div className={styles.headerActions}>
-           <button className={styles.secondaryButton}>Board Settings</button>
+           <button 
+             className={styles.secondaryButton}
+             onClick={() => setWorkflowModalOpen(true)}
+           >
+             Workflow Settings
+           </button>
         </div>
       </header>
 
@@ -152,13 +229,27 @@ const handleColumnDelete = async (columnId: string) => {
           paddingBottom: "1rem",
           alignItems: "flex-start" 
         }}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const dataStr = e.dataTransfer.getData("text/plain");
+          if (!dataStr) return;
+          try {
+            const data = JSON.parse(dataStr);
+            if (data.type === "column") {
+              handleColumnMove(data.columnId, columns.length);
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }}
       >
         {columns.length === 0 ? (
           <div className={styles.emptyCard}>
             No columns defined for this board yet.
           </div>
         ) : (
-          columns.map((col) => (
+          [...columns].sort((a, b) => a.order - b.order).map((col) => (
             <div key={col.id} style={{ minWidth: "300px" }} >
               <Column 
               column={col} 
@@ -167,6 +258,8 @@ const handleColumnDelete = async (columnId: string) => {
               onTaskMove={handleTaskMove}
               onTaskDelete={handleTaskDelete}
               onColumnDelete={handleColumnDelete}
+              onColumnMove={handleColumnMove}
+              onColumnUpdate={handleColumnUpdate}
               />
             </div>
           ))
@@ -181,6 +274,17 @@ const handleColumnDelete = async (columnId: string) => {
                 onSuccess={handleColumnCreator}
               />
             )}
+
+      {workflowModalOpen && (
+        <WorkflowSettingsModal
+          projectId={projectId!}
+          boardId={boardId!}
+          columns={columns}
+          transitions={transitions}
+          onClose={() => setWorkflowModalOpen(false)}
+          onUpdate={(newTransitions) => setTransitions(newTransitions)}
+        />
+      )}
     </div>
   );
 };
