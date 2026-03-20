@@ -87,9 +87,6 @@ export const ProjectBoard = () => {
                   <h3>{board.title}</h3>
                 </div>
                 <p>{board.description || "No description provided."}</p>
-                <div className={styles.boardStats}>
-                   <span>View Workflow →</span>
-                </div>
               </article>
             ))}
           </div>

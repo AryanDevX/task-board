@@ -13,6 +13,7 @@ interface EditColumnModalProps {
 export const EditColumnModal = ({ column, onClose, onSuccess }: EditColumnModalProps) => {
   const { projectId, boardId } = useParams<{ projectId: string; boardId: string }>();
   const [title, setTitle] = useState(column.title);
+  const [status, setStatus] = useState<string>((column as any).status || 'TODO');
   const [wipLimit, setWipLimit] = useState<string>(column.wipLimit ? String(column.wipLimit) : '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +31,8 @@ export const EditColumnModal = ({ column, onClose, onSuccess }: EditColumnModalP
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: title.trim(),
-          wipLimit: wipLimit !== '' ? Number(wipLimit) : null
+          wipLimit: wipLimit !== '' ? Number(wipLimit) : null,
+          status
         })
       });
 
@@ -56,6 +58,21 @@ export const EditColumnModal = ({ column, onClose, onSuccess }: EditColumnModalP
           <div className={styles.inputGroup}>
             <label htmlFor="title">Column Title</label>
             <input id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="status">Status Mapping</label>
+            <select
+              id="status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              required
+            >
+              <option value="TODO">To Do</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="IN_REVIEW">In Review</option>
+              <option value="DONE">Done</option>
+            </select>
           </div>
 
           <div>

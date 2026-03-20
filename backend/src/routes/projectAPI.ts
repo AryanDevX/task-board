@@ -4,6 +4,8 @@ import {
   getProjects,
   projectArchive,
   updateProject,
+  deleteProject,
+  unarchiveProject,
 } from '../controllers/ProjectControllers.js';
 import { authenticateJWT } from '../middleware/authenticateJWT.js';
 import { requireProjectRole } from '../middleware/requireProjectRole.js';
@@ -16,6 +18,7 @@ import {
 const router = express.Router();
 
 router.patch('/projects/:projectId',authenticateJWT,requireProjectRole(["PROJECT_ADMIN"]), updateProject)
+router.delete('/projects/:projectId', authenticateJWT, requireProjectRole(["PROJECT_ADMIN"]), deleteProject);
 router.post('/projects/', authenticateJWT, createProject);
 router.get('/projects/:projectId', authenticateJWT, getProjects);
 router.get('/projects', authenticateJWT, getProjects);
@@ -26,6 +29,7 @@ router.get(
   getMembers,
 );
 router.post('/projects/:projectId/archive',authenticateJWT,requireProjectRole(["PROJECT_ADMIN"]),projectArchive)
+router.post('/projects/:projectId/unarchive',authenticateJWT,requireProjectRole(["PROJECT_ADMIN"]),unarchiveProject)
 router.post(
   '/projects/:projectId/members/:email',
   authenticateJWT,

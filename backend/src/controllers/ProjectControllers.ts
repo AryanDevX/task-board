@@ -133,3 +133,50 @@ export const projectArchive =
     }
   };
 
+export const unarchiveProject = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const projectId = req.params.projectId;
+    const project = await prisma.project.findUnique({
+      where: { id: parseInt(projectId) },
+    });
+
+    if (!project) {
+      return next(new AppError('project not found', 404));
+    }
+
+    if (!project.archived) {
+      return next(new AppError('Project is not archived', 400));
+    }
+
+    await prisma.project.update({
+      where: { id: parseInt(projectId) },
+      data: { archived: false, archivedAt: null },
+    });
+
+    return res.status(200).json({ message: "Unarchived successfully" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteProject = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const projectId = req.params.projectId;
+    
+    const project = await prisma.project.findUnique({
+      where: { id: parseInt(projectId) },
+    });
+
+    if (!project) {
+      return next(new AppError('Project not found', 404));
+    }
+
+    await prisma.project.delete({
+      where: { id: parseInt(projectId) },
+    });
+
+    return res.status(200).json({ message: 'Project deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+};

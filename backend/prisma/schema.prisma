@@ -92,8 +92,8 @@ model ProjectMembership {
   role      ProjectRole
 
   //relations 
-  user    User    @relation(fields: [userId], references: [id])
-  project Project @relation(fields: [projectId], references: [id])
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([userId, projectId])
   @@index([projectId])
@@ -132,7 +132,7 @@ model Column {
   order    Int
   boardId  Int
   wipLimit Int?
-  status   String @default("ToDo")
+  status   String @default("TODO")
 
   //relations
   board           Board                @relation(fields: [boardId], references: [id], onDelete: Cascade)
@@ -211,8 +211,8 @@ model WorkflowTransition {
   id        Int     @id @default(autoincrement())
   projectId Int
   boardId   Int
-  project   Project @relation(fields: [projectId], references: [id])
-  board     Board   @relation(fields: [boardId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  board     Board   @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
   fromColumnId Int
   toColumnId   Int

@@ -14,7 +14,8 @@ export const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isManageUsersOpen, setIsManageUsersOpen] = useState(false);
@@ -36,19 +37,23 @@ export const Dashboard = () => {
   };
 
   const handleCreateProject = async (newProject: Project) => {
-    setProjects((prevProjects) => [newProject, ...prevProjects]);
+    setAllProjects((prevProjects) => [newProject, ...prevProjects]);
   };
 
   const handleUpdateSuccess = (updatedProject: Project) => {
-    setProjects((prevProjects) =>
+    setAllProjects((prevProjects) =>
       prevProjects.map((p) => (p.id === updatedProject.id ? updatedProject : p))
     );
   };
 
-  const handleArchieveProject = async (projectId: string | number)=>{
+  const handleArchiveProject = async (projectId: string | number)=>{
     try{
       await projectApi.archiveProject(String(projectId));
-      setProjects((prevProjects) => prevProjects.filter((project) => project.id !== projectId));
+      setAllProjects((prevProjects) =>
+        prevProjects.map((project) =>
+          project.id === projectId ? { ...project, archived: true } : project
+        )
+      );
     }
     catch(error){
       console.error('Failed to archieve project', error);
@@ -56,12 +61,36 @@ export const Dashboard = () => {
     }
   }
 
+  const handleUnarchiveProject = async (projectId: string | number) => {
+    try {
+      await projectApi.unarchiveProject(String(projectId));
+      setAllProjects((prevProjects) =>
+        prevProjects.map((project) =>
+          project.id === projectId ? { ...project, archived: false } : project
+        )
+      );
+    } catch (error) {
+      console.error('Failed to unarchive project', error);
+      alert('Failed to unarchive project. Please try again later.');
+    }
+  };
+
+   const handleDeleteProject = async (projectId: string | number) => {
+    if(!window.confirm('Are you sure you want to permanently delete this project?')) return;
+    try {
+      await projectApi.deleteProject(String(projectId));
+      setAllProjects((prev) => prev.filter((p) => p.id !== projectId));
+    } catch (error) {
+      console.error('Failed to delete project', error);
+      alert('Failed to delete project. Please try again later.');
+    }
+  };
+
   useEffect(() => {
     const loadProjects = async () => {
       try {
         const data = await projectApi.getProjects();
-        const activeProjects = data.projects.filter((p: Project) => !p.archived);
-        setProjects(activeProjects);
+        setAllProjects(data.projects);
       } 
       catch(error){
         console.error('Failed to load projects', error);
@@ -69,6 +98,9 @@ export const Dashboard = () => {
     };
     loadProjects();
   }, []);
+
+  const displayedProjects = allProjects.filter(p => showArchived ? p.archived : !p.archived);
+
 
   const avatarSrc = getAvatarSrc(user?.avatar);
 
@@ -93,6 +125,13 @@ export const Dashboard = () => {
           
         )}
         <div className={styles.actions}>
+            <button
+            className={styles.newProjectBtn}
+            onClick={() => setShowArchived(!showArchived)}
+            style={{ backgroundColor: showArchived ? '#6b7280' : undefined }}
+          >
+            {showArchived ? 'Active Projects' : 'Archived Projects'}
+          </button>
           <NotificationCenter />
           <button className={styles.logoutBtn} onClick={handleLogout}>
             Log out
@@ -115,12 +154,12 @@ export const Dashboard = () => {
       </header>
 
       <main>
-        <h2>My Projects</h2>
-        {projects.length === 0 ? (
-          <p>You don't have any projects yet. Click "New Project" to start!</p>
+        <h2>{showArchived ? 'Archived Projects' : 'My Projects'}</h2>
+        {displayedProjects.length === 0 ? (
+          <p>{showArchived ? "No archived projects." : "You don't have any projects yet. Click \"New Project\" to start!"}</p>
         ) : (
           <div className={styles.projectGrid}>
-            {projects.map((project) => (
+           {displayedProjects.map((project) => (
               <div key={project.id} className={styles.projectCardWrapper}>
                 <Link
                   to={`/project/${project.id}`}
@@ -133,21 +172,43 @@ export const Dashboard = () => {
                   <p>Created: {new Date(project.createdAt).toLocaleDateString()}</p>
                   <p>Updated: {new Date(project.updatedAt).toLocaleDateString()}</p>
                 </div>
-                {isAdmin(project) && (
+                  {isAdmin(project) && !showArchived && (
                   <div className={styles.cardActions}>
                     <button
                       onClick={() => setEditingProject(project)}
                       className={styles.editBtn}
                     >
-                      Update
+                     Edit
                     </button>
-                  <button
-                    onClick={() => handleArchieveProject(project.id)}
+                    <button
+                      onClick={() => handleArchiveProject(project.id)}
+                      className={styles.editBtn}
+                    >
+                      Archive
+                  </button>
+                   <button
+                    onClick={() => handleDeleteProject(project.id)}
                     className={styles.archieveBtn}
                   >
-                    Archive
+                    Delete
                   </button>
                 </div>
+                )}
+                {isAdmin(project) && showArchived && (
+                  <div className={styles.cardActions}>
+                    <button
+                      onClick={() => handleUnarchiveProject(project.id)}
+                      className={styles.editBtn}
+                    >
+                      Unarchive
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProject(project.id)}
+                      className={styles.archieveBtn}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 )}
               </div>
             ))}

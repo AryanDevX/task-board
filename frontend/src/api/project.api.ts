@@ -28,6 +28,11 @@ export const projectApi = {
       body: JSON.stringify(data),
     }),
 
+  deleteProject: (projectId: string): Promise<{ message: string }> =>
+    apiFetch(`/projects/${projectId}`, {
+      method: 'DELETE',
+    }),
+
   getMembers: (projectId: string): Promise<{ members: ProjectMember[] }> =>
     apiFetch(`/projects/${projectId}/members`),
 
@@ -36,6 +41,10 @@ export const projectApi = {
       method: 'POST',
     }),
 
+     unarchiveProject: (projectId: string): Promise<Project> =>
+    apiFetch(`/projects/${projectId}/unarchive`, {
+      method: 'POST',
+    }),
   addMember: (
     projectId: string, 
     email: string,

@@ -16,6 +16,7 @@ interface CreateColumnModalProps {
 export const CreateColumnModal = ({projectId, nextOrder = 0, onClose, onSuccess }: CreateColumnModalProps) => {
   const { boardId } = useParams<{ boardId: string  }>();
   const [title, setTitle] = useState('');
+  const [status, setStatus] = useState('TODO');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [wipLimit, setWipLimit]= useState<string>();
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +28,8 @@ export const CreateColumnModal = ({projectId, nextOrder = 0, onClose, onSuccess 
     const data = {
       title: title.trim(), 
       order: nextOrder,
-      wipLimit: wipLimit ? Number(wipLimit) : undefined
+      wipLimit: wipLimit ? Number(wipLimit) : undefined,
+      status
     } as CreateColumnDTO;
 
     try {
@@ -70,6 +72,21 @@ export const CreateColumnModal = ({projectId, nextOrder = 0, onClose, onSuccess 
       placeholder="e.g. Done"
       required
     />
+  </div>
+
+  <div className={styles.inputGroup}>
+    <label htmlFor="status">Status Mapping</label>
+    <select
+      id="status"
+      value={status}
+      onChange={(e) => setStatus(e.target.value)}
+      required
+    >
+      <option value="TODO">To Do</option>
+      <option value="IN_PROGRESS">In Progress</option>
+      <option value="IN_REVIEW">In Review</option>
+      <option value="DONE">Done</option>
+    </select>
   </div>
 
   {/* WIP Limit - Number Input */}

@@ -26,7 +26,39 @@ export const BoardPage = () => {
   }
 
   const handleTaskCreator= (task:Task)=>{
-    setTasks(prev=>[...prev, task]);
+    setTasks((prev) => {
+      const newTasksState = [...prev, task];
+
+      //  update the parent story's column based on its new children's statuses
+      if (task.parentId) {
+        const parentId = task.parentId;
+        const parentIndex = newTasksState.findIndex((t) => t.id === parentId);
+
+        if (parentIndex !== -1) {
+          const parent = newTasksState[parentIndex];
+          const children = newTasksState.filter((t) => t.parentId === parentId);
+
+          if (children.length > 0) {
+            const childStatuses = children.map((c) => {
+              const col = columns.find((col) => col.id === c.columnId);
+              return (col as any)?.status || 'TODO';
+            });
+
+            const allDone = childStatuses.every((s) => s === 'DONE');
+            const allTodo = childStatuses.every((s) => s === 'TODO');
+
+            const targetStatus = allDone ? 'DONE' : allTodo ? 'TODO' : 'IN_PROGRESS';
+            const derivedColumn = columns.find((col) => (col as any)?.status === targetStatus) || columns[0];
+
+            if (derivedColumn && parent.columnId !== derivedColumn.id) {
+              newTasksState[parentIndex] = { ...parent, columnId: derivedColumn.id };
+            }
+          }
+        }
+      }
+
+      return newTasksState;
+    });
   }
 
   const handleColumnUpdate = (updatedCol: Columntype) => {
@@ -76,16 +108,47 @@ const handleTaskMove = async (taskId: string, sourceColumnId: string, targetColu
     const finalizedTarget = targetColTasks.map((t, idx) => ({ ...t, order: idx }));
     const nonTargetTasks = otherTasks.filter(t => String(t.columnId) !== targetColumnId);
 
+    let newTasksState: Task[] = [];
     if (sourceColumnId !== targetColumnId) {
       const sourceColTasks = nonTargetTasks
         .filter(t => String(t.columnId) === sourceColumnId)
         .sort((a, b) => a.order - b.order)
         .map((t, idx) => ({ ...t, order: idx })); // Resequence source column
       const rest = nonTargetTasks.filter(t => String(t.columnId) !== sourceColumnId);
-      return [...rest, ...sourceColTasks, ...finalizedTarget];
+      newTasksState = [...rest, ...sourceColTasks, ...finalizedTarget];
+    } else {
+      newTasksState = [...nonTargetTasks, ...finalizedTarget];
     }
 
-    return [...nonTargetTasks, ...finalizedTarget];
+    //  update the parent story's column based on its children's statuses
+    if (modifiedTask.parentId) {
+      const parentId = modifiedTask.parentId;
+      const parentIndex = newTasksState.findIndex(t => t.id === parentId);
+      
+      if (parentIndex !== -1) {
+        const parent = newTasksState[parentIndex];
+        const children = newTasksState.filter(t => t.parentId === parentId);
+        
+        if (children.length > 0) {
+          const childStatuses = children.map(c => {
+            const col = columns.find(col => col.id === c.columnId);
+            return (col as any)?.status || 'TODO';
+          });
+          
+          const allDone = childStatuses.every(s => s === 'DONE');
+          const allTodo = childStatuses.every(s => s === 'TODO');
+          
+          const targetStatus = allDone ? 'DONE' : (allTodo ? 'TODO' : 'IN_PROGRESS');
+          const derivedColumn = columns.find(col => (col as any)?.status === targetStatus) || columns[0];
+          
+          if (derivedColumn && parent.columnId !== derivedColumn.id) {
+            newTasksState[parentIndex] = { ...parent, columnId: derivedColumn.id };
+          }
+        }
+      }
+    }
+
+    return newTasksState;
   });
 
   try {
@@ -254,6 +317,7 @@ const handleColumnDelete = async (columnId: string) => {
               <Column 
               column={col} 
               tasks={tasks.filter(t=>t.columnId===col.id)}
+              allTasks={tasks}
               onTaskCreated= {handleTaskCreator }
               onTaskMove={handleTaskMove}
               onTaskDelete={handleTaskDelete}
