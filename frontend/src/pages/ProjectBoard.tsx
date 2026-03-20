@@ -4,7 +4,8 @@ import { boardApi } from "../api/boards.api";
 import { type Board } from "../types/models";
 import { CreateBoardModal } from "../components/CreateBoardModal";
 import { NotificationCenter } from "../components/Notification";
-import styles from "./ProjectBoard.module.css"; 
+import styles from "./ProjectBoard.module.css";
+import sharedStyles from "../styles/index.module.css";
 
 export const ProjectBoard = () => {
   const navigate = useNavigate();
@@ -42,11 +43,10 @@ export const ProjectBoard = () => {
   if (error) return <div className={styles.state}>{error}</div>;
 
   return (
-    <div className={styles.page}>
-      {/* Top Bar with Navigation */}
-      <header className={styles.topBar}>
+    <div className={`${sharedStyles.pageShell} ${styles.page}`}>
+      <header className={sharedStyles.pageTopBar}>
         <button
-          className={styles.backButton}
+          className={sharedStyles.backButton}
           onClick={() => navigate("/dashboard")}
         >
           ← Dashboard
@@ -54,21 +54,19 @@ export const ProjectBoard = () => {
         <NotificationCenter />
       </header>
 
-      {/* Section Header */}
-      <section className={styles.sectionHeader}>
-        <div>
-          <h1 className={styles.title}>Project Boards</h1>
-          <p className={styles.subtitle}>Manage and organize your team workflows.</p>
+      <section className={sharedStyles.pageSplitHeader}>
+        <div className={sharedStyles.pageTitleBlock}>
+          <h1 className={sharedStyles.pageTitle}>Project Boards</h1>
+          <p className={sharedStyles.pageSubtitle}>Manage and organize your team workflows.</p>
         </div>
-        <button 
-          className={styles.primaryButton} 
+        <button
+          className={sharedStyles.primaryButton}
           onClick={() => setIsModalOpen(true)}
         >
           + New Board
         </button>
       </section>
 
-      {/* Boards Grid */}
       <div className={styles.section}>
         {boards.length === 0 ? (
           <div className={styles.emptyCard}>
@@ -80,7 +78,7 @@ export const ProjectBoard = () => {
               <article
                 key={board.id}
                 className={styles.boardCard}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: "pointer" }}
                 onClick={() => navigate(`/project/${projectId}/boards/${board.id}`)}
               >
                 <div className={styles.boardCardHeader}>
@@ -96,7 +94,6 @@ export const ProjectBoard = () => {
         )}
       </div>
 
-      {/* Modal Integration */}
       {isModalOpen && (
         <CreateBoardModal
           projectId={projectId!}

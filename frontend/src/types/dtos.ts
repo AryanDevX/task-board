@@ -62,6 +62,6 @@ export interface TimelineEntry {
   field?: string;
   oldValue?: string | null;
   newValue?: string | null;
-  createdAt: Date;
+  createdAt: string;
   user: Pick<User, 'id' | 'username' | 'avatar'>;
 }

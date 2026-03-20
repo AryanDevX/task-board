@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { type Column } from '../types/models';
-import styles from '../pages/ProjectBoard.module.css';
+import styles from '../styles/index.module.css';
 import { apiFetch } from '../api/client';
 
 interface EditColumnModalProps {
@@ -58,18 +58,18 @@ export const EditColumnModal = ({ column, onClose, onSuccess }: EditColumnModalP
             <input id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
           </div>
 
-          <div>
+          <div className={styles.inputGroup}>
             <label htmlFor="wipLimit">WIP Limit (Optional)</label>
             <input id="wipLimit" type="number" min="1" value={wipLimit} onChange={(e) => setWipLimit(e.target.value)} placeholder="No limit" />
           </div>
 
-          {error && <p style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '0.5rem' }}>{error}</p>}
+          {error && <p className={styles.error}>{error}</p>}
 
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-            <button type="button" className={styles.secondaryButton} onClick={onClose} style={{ flex: 1, background: '#f3f4f6', color: '#374151' }}>
+          <div className={styles.buttonRow}>
+            <button type="button" className={styles.secondaryButton} onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className={styles.primaryButton} disabled={isSubmitting || !title.trim()} style={{ flex: 2 }}>
+            <button type="submit" className={styles.primaryButton} disabled={isSubmitting || !title.trim()}>
               {isSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
