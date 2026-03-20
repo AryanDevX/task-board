@@ -22,13 +22,23 @@ export const OrganizationUsersBrowser = ({
 }: Props) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const { users, isLoading, error, total, totalPages } = useOrganizationUsers({
-    page,
-    limit: pageSize,
+  
+  //fetching a big list of users to avoid server pagination
+  const { users, isLoading, error } = useOrganizationUsers({
+    page: 1, 
+    limit: 1000,
     search: searchQuery,
   });
 
-  const visibleUsers = filterUsers ? users.filter(filterUsers) : users;
+  //Filter non project user
+  const allAvailableUsers = filterUsers ? users.filter(filterUsers) : users;
+
+  //Page calculation and index
+  const totalAvailable = allAvailableUsers.length;
+  const calculatedTotalPages = Math.max(1, Math.ceil(totalAvailable / pageSize));
+  const currentPage = Math.min(page, calculatedTotalPages);
+  const startIndex = (currentPage - 1) * pageSize;
+  const visibleUsers = allAvailableUsers.slice(startIndex, startIndex + pageSize);
 
   return (
     <div className={styles.browser}>
@@ -42,13 +52,13 @@ export const OrganizationUsersBrowser = ({
           value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value);
-            setPage(1);
+            setPage(1); //default page is 1 for searching.
           }}
         />
       </div>
 
       <p className={styles.metaText}>
-        {isLoading ? 'Loading users...' : `${total} users found`}
+        {isLoading ? 'Loading users...' : `${totalAvailable} available users found`}
       </p>
 
       {error ? (
@@ -73,22 +83,22 @@ export const OrganizationUsersBrowser = ({
 
       <div className={styles.pagination}>
         <p className={styles.metaText}>
-          Page {page} of {totalPages}
+          Page {currentPage} of {calculatedTotalPages}
         </p>
         <div className={styles.pageButtons}>
           <button
             type="button"
             className={styles.pageButton}
-            onClick={() => setPage((current) => Math.max(1, current - 1))}
-            disabled={page === 1 || isLoading}
+            onClick={() => setPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1 || isLoading}
           >
             Previous
           </button>
           <button
             type="button"
             className={styles.pageButton}
-            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-            disabled={page === totalPages || isLoading}
+            onClick={() => setPage(Math.min(calculatedTotalPages, currentPage + 1))}
+            disabled={currentPage === calculatedTotalPages || isLoading}
           >
             Next
           </button>

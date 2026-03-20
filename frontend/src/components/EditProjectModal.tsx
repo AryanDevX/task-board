@@ -25,10 +25,16 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
 
   const [initialMembers, setInitialMembers] = useState<ProjectMemberPayload[]>([]);
   const [activeMembers, setActiveMembers] = useState<ProjectMemberPayload[]>([]);
-  const [newMemberRole, setNewMemberRole] = useState<ProjectRole>('PROJECT_MEMBER');
-
   const { user } = useAuth();
   const isGlobalAdmin = user?.globalRole === 'GLOBAL_ADMIN';
+
+  //pagination:
+  const [membersPage, setMembersPage] = useState(1);
+  const membersPerPage = 5;
+  const totalMembersPages = Math.max(1, Math.ceil(activeMembers.length / membersPerPage));
+  const currentMembersPage = Math.min(membersPage, totalMembersPages);
+  const startIndex = (currentMembersPage - 1) * membersPerPage;
+  const visibleActiveMembers = activeMembers.slice(startIndex, startIndex + membersPerPage);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -56,13 +62,12 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
   const handleAddOrganizationUser = (email: string) => {
     const normalizedEmail = email.trim().toLowerCase();
     if(!normalizedEmail) return;
-
     if(activeMembers.some((member) => member.email.toLowerCase() === normalizedEmail)) {
       alert('This user is already in the project.');
       return;
     }
-
-    setActiveMembers((prev) => [...prev, { email: normalizedEmail, role: newMemberRole }]);
+    setActiveMembers((prev) => [{ email: normalizedEmail, role: 'PROJECT_MEMBER' }, ...prev]);
+    setMembersPage(1);
   };
 
   const handleRemoveMember = (emailToRemove: string) => {
@@ -143,18 +148,6 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
           <hr className={styles.separator} />
           <h3>Users in Project</h3>
           
-          <div className={styles.memberInputRow}>
-            <select 
-              className={sharedStyles.input}
-              value={newMemberRole} 
-              onChange={(e) => setNewMemberRole(e.target.value as ProjectRole)}
-            >
-              <option value="PROJECT_MEMBER">Member</option>
-              <option value="PROJECT_ADMIN">Admin</option>
-              <option value="PROJECT_VIEWER">Viewer</option>
-            </select>
-          </div>
-
           <OrganizationUsersBrowser
             title="Browse organization users and add them to this project."
             pageSize={10}
@@ -176,40 +169,69 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
           {isMembersLoading ? (
             <p className={styles.loadingText}>Loading team members...</p>
           ) : activeMembers.length > 0 && (
-            <ul className={styles.memberList}>
-              {activeMembers.map((member) => (
-                <li key={member.email} className={styles.memberItem}>
-                  
-                  <strong>{member.email}</strong>
-                  
-                  <div className={styles.memberActions}>
-                    <select
-                      className={`${sharedStyles.input} ${styles.roleSelect} ${styles[member.role] || ''}`}
-                      value={member.role}
-                      onChange={(e) => handleRoleChange(member.email, e.target.value as ProjectRole)}
-                    >
-                      <option value="PROJECT_MEMBER">Member</option>
-                      {(isGlobalAdmin || member.role === 'PROJECT_ADMIN') && (
-                        <option value="PROJECT_ADMIN" disabled={!isGlobalAdmin}>
-                          Admin
-                        </option>
-                      )}
-                      
-                      <option value="PROJECT_VIEWER">Viewer</option>
-                    </select>
+            <>
+              <ul className={styles.memberList}>
+                {visibleActiveMembers.map((member) => (
+                  <li key={member.email} className={styles.memberItem}>
+
+                    <strong>{member.email}</strong>
                     
-                    <button 
-                      type="button" 
-                      className={styles.removeBtn}
-                      onClick={() => handleRemoveMember(member.email)}
+                    <div className={styles.memberActions}>
+                      <select
+                        className={`${sharedStyles.input} ${styles.roleSelect} ${styles[member.role] || ''}`}
+                        value={member.role}
+                        onChange={(e) => handleRoleChange(member.email, e.target.value as ProjectRole)}
+                      >
+                        <option value="PROJECT_MEMBER">Member</option>
+                        {(isGlobalAdmin || member.role === 'PROJECT_ADMIN') && (
+                          <option value="PROJECT_ADMIN" disabled={!isGlobalAdmin}>
+                            Admin
+                          </option>
+                        )}
+                        
+                        <option value="PROJECT_VIEWER">Viewer</option>
+                      </select>
+                      
+                      <button 
+                        type="button" 
+                        className={styles.removeBtn}
+                        onClick={() => handleRemoveMember(member.email)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    
+                  </li>
+                ))}
+              </ul>
+
+              {/* Added the Fragment wrapper up above, so this renders perfectly now! */}
+              {totalMembersPages > 1 && (
+                <div className={sharedStyles.inlineControls} style={{ marginTop: '1rem', padding: '0 0.5rem' }}>
+                  <p className={sharedStyles.helperText}>
+                    Page {currentMembersPage} of {totalMembersPages}
+                  </p>
+                  <div className={sharedStyles.inlineControls}>
+                    <button
+                      type="button"
+                      className={sharedStyles.smallButton}
+                      onClick={() => setMembersPage((p) => Math.max(1, p - 1))}
+                      disabled={currentMembersPage === 1}
                     >
-                      Remove
+                      Previous
+                    </button>
+                    <button
+                      type="button"
+                      className={sharedStyles.smallButton}
+                      onClick={() => setMembersPage((p) => Math.min(totalMembersPages, p + 1))}
+                      disabled={currentMembersPage === totalMembersPages}
+                    >
+                      Next
                     </button>
                   </div>
-                  
-                </li>
-              ))}
-            </ul>
+                </div>
+              )}
+            </>
           )}
 
           <div className={styles.modalActions}>

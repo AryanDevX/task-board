@@ -27,6 +27,7 @@ export const getUserNotifications = async (
               select: {
                 board: {
                   select: {
+                    id:true,
                     projectId: true,
                   },
                 },
@@ -36,13 +37,19 @@ export const getUserNotifications = async (
         },
       },
     });
-    res.status(200).json({
-      notifications: notifications.map((notification) => ({
-        ...notification,
-        taskTitle: notification.task?.title ?? null,
-        projectId: notification.task?.column.board.projectId ?? null,
-      })),
-    });
+    const formattedNotifications = notifications.map((n) => ({
+      id: n.id,
+      userId: n.userId,
+      taskId: n.taskId,
+      type: n.type,
+      message: n.message,
+      isRead: n.isRead,
+      createdAt: n.createdAt,
+      projectId: n.task?.column?.board?.projectId || null,
+      boardId: n.task?.column?.board?.id || null, 
+      taskTitle: n.task?.title || null,
+    }));
+    res.status(200).json({ notifications: formattedNotifications });
   }
   catch (error){
     next(error);

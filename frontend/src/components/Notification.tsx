@@ -44,7 +44,10 @@ export const NotificationCenter = () => {
       console.error('Failed to mark notification as read', error);
     }
 
-    if(notification.projectId){
+    if(notification.projectId && notification.boardId && notification.taskId){ 
+      navigate(`/project/${notification.projectId}/board/${notification.boardId}?taskId=${notification.taskId}`);
+    } 
+    else if(notification.projectId){
       navigate(`/project/${notification.projectId}`);
     }
     setIsOpen(false);

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict'; //assert check if the response is same as we expected and strict if for strict type checking.
 import {
   addMember, deleteMember, updateMember, getMembers,
-} from '..src/controllers/manageMembers';
+} from '../src/controllers/manageMembers';
 
 import { prisma } from '../lib/prisma.js';
 import { AppError } from '../types/appError.js';
@@ -12,7 +12,7 @@ type mockRequest = {
   body:Record<string,unknown>;
   user?:{
     userId?:number;
-    GlobalRole?:'GLOBAL_ADMIN' | 'USER';
+    globalRole?:'GLOBAL_ADMIN' | 'USER';
   };
 };
 
@@ -42,7 +42,7 @@ const prismaMock = prisma as unknown as {
 const createReq=(overrides:Partial<mockRequest> = {}):mockRequest => ({
   params:{},
   body:{},
-  user:{GlobalRole:'USER'},
+  user:{globalRole:'USER'},
   ...overrides,
 })
 

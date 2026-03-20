@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../types/appError.js';
-import { Prisma } from '@prisma/client';
+import { Prisma, NotificationType } from '@prisma/client';
 import { getTaskWithTimeline } from '../services/taskService.js';
 
 
@@ -139,27 +139,34 @@ export const updateComment = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try{
+  try {
     const { commentId } = req.params;
     const { content } = req.body;
-    if(!req.user){
+    
+    if (!req.user) {
       return next(new AppError('Unauthorized', 400));
     }
     const userId = req.user.userId;
-    if(!content){
+    
+    if (!content) {
       return next(new AppError('Content is required.', 400));
     }
+    
     const existingComment = await prisma.comment.findUnique({
       where: { id: parseInt(commentId) },
+      include: { author: true }, 
     });
-    if(!existingComment){
+    
+    if (!existingComment) {
       return next(new AppError('Comment not found.', 404));
     }
-    if(existingComment.authorId !== userId){
+    
+    if (existingComment.authorId !== userId) {
       return next(
         new AppError('Unauthorized: You can only edit your own comments.', 403),
       );
     }
+    
     const updatedComment = await prisma.comment.update({
       where: { id: parseInt(commentId) },
       data: { content },
@@ -174,9 +181,43 @@ export const updateComment = async (
         newValue: content,
       },
     });
+
+    const extractMentions = (text: string) => {
+      const mentionRegex = /@([a-zA-Z0-9_.-]+)/g;
+      const matches = Array.from(text.matchAll(mentionRegex));
+      return [...new Set(matches.map((m) => m[1]))];
+    };
+
+    const oldMentions = extractMentions(existingComment.content);
+    const newMentions = extractMentions(content);
+
+    const newlyAddedMentions = newMentions.filter(
+      (username) => !oldMentions.includes(username)
+    );
+
+    if (newlyAddedMentions.length > 0) {
+      const usersToNotify = await prisma.user.findMany({
+        where: { username: { in: newlyAddedMentions } },
+      });
+
+      const validUsersToNotify = usersToNotify.filter((u) => u.id !== userId);
+
+      if (validUsersToNotify.length > 0) {
+        const notificationsData = validUsersToNotify.map((user) => ({
+          userId: user.id,
+          type: NotificationType.USER_MENTIONED, 
+          message: `${existingComment.author.username} mentioned you in an edited comment.`,
+          taskId: existingComment.taskId,
+        }));
+
+        await prisma.notification.createMany({
+          data: notificationsData,
+        });
+      }
+    }
+
     res.status(200).json(updatedComment);
-  }
-  catch (error){
+  } catch (error) {
     next(error);
   }
 };

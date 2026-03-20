@@ -168,8 +168,8 @@ export const Dashboard = () => {
                 </Link>
                 <p className={styles.projectDesc}>{project.description || 'No description provided.'}</p>
                 <div className={styles.projectMeta}>
-                  <p>Created: {new Date(project.createdAt).toLocaleDateString()}</p>
-                  <p>Updated: {new Date(project.updatedAt).toLocaleDateString()}</p>
+                  <p>Created: {new Date(project.createdAt).toLocaleString()}</p>
+                  <p>Updated: {new Date(project.updatedAt).toLocaleString()}</p>
                 </div>
                   {isAdmin(project) && !showArchived && (
                   <div className={styles.cardActions}>

@@ -181,6 +181,7 @@ export interface Notification {
   type: NotificationType;
   message: string;
   isRead: boolean;
+  boardId?: number;
   createdAt: string;
 }
 
