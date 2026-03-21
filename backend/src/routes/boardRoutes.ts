@@ -12,11 +12,11 @@ import { requireProjectRole } from '../middleware/requireProjectRole.js';
 // mergeParams allows this router to read the :projectId from the parent projectRoutes
 const router = Router({ mergeParams: true });
 
-// create: Only Admins and Members can create new boards
+// create: Only Admins can create new boards
 router.post(
   '/',
   authenticateJWT,
-  requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER']),
+  requireProjectRole(['PROJECT_ADMIN']),
   createBoard,
 );
 
@@ -36,19 +36,19 @@ router.get(
   getBoardDetails,
 );
 
-// update: Only Admins and Members can rename or update the description
+// update: Only Admins  can rename or update the description
 router.put(
   '/:boardId',
   authenticateJWT,
-  requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER']),
+  requireProjectRole(['PROJECT_ADMIN']),
   updateBoard,
 );
 
-//delete: Only Admins and Members can delete a board
+//delete: Only Admins  can delete a board
 router.delete(
   '/:boardId',
   authenticateJWT,
-  requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER']),
+  requireProjectRole(['PROJECT_ADMIN']),
   deleteBoard,
 );
 

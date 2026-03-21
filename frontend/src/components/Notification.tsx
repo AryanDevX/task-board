@@ -45,7 +45,7 @@ export const NotificationCenter = () => {
     }
 
     if(notification.projectId && notification.boardId && notification.taskId){ 
-      navigate(`/project/${notification.projectId}/board/${notification.boardId}?taskId=${notification.taskId}`);
+      navigate(`/project/${notification.projectId}/boards/${notification.boardId}`);
     } 
     else if(notification.projectId){
       navigate(`/project/${notification.projectId}`);

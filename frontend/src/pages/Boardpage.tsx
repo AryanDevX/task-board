@@ -314,10 +314,7 @@ export const BoardPage = () => {
                 <Column 
                   column={col} 
                   tasks={tasks.filter(t => t.columnId === col.id)}
-                  
-                  // Passed this prop in case your teammate's Column component depends on it
-                  allTasks={tasks} 
-                  
+                  allTasks={tasks}    
                   onTaskCreated={handleTaskCreator}
                   onTaskUpdated={handleTaskUpdated}
                   onTaskMove={handleTaskMove}

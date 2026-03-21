@@ -5,6 +5,9 @@ import { Prisma, NotificationType } from '@prisma/client';
 import { getTaskWithTimeline } from '../services/taskService.js';
 
 
+
+ // get all comments for a specific task.
+ 
 export const getComments = async (
   req: Request,
   res: Response,
@@ -44,6 +47,8 @@ export const getComments = async (
   }
 };
 
+ // creates a new comment for a task and handles notifications for mentions and task assignee.
+ 
 export const createComment = async (
   req: Request,
   res: Response,
@@ -76,11 +81,14 @@ export const createComment = async (
     });
 
     const notificationsToCreate: Prisma.NotificationCreateManyInput[] = [];
+    // regex to find mentions (e.g., @username) in the comment content.
     const mentionMatches = content.match(/@([a-zA-Z0-9_]+)/g);
     if(mentionMatches){
+      // extract usernames from the matches.
       const usernames = mentionMatches.map((match: string) =>
         match.substring(1),
       );
+      // find the user IDs for the mentioned usernames, excluding the comment author.
       const mentionedUsers = await prisma.user.findMany({
         where: {
           username: { in: usernames },
@@ -134,6 +142,7 @@ export const createComment = async (
   }
 };
 
+ // updates an existing comment. Only the author of the comment can update it.
 export const updateComment = async (
   req: Request,
   res: Response,
@@ -160,7 +169,7 @@ export const updateComment = async (
     if (!existingComment) {
       return next(new AppError('Comment not found.', 404));
     }
-    
+    // authorize: ensure the authenticated user is the author of the comment.
     if (existingComment.authorId !== userId) {
       return next(
         new AppError('Unauthorized: You can only edit your own comments.', 403),
@@ -172,6 +181,7 @@ export const updateComment = async (
       data: { content },
     });
 
+    // record the comment update in the audit log, including old and new content.
     await prisma.auditLog.create({
       data: {
         taskId: existingComment.taskId,
@@ -222,6 +232,8 @@ export const updateComment = async (
   }
 };
 
+ // deletes a specific comment. Only the author of the comment can delete it.
+ 
 export const deleteComment = async (
   req: Request,
   res: Response,

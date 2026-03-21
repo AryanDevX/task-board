@@ -4,6 +4,7 @@ import * as taskService from '../services/taskService.js';
 import { MoveTaskDTO } from '../types/dtos.js';
 import { prisma } from '../../lib/prisma.js';
 
+// The actual task creation logic is delegated to `taskService.createTask`.
 export const createTask = async (
   req: Request,
   res: Response,
@@ -11,6 +12,7 @@ export const createTask = async (
 ): Promise<void> => {
   try{
     if(!req.user || !req.user.userId)
+      // Check if the user is authenticated.
       return next(new AppError('Unauthorized', 401));
 
     const newTask = await taskService.createTask(req.body, req.user.userId);
@@ -22,6 +24,9 @@ export const createTask = async (
   }
 };
 
+// Retrieves a single task by its ID, including its activity timeline.
+// Requires a task ID in the request parameters.
+// The detailed task retrieval logic is delegated to `taskService.getTaskWithTimeline`.
 export const getTask = async (
   req: Request,
   res: Response,
@@ -40,6 +45,9 @@ export const getTask = async (
   }
 };
 
+// Retrieves all tasks for a specific column.
+// Requires a column ID in the request parameters.
+// Tasks are ordered by their `order` property.
 export const getTasks = async (
   req: Request,
   res: Response,
@@ -69,6 +77,7 @@ export const getTasks = async (
     next(error);
   }
 };
+// The update logic is delegated to `taskService.updateTask`.
 export const updateTask = async (
   req: Request,
   res: Response,
@@ -92,6 +101,7 @@ export const updateTask = async (
   }
 };
 
+// Moves a task to a different column or reorders it within the same column.
 export const moveTask = async (
   req: Request,
   res: Response,
@@ -117,6 +127,7 @@ const { targetColumnId, newOrder } = req.body;
   }
 };
 
+// The deletion logic is in  `taskService.deleteTask`.
 export const deleteTask = async (
   req: Request,
   res: Response,

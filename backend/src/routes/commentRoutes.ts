@@ -19,7 +19,7 @@ router.get(
 router.post(
   '/',
   authenticateJWT,
-  requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER']),
+  requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER' ]),
   createComment,
 );
 
@@ -31,7 +31,7 @@ router.put(
   updateComment,
 );
 
-//Deleting colCommentumn
+//Deleting comment
 router.delete(
   '/:commentId',
   authenticateJWT,

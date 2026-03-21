@@ -102,7 +102,7 @@ export default function Column({
     onTaskMove(String(taskId), String(sourceColumnId), targetColumnId, Math.max(0, newOrder));
   };
 
-  // Helper to safely strip HTML tags for the task card preview (Your version)
+  // Helper to safely strip HTML tags for the task card preview 
   const stripHtml = (html: string) => {
     const doc = new DOMParser().parseFromString(html, "text/html");
     return doc.body.textContent?.trim() ?? "";
@@ -130,7 +130,6 @@ export default function Column({
           )}
         </div>
         
-        {/* Using your clean CSS classes instead of his inline styles */}
         <div className={styles.columnActions}>
           <button className={styles.iconActionBtn} onClick={() => setShowEditModal(true)}>Edit</button>
           <button className={`${styles.iconActionBtn} ${styles.deleteBtn}`} onClick={() => onColumnDelete(String(column.id))}>x</button>
@@ -170,7 +169,7 @@ export default function Column({
                   JSON.stringify({ type: 'task', taskId: task.id, sourceColumnId: task.columnId, sourceOrder: task.order })
                 );
               }}
-              onClick={() => setSelectedTask(task)} // Opening modal from your version
+              onClick={() => setSelectedTask(task)} 
             >
               <button 
                 className={styles.taskDeleteBtn}
