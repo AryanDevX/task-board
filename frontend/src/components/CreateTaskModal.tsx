@@ -13,12 +13,14 @@ interface Props {
   order: number;
   columnId: string;
   stories: Task[];
+  wipLimit?: number | null;
+  wipCount?: number;
   onClose: () => void;
   onSuccess: (task: Task) => void;
   task?: Task;
 }
 
-export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, task }: Props) => {
+export const CreateTaskModal = ({ order, columnId, stories, wipLimit, wipCount, onClose, onSuccess, task }: Props) => {
   const { projectId, boardId } = useParams<{ projectId: string; boardId: string }>();
   const isEditing = Boolean(task);
   const { user } = useAuth();
@@ -36,10 +38,13 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [isTimelineLoading, setIsTimelineLoading] = useState(false);
   const [timelineError, setTimelineError] = useState<string | null>(null);
+  const [reporterName, setReporterName] = useState<string | null>(null);
 
   // Edit and delete comments
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editCommentContent, setEditCommentContent] = useState("");
+
+  const [isFormSubmitting, setIsFormSubmitting] = useState(false);
 
   // Main form
   const [form, setForm] = useState({
@@ -91,6 +96,7 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
       setTimelineError(null);
       setIsTimelineLoading(false);
       setEditingCommentId(null);
+      setReporterName(null);
       return;
     }
     
@@ -104,6 +110,7 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
         ]);
         setComments(taskComments);
         setTimeline(taskDetails.activityTimeline ?? []);
+        setReporterName(taskDetails.reporter?.username ?? null);
       } catch (err) {
         console.error("Failed to load task activity timeline:", err);
         setTimelineError("Failed to load activity timeline.");
@@ -124,6 +131,7 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
       ]);
       setComments(taskComments);
       setTimeline(taskDetails.activityTimeline ?? []);
+      setReporterName(taskDetails.reporter?.username ?? null);
     } catch (err) {
       console.error("Failed to refresh task activity:", err);
     }
@@ -264,6 +272,16 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
       alert("Title is required");
       return;
     }
+
+    // Frontend WIP check before sending to backend
+    if (!isEditing && form.issueType !== IssueType.STORY && wipLimit !== undefined && wipLimit !== null) {
+      if (wipCount !== undefined && wipCount >= wipLimit) {
+        alert(`WIP Limit Reached: This column cannot accept more than ${wipLimit} tasks.`);
+        return;
+      }
+    }
+
+    setIsFormSubmitting(true);
     try {
       if (isEditing && task) {
         const payload = {
@@ -292,6 +310,9 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
       onClose();
     } catch (err) {
       console.error(err);
+      alert(err instanceof Error ? err.message : "Failed to save task.");
+    } finally {
+      setIsFormSubmitting(false);
     }
   };
 
@@ -364,6 +385,18 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
             ))}
           </select>
         </div>
+
+      {isEditing && reporterName && (
+        <div className={styles.fieldGroup}>
+          <label>Reporter</label>
+          <input
+            className={styles.input}
+            value={reporterName}
+            disabled
+            style={{ opacity: 0.7, cursor: "not-allowed", backgroundColor: "#f9fafb" }}
+          />
+        </div>
+      )}
 
         {!isStory && (
           <>
@@ -441,8 +474,8 @@ export const CreateTaskModal = ({ order, columnId, stories, onClose, onSuccess, 
         </div>
 
         <div className={styles.buttonRow}>
-          <button className={styles.primaryButton} onClick={handleSubmit} type="button">
-            {isEditing ? "Update" : "Create"}
+          <button className={styles.primaryButton} onClick={handleSubmit} type="button" disabled={isFormSubmitting}>
+            {isFormSubmitting ? "Saving..." : (isEditing ? "Update" : "Create")}
           </button>
           <button className={styles.secondaryButton} onClick={onClose} type="button">
             Cancel

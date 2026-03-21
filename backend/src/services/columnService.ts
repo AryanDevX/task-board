@@ -38,6 +38,16 @@ export const updateColumn = async (columnId: number, data: UpdateColumnDTO) => {
   const oldColumn = await prisma.column.findUnique({ where: { id: columnId } });
   if(!oldColumn) throw new AppError('Column not found.', 404);
 
+  // Implement strategy: Fetch the 4 default columns based on ascending ID order
+  const defaultColumns = await prisma.column.findMany({
+    where: { boardId: oldColumn.boardId },
+    orderBy: { id: 'asc' },
+    take: 4,
+  });
+  if (defaultColumns.some((c) => c.id === columnId) && status !== undefined && status !== oldColumn.status) {
+    throw new AppError('Cannot change the status of a default column.', 400);
+  }
+
   //Case 1: order changed
   if(order !== undefined && Number(order) !== oldColumn.order){
     const newOrderInt = Number(order);
@@ -109,6 +119,18 @@ export const updateColumn = async (columnId: number, data: UpdateColumnDTO) => {
 //Deleting a column:
 export const deleteColumn = async (columnId: number) => {
   try{
+    const col = await prisma.column.findUnique({ where: { id: columnId } });
+    if (col) {
+      const defaultColumns = await prisma.column.findMany({
+        where: { boardId: col.boardId },
+        orderBy: { id: 'asc' },
+        take: 4,
+      });
+      if (defaultColumns.some((c) => c.id === columnId)) {
+        throw new AppError('Cannot delete default columns.', 400);
+      }
+    }
+
     return await prisma.column.delete({
       where: { id: columnId },
     });

@@ -70,9 +70,42 @@ export const BoardPage = () => {
   }; 
 
   const handleTaskUpdated = (updatedTask: Task) => {
-    setTasks((prev) =>
-      prev.map((task) => (task.id === updatedTask.id ? updatedTask : task)),
-    );
+    setTasks((prev) => {
+      const newTasksState = prev.map((task) => (task.id === updatedTask.id ? updatedTask : task));
+      const oldTask = prev.find(t => t.id === updatedTask.id);
+      
+      const parentIdsToSync = new Set<number>();
+      if (oldTask?.parentId) parentIdsToSync.add(oldTask.parentId);
+      if (updatedTask.parentId) parentIdsToSync.add(updatedTask.parentId);
+
+      parentIdsToSync.forEach(parentId => {
+        const parentIndex = newTasksState.findIndex((t) => t.id === parentId);
+        if (parentIndex !== -1) {
+          const parent = newTasksState[parentIndex];
+          const children = newTasksState.filter((t) => t.parentId === parentId);
+
+          if (children.length > 0) {
+            const childStatuses = children.map((c) => {
+              const col = columns.find((col) => col.id === c.columnId);
+              return (col as ColumnWithStatus | undefined)?.status || 'TODO';
+            });
+
+            const allDone = childStatuses.every((s) => s === 'DONE');
+            const allTodo = childStatuses.every((s) => s === 'TODO');
+
+            const targetStatus = allDone ? 'DONE' : allTodo ? 'TODO' : 'IN_PROGRESS';
+            const derivedColumn =
+              columns.find((col) => (col as ColumnWithStatus).status === targetStatus) || columns[0];
+
+            if (derivedColumn && parent.columnId !== derivedColumn.id) {
+              newTasksState[parentIndex] = { ...parent, columnId: derivedColumn.id };
+            }
+          }
+        }
+      });
+
+      return newTasksState;
+    });
   };
 
   // --- MERGED LOGIC: Handles workflow transitions & parent story sync on drag ---
@@ -87,10 +120,14 @@ export const BoardPage = () => {
       }
     }
 
+    const taskToMoveCheck = tasks.find(t => String(t.id) === taskId);
+    if (!taskToMoveCheck) return;
+
     const targetCol = columns.find(col => String(col.id) === targetColumnId);
-    const targetColTasks = tasks.filter(t => String(t.columnId) === targetColumnId);
+    const targetColTasks = tasks.filter(t => String(t.columnId) === targetColumnId && t.issueType !== 'STORY');
 
     if (
+      taskToMoveCheck.issueType !== 'STORY' &&
       targetCol?.wipLimit && 
       ((sourceColumnId !== targetColumnId && targetColTasks.length >= targetCol.wipLimit) ||
       (sourceColumnId === targetColumnId && targetColTasks.length > targetCol.wipLimit))
@@ -222,18 +259,59 @@ export const BoardPage = () => {
     fetchColumns();
   }, [boardId, projectId]);
 
+  // Implement the strategy to identify the 4 default columns based on their creation order (lowest IDs)
+  const defaultColumnIds = columns
+    .slice()
+    .sort((a, b) => Number(a.id) - Number(b.id))
+    .slice(0, 4)
+    .map((c) => String(c.id));
+
   const handleTaskDelete = async (taskId: string) => {
     try {
       const currTask = tasks.find(t => String(t.id) === taskId);
       const columnId = String(currTask?.columnId);
       await taskApi.deleteTask(projectId!, boardId!, columnId!, taskId);
-      setTasks((prev) => prev.filter((t) => t.id !== parseInt(taskId)));
+      
+      setTasks((prev) => {
+        const deletedTask = prev.find((t) => String(t.id) === taskId);
+        const newTasksState = prev.filter((t) => String(t.id) !== taskId);
+        
+        if (deletedTask?.parentId) {
+          const parentId = deletedTask.parentId;
+          const parentIndex = newTasksState.findIndex((t) => t.id === parentId);
+
+          if (parentIndex !== -1) {
+            const parent = newTasksState[parentIndex];
+            const children = newTasksState.filter((t) => t.parentId === parentId);
+
+            if (children.length > 0) {
+              const childStatuses = children.map((c) => {
+                const col = columns.find((col) => col.id === c.columnId);
+                return (col as ColumnWithStatus | undefined)?.status || 'TODO';
+              });
+              const allDone = childStatuses.every((s) => s === 'DONE');
+              const allTodo = childStatuses.every((s) => s === 'TODO');
+              const targetStatus = allDone ? 'DONE' : allTodo ? 'TODO' : 'IN_PROGRESS';
+              const derivedColumn = columns.find((col) => (col as ColumnWithStatus).status === targetStatus) || columns[0];
+              if (derivedColumn && parent.columnId !== derivedColumn.id) {
+                newTasksState[parentIndex] = { ...parent, columnId: derivedColumn.id };
+              }
+            }
+          }
+        }
+        return newTasksState;
+      });
     } catch (err) {
       console.error(err);
     }
   };
 
   const handleColumnDelete = async (columnId: string) => {
+    if (defaultColumnIds.includes(columnId)) {
+      alert("Cannot delete default columns.");
+      return;
+    }
+
     try {
       const val = tasks.filter(t => String(t.columnId) === columnId);
       if (val.length !== 0) {
@@ -313,6 +391,7 @@ export const BoardPage = () => {
               <div key={col.id} className={styles.columnWrapper}>
                 <Column 
                   column={col} 
+                  isDefault={defaultColumnIds.includes(String(col.id))}
                   tasks={tasks.filter(t => t.columnId === col.id)}
                   allTasks={tasks}    
                   onTaskCreated={handleTaskCreator}

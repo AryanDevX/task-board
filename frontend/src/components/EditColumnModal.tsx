@@ -6,13 +6,14 @@ import { apiFetch } from '../api/client';
 
 interface EditColumnModalProps {
   column: Column;
+  isDefault?: boolean;
   onClose: () => void;
   onSuccess: (updatedColumn: Column) => void;
 }
 
 type ColumnWithStatus = Column & { status?: string };
 
-export const EditColumnModal = ({ column, onClose, onSuccess }: EditColumnModalProps) => {
+export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditColumnModalProps) => {
   const { projectId, boardId } = useParams<{ projectId: string; boardId: string }>();
   const [title, setTitle] = useState(column.title);
   const [status, setStatus] = useState<string>((column as ColumnWithStatus).status || 'TODO');
@@ -23,6 +24,11 @@ export const EditColumnModal = ({ column, onClose, onSuccess }: EditColumnModalP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !boardId || !projectId) return;
+
+    if (isDefault && status !== ((column as ColumnWithStatus).status || 'TODO')) {
+      alert('Cannot change the status of a default column.');
+      return;
+    }
 
     try {
       setIsSubmitting(true);

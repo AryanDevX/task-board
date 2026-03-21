@@ -4,6 +4,8 @@ import { boardApi } from "../api/boards.api";
 import { type Board } from "../types/models";
 import { CreateBoardModal } from "../components/CreateBoardModal";
 import { NotificationCenter } from "../components/Notification";
+import { EditBoardModal } from "../components/EditBoardModal";
+import { apiFetch } from "../api/client";
 import styles from "./ProjectBoard.module.css";
 import sharedStyles from "../styles/index.module.css";
 
@@ -14,10 +16,27 @@ export const ProjectBoard = () => {
   const [error, setError] = useState<string | null>(null);
   const [boards, setBoards] = useState<Board[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBoard, setEditingBoard] = useState<Board | null>(null);
 
   const handleCreateBoard = (newBoard: Board) => {
     setBoards((prev) => [newBoard, ...prev]);
     setIsModalOpen(false);
+  };
+
+  const handleUpdateBoard = (updatedBoard: Board) => {
+    setBoards((prev) => prev.map((b) => (b.id === updatedBoard.id ? updatedBoard : b)));
+  };
+
+  const handleDeleteBoard = async (e: React.MouseEvent, boardId: string | number) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this board? This action cannot be undone.")) return;
+    try {
+      await apiFetch(`/projects/${projectId}/boards/${boardId}`, { method: "DELETE" });
+      setBoards((prev) => prev.filter((b) => String(b.id) !== String(boardId)));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete board.");
+    }
   };
 
   useEffect(() => {
@@ -84,6 +103,20 @@ export const ProjectBoard = () => {
                   <h3>{board.title}</h3>
                 </div>
                 <p>{board.description || "No description provided."}</p>
+                <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', paddingTop: '8px' }}>
+                  <button
+                    className={sharedStyles.tinyButton}
+                    onClick={(e) => { e.stopPropagation(); setEditingBoard(board); }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className={`${sharedStyles.tinyButton} ${sharedStyles.deleteActionButton}`}
+                    onClick={(e) => handleDeleteBoard(e, board.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </article>
             ))}
           </div>
@@ -95,6 +128,15 @@ export const ProjectBoard = () => {
           projectId={projectId!}
           onClose={() => setIsModalOpen(false)}
           onSuccess={handleCreateBoard}
+        />
+      )}
+
+      {editingBoard && (
+        <EditBoardModal
+          projectId={projectId!}
+          board={editingBoard}
+          onClose={() => setEditingBoard(null)}
+          onSuccess={handleUpdateBoard}
         />
       )}
     </div>

@@ -37,7 +37,7 @@ export const createTask = async (data: TaskDTO, reporterId: number) => {
     parentId ? Number(parentId) : null,
     issueType || 'TASK',
   );
-  await enforceWipLimit(Number(columnId));
+  await enforceWipLimit(Number(columnId), issueType || 'TASK');
   if(assigneeId)
     await validateAssigneeMembership(Number(assigneeId), Number(columnId));
 
@@ -185,7 +185,7 @@ export const updateTask = async (
       oldTask.columnId,
       Number(columnId),
     );
-    await enforceWipLimit(Number(columnId));
+    await enforceWipLimit(Number(columnId), issueType || oldTask.issueType);
 
     auditLogsData.push({
       taskId,
@@ -282,8 +282,12 @@ export const updateTask = async (
   //Maintaining logs and syncing story:
   if(auditLogsData.length > 0)
     await prisma.auditLog.createMany({ data: auditLogsData });
-  if(oldTask.parentId && columnId && oldTask.columnId !== Number(columnId)){
+
+  if(oldTask.parentId) {
     await syncStoryStatus(oldTask.parentId, userId);
+  }
+  if(updatedTask.parentId && updatedTask.parentId !== oldTask.parentId) {
+    await syncStoryStatus(updatedTask.parentId, userId);
   }
 
   return updatedTask;
@@ -338,7 +342,7 @@ export const moveTask = async (
   }
 
   //WIP Limits and Timestamps
-  await enforceWipLimit(Number(targetColumnId));
+  await enforceWipLimit(Number(targetColumnId), taskToMove.issueType);
   const dates = await getResolutionDatesForColumn(
     Number(targetColumnId),
     taskToMove.resolvedAt,

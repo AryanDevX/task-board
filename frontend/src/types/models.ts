@@ -135,6 +135,8 @@ export interface Task {
 
 export interface TaskDetails extends Task {
   activityTimeline: import('./dtos').TimelineEntry[];
+  reporter?: { id: number; username: string; avatar: string | null };
+  assignee?: { id: number; username: string; avatar: string | null };
 }
 
 export interface ColumnWithTasks extends Column {

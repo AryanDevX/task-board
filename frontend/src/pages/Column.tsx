@@ -11,6 +11,7 @@ type ColumnWithStatus = ColumnType & { status?: string };
 
 interface Props {
   column: ColumnType;
+  isDefault?: boolean;
   tasks: Task[];
   allTasks: Task[]; // Added from his version to track parent/child relationships
   onTaskCreated: (task: Task) => void;
@@ -24,6 +25,7 @@ interface Props {
 
 export default function Column({ 
   column, 
+  isDefault,
   tasks, 
   allTasks,
   onTaskCreated, 
@@ -38,6 +40,7 @@ export default function Column({
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showSubIssuesTask, setShowSubIssuesTask] = useState<Task | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const taskIdFromUrl = searchParams.get("taskId");
@@ -108,6 +111,8 @@ export default function Column({
     return doc.body.textContent?.trim() ?? "";
   };
 
+  const wipCount = tasks.filter(t => t.issueType !== 'STORY').length;
+
   return (
     <div
       className={styles.columnContainer}
@@ -123,9 +128,9 @@ export default function Column({
           <h3 className={styles.columnTitle}>{column.title}</h3>
           {column.wipLimit !== null && (
             <span
-              className={`${styles.wipBadge} ${tasks.length > column.wipLimit ? styles.wipExceeded : ""}`}
+              className={`${styles.wipBadge} ${wipCount > column.wipLimit ? styles.wipExceeded : ""}`}
             >
-              WIP: {tasks.length} / {column.wipLimit}
+              WIP: {wipCount} / {column.wipLimit}
             </span>
           )}
         </div>
@@ -219,7 +224,14 @@ export default function Column({
               {/* MERGED: Sub-issues tracker for Stories */}
               {task.issueType === 'STORY' && (
                 <div className={styles.storyMeta}>
-                  <span className={styles.storyCountChip}>
+                  <span 
+                    className={styles.storyCountChip}
+                    style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowSubIssuesTask(task);
+                    }}
+                  >
                     {allTasks.filter(t => t.parentId === task.id).length} Sub-issues
                   </span>
                   <span className={styles.storyStatusChip}>
@@ -243,7 +255,7 @@ export default function Column({
         <button 
           className={`${modalStyles.secondaryButton} ${modalStyles.fullWidth}`}
           onClick={() => {
-            if (column.wipLimit !== null && tasks.length >= column.wipLimit) {
+            if (column.wipLimit !== null && wipCount >= column.wipLimit) {
               alert(`WIP limit of ${column.wipLimit} reached for ${column.title}.`);
               return;
             }
@@ -259,6 +271,8 @@ export default function Column({
         <CreateTaskModal
           order={tasks.length}
           columnId={String(column.id)}
+          wipLimit={column.wipLimit}
+          wipCount={wipCount}
           stories={allTasks.filter((t) => t.issueType === 'STORY')} // MERGED: Pass only Stories here
           onClose={() => setShowModal(false)}
           onSuccess={onTaskCreated}
@@ -269,6 +283,7 @@ export default function Column({
       {showEditModal && (
         <EditColumnModal
           column={column}
+          isDefault={isDefault}
           onClose={() => setShowEditModal(false)}
           onSuccess={onColumnUpdate}
         />
@@ -282,13 +297,48 @@ export default function Column({
               order={activeTask.order}
               columnId={String(column.id)}
               task={activeTask}
-              stories={[]} 
+              wipLimit={column.wipLimit}
+              wipCount={wipCount}
+              stories={allTasks.filter((t) => t.issueType === 'STORY')} 
               onClose={handleCloseModal}
               onSuccess={(updatedTask) => {
                 onTaskUpdated(updatedTask);
                 handleCloseModal();
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* SUB-ISSUES READ-ONLY MODAL */}
+      {showSubIssuesTask && (
+        <div className={modalStyles.modalOverlay} onClick={() => setShowSubIssuesTask(null)}>
+          <div className={modalStyles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <div className={modalStyles.modalHeader}>
+              <h3>Sub-issues for {showSubIssuesTask.title}</h3>
+              <button className={modalStyles.closeButton} onClick={() => setShowSubIssuesTask(null)} type="button">×</button>
+            </div>
+            <div className={modalStyles.timelineList} style={{ maxHeight: '60vh', overflowY: 'auto', marginTop: '1rem' }}>
+              {allTasks.filter(t => t.parentId === showSubIssuesTask.id).length === 0 ? (
+                <p className={modalStyles.helperText}>No sub-issues found.</p>
+              ) : (
+                allTasks.filter(t => t.parentId === showSubIssuesTask.id).map(child => (
+                  <article key={child.id} className={modalStyles.timelineItem}>
+                    <div className={modalStyles.timelineHeader}>
+                      <span className={modalStyles.timelineAuthor}>{child.title}</span>
+                      <span className={modalStyles.timelineDate}>
+                        {child.issueType} • {child.priority}
+                      </span>
+                    </div>
+                    {child.description && (
+                      <p className={modalStyles.timelineComment} style={{ marginTop: '0.25rem', fontSize: '0.9rem', color: '#4b5563' }}>
+                        {stripHtml(child.description)}
+                      </p>
+                    )}
+                  </article>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}

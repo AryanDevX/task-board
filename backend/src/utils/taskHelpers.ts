@@ -3,11 +3,13 @@ import { AppError } from '../../types/appError.js';
 
 // Work In Progress limit:
 // Prevents teams from overloading a specific column.
-export const enforceWipLimit = async (columnId: number): Promise<void> => {
+export const enforceWipLimit = async (columnId: number, issueType?: string): Promise<void> => {
+  if (issueType === 'STORY') return;
+
   const column = await prisma.column.findUnique({ where: { id: columnId } });
   if(!column || column.wipLimit === null) return;
 
-  const currentTaskCount = await prisma.task.count({ where: { columnId } });
+  const currentTaskCount = await prisma.task.count({ where: { columnId, issueType: { not: 'STORY' } } });
   if(currentTaskCount >= column.wipLimit){
     throw new AppError(
       `WIP Limit Reached: The '${column.title}' column cannot accept more than ${column.wipLimit} tasks.`,
