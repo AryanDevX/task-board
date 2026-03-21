@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { columnApi } from '../api/column.api';
 import { type Column as Columntype } from '../types/models';
@@ -13,8 +13,11 @@ import { WorkflowSettingsModal } from '../components/WorkflowSettingsModal';
 
 type ColumnWithStatus = Columntype & { status?: string };
 
+// main board page component
 export const BoardPage = () => {
+  // hooks and state variables
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { boardId, projectId } = useParams<{
     projectId: string;
     boardId: string;
@@ -28,25 +31,26 @@ export const BoardPage = () => {
   const [workflowModalOpen, setWorkflowModalOpen] = useState(false);
   const [projectRole, setProjectRole] = useState<string | null>(null);
 
+  // handle creating new column
   const handleColumnCreator = (col: Columntype) => {
     setColumns((prev) => [...prev, col]);
     SetAddModal(false);
   };
 
-  // --- MERGED LOGIC: Handles parent story status sync on task creation ---
+  // handles parent story status sync on task creation
   const handleTaskCreator = (task: Task) => {
     setTasks((prev) => {
       const newTasksState = [...prev, task];
 
-      if (task.parentId) {
+      if(task.parentId){
         const parentId = task.parentId;
         const parentIndex = newTasksState.findIndex((t) => t.id === parentId);
 
-        if (parentIndex !== -1) {
+        if(parentIndex !== -1){
           const parent = newTasksState[parentIndex];
           const children = newTasksState.filter((t) => t.parentId === parentId);
 
-          if (children.length > 0) {
+          if(children.length > 0){
             const childStatuses = children.map((c) => {
               const col = columns.find((col) => col.id === c.columnId);
               return (col as ColumnWithStatus | undefined)?.status || 'TODO';
@@ -65,7 +69,7 @@ export const BoardPage = () => {
                 (col) => (col as ColumnWithStatus).status === targetStatus,
               ) || columns[0];
 
-            if (derivedColumn && parent.columnId !== derivedColumn.id) {
+            if(derivedColumn && parent.columnId !== derivedColumn.id){
               newTasksState[parentIndex] = {
                 ...parent,
                 columnId: derivedColumn.id,
@@ -78,28 +82,30 @@ export const BoardPage = () => {
     });
   };
 
+  // handle column updates
   const handleColumnUpdate = (updatedCol: Columntype) => {
     setColumns((prev) =>
       prev.map((c) => (c.id === updatedCol.id ? updatedCol : c)),
     );
   };
 
+  // handle task updates and parent status sync
   const handleTaskUpdated = (updatedTask: Task) => {
     setTasks((prev) => {
       const newTasksState = prev.map((task) => (task.id === updatedTask.id ? updatedTask : task));
       const oldTask = prev.find(t => t.id === updatedTask.id);
       
       const parentIdsToSync = new Set<number>();
-      if (oldTask?.parentId) parentIdsToSync.add(oldTask.parentId);
-      if (updatedTask.parentId) parentIdsToSync.add(updatedTask.parentId);
+      if(oldTask?.parentId)parentIdsToSync.add(oldTask.parentId);
+      if(updatedTask.parentId)parentIdsToSync.add(updatedTask.parentId);
 
       parentIdsToSync.forEach(parentId => {
         const parentIndex = newTasksState.findIndex((t) => t.id === parentId);
-        if (parentIndex !== -1) {
+        if(parentIndex !== -1){
           const parent = newTasksState[parentIndex];
           const children = newTasksState.filter((t) => t.parentId === parentId);
 
-          if (children.length > 0) {
+          if(children.length > 0){
             const childStatuses = children.map((c) => {
               const col = columns.find((col) => col.id === c.columnId);
               return (col as ColumnWithStatus | undefined)?.status || 'TODO';
@@ -112,7 +118,7 @@ export const BoardPage = () => {
             const derivedColumn =
               columns.find((col) => (col as ColumnWithStatus).status === targetStatus) || columns[0];
 
-            if (derivedColumn && parent.columnId !== derivedColumn.id) {
+            if(derivedColumn && parent.columnId !== derivedColumn.id){
               newTasksState[parentIndex] = { ...parent, columnId: derivedColumn.id };
             }
           }
@@ -123,46 +129,46 @@ export const BoardPage = () => {
     });
   };
 
-  // --- MERGED LOGIC: Handles workflow transitions & parent story sync on drag ---
+  // handles workflow transitions and parent story sync on drag
   const handleTaskMove = async (
     taskId: string,
     sourceColumnId: string,
     targetColumnId: string,
     newOrder: number,
   ) => {
-    if (sourceColumnId !== targetColumnId) {
+    if(sourceColumnId !== targetColumnId){
       const isValidTransition = transitions.some(
         (t) =>
           String(t.fromColumnId) === sourceColumnId &&
           String(t.toColumnId) === targetColumnId,
       );
-      if (!isValidTransition) {
+      if(!isValidTransition){
         alert(
-          'Invalid workflow transition. Moving to this column is not permitted.',
+          'Invalid workflow transition Moving to this column is not permitted',
         );
         return;
       }
     }
 
     const taskToMoveCheck = tasks.find(t => String(t.id) === taskId);
-    if (!taskToMoveCheck) return;
+    if(!taskToMoveCheck)return;
 
     const targetCol = columns.find(col => String(col.id) === targetColumnId);
     const targetColTasks = tasks.filter(t => String(t.columnId) === targetColumnId && t.issueType !== 'STORY');
 
-    if (
+    if(
       taskToMoveCheck.issueType !== 'STORY' &&
       targetCol?.wipLimit && 
       ((sourceColumnId !== targetColumnId && targetColTasks.length >= targetCol.wipLimit) ||
       (sourceColumnId === targetColumnId && targetColTasks.length > targetCol.wipLimit))
-    ) {
+    ){
       alert(`Wip Limit of Column ${targetCol.title} exceeded`);
       return;
     }
 
     setTasks((prev) => {
       const taskToMove = prev.find((t) => String(t.id) === taskId);
-      if (!taskToMove) return prev;
+      if(!taskToMove)return prev;
 
       const otherTasks = prev.filter((t) => String(t.id) !== taskId);
       const modifiedTask = { ...taskToMove, columnId: Number(targetColumnId) };
@@ -181,7 +187,7 @@ export const BoardPage = () => {
       );
 
       let newTasksState: Task[] = [];
-      if (sourceColumnId !== targetColumnId) {
+      if(sourceColumnId !== targetColumnId){
         const sourceColTasks = nonTargetTasks
           .filter((t) => String(t.columnId) === sourceColumnId)
           .sort((a, b) => a.order - b.order)
@@ -190,20 +196,21 @@ export const BoardPage = () => {
           (t) => String(t.columnId) !== sourceColumnId,
         );
         newTasksState = [...rest, ...sourceColTasks, ...finalizedTarget];
-      } else {
+      }
+      else{
         newTasksState = [...nonTargetTasks, ...finalizedTarget];
       }
 
-      // Update the parent story's column based on its children's statuses
-      if (modifiedTask.parentId) {
+      // update the parent storys column based on its childrens statuses
+      if(modifiedTask.parentId){
         const parentId = modifiedTask.parentId;
         const parentIndex = newTasksState.findIndex((t) => t.id === parentId);
 
-        if (parentIndex !== -1) {
+        if(parentIndex !== -1){
           const parent = newTasksState[parentIndex];
           const children = newTasksState.filter((t) => t.parentId === parentId);
 
-          if (children.length > 0) {
+          if(children.length > 0){
             const childStatuses = children.map((c) => {
               const col = columns.find((col) => col.id === c.columnId);
               return (col as ColumnWithStatus | undefined)?.status || 'TODO';
@@ -222,7 +229,7 @@ export const BoardPage = () => {
                 (col) => (col as ColumnWithStatus).status === targetStatus,
               ) || columns[0];
 
-            if (derivedColumn && parent.columnId !== derivedColumn.id) {
+            if(derivedColumn && parent.columnId !== derivedColumn.id){
               newTasksState[parentIndex] = {
                 ...parent,
                 columnId: derivedColumn.id,
@@ -235,7 +242,7 @@ export const BoardPage = () => {
       return newTasksState;
     });
 
-    try {
+    try{
       await taskApi.moveTask(
         projectId!,
         boardId!,
@@ -244,30 +251,32 @@ export const BoardPage = () => {
         targetColumnId,
         String(newOrder),
       );
-    } catch (error) {
-      console.error('Failed to move task:', error);
+    }
+    catch(error){
+      console.error('Failed to move task', error);
     }
   };
 
+  // handle dragging and moving columns
   const handleColumnMove = async (columnId: string, newOrder: number) => {
     const draggedCol = columns.find((c) => String(c.id) === columnId);
-    if (!draggedCol || draggedCol.order === newOrder) return;
+    if(!draggedCol || draggedCol.order === newOrder)return;
 
     setColumns((prev) => {
       const sorted = [...prev].sort((a, b) => a.order - b.order);
       const oldIndex = sorted.findIndex((c) => String(c.id) === columnId);
-      if (oldIndex === -1) return prev;
+      if(oldIndex === -1)return prev;
 
       let targetIndex = sorted.findIndex((c) => c.order === newOrder);
 
       const [removed] = sorted.splice(oldIndex, 1);
-      if (targetIndex === -1) targetIndex = sorted.length;
+      if(targetIndex === -1)targetIndex = sorted.length;
 
       sorted.splice(targetIndex, 0, removed);
       return sorted.map((c, i) => ({ ...c, order: i }));
     });
 
-    try {
+    try{
       await apiFetch(
         `/projects/${projectId}/boards/${boardId}/columns/${columnId}`,
         {
@@ -276,16 +285,18 @@ export const BoardPage = () => {
           body: JSON.stringify({ order: newOrder }),
         },
       );
-    } catch (error) {
-      console.error('Failed to move column:', error);
+    }
+    catch(error){
+      console.error('Failed to move column', error);
     }
   };
 
+  // fetch board data on mount
   useEffect(() => {
-    if (!boardId || !projectId) return;
+    if(!boardId || !projectId)return;
 
     const fetchColumns = async () => {
-      try {
+      try{
         setLoading(true);
         const data = await columnApi.getColumns(projectId, boardId);
         setColumns(data);
@@ -303,12 +314,14 @@ export const BoardPage = () => {
         setTransitions(transData);
 
         const projectData = await apiFetch<{ projects: Project[] }>(`/projects/${projectId}`);
-        if (projectData.projects && projectData.projects.length > 0) {
+        if(projectData.projects && projectData.projects.length > 0){
           setProjectRole(projectData.projects[0].userRole);
         }
-      } catch (err) {
+      }
+      catch(err){
         console.error(err);
-      } finally {
+      }
+      finally{
         setLoading(false);
       }
     };
@@ -316,15 +329,44 @@ export const BoardPage = () => {
     fetchColumns();
   }, [boardId, projectId]);
 
-  // Implement the strategy to identify the 4 default columns based on their creation order (lowest IDs)
+  // handle navigation to task from notification
+  // handle navigation to task from notification
+  useEffect(() => {
+    const taskIdParam = searchParams.get('taskId');
+    
+    if(taskIdParam){
+      const taskElement = document.getElementById(`task-${taskIdParam}`);
+      if(taskElement){
+        // add visual highlight via css class
+        taskElement.classList.add(styles.taskHighlight);
+        taskElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // remove highlight class after 3 seconds
+        const timeout = setTimeout(() => {
+          taskElement.classList.remove(styles.taskHighlight);
+        }, 3000);
+        
+        // clean up query params after navigation
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('taskId');
+        newParams.delete('columnId');
+        setSearchParams(newParams);
+        
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [searchParams, setSearchParams]);
+
+  // identify default columns
   const defaultColumnIds = columns
     .slice()
     .sort((a, b) => Number(a.id) - Number(b.id))
     .slice(0, 4)
     .map((c) => String(c.id));
 
+  // handle deleting tasks
   const handleTaskDelete = async (taskId: string) => {
-    try {
+    try{
       const currTask = tasks.find((t) => String(t.id) === taskId);
       const columnId = String(currTask?.columnId);
       await taskApi.deleteTask(projectId!, boardId!, columnId!, taskId);
@@ -333,15 +375,15 @@ export const BoardPage = () => {
         const deletedTask = prev.find((t) => String(t.id) === taskId);
         const newTasksState = prev.filter((t) => String(t.id) !== taskId);
         
-        if (deletedTask?.parentId) {
+        if(deletedTask?.parentId){
           const parentId = deletedTask.parentId;
           const parentIndex = newTasksState.findIndex((t) => t.id === parentId);
 
-          if (parentIndex !== -1) {
+          if(parentIndex !== -1){
             const parent = newTasksState[parentIndex];
             const children = newTasksState.filter((t) => t.parentId === parentId);
 
-            if (children.length > 0) {
+            if(children.length > 0){
               const childStatuses = children.map((c) => {
                 const col = columns.find((col) => col.id === c.columnId);
                 return (col as ColumnWithStatus | undefined)?.status || 'TODO';
@@ -350,7 +392,7 @@ export const BoardPage = () => {
               const allTodo = childStatuses.every((s) => s === 'TODO');
               const targetStatus = allDone ? 'DONE' : allTodo ? 'TODO' : 'IN_PROGRESS';
               const derivedColumn = columns.find((col) => (col as ColumnWithStatus).status === targetStatus) || columns[0];
-              if (derivedColumn && parent.columnId !== derivedColumn.id) {
+              if(derivedColumn && parent.columnId !== derivedColumn.id){
                 newTasksState[parentIndex] = { ...parent, columnId: derivedColumn.id };
               }
             }
@@ -358,20 +400,22 @@ export const BoardPage = () => {
         }
         return newTasksState;
       });
-    } catch (err) {
+    }
+    catch(err){
       console.error(err);
     }
   };
 
+  // handle deleting columns
   const handleColumnDelete = async (columnId: string) => {
-    if (defaultColumnIds.includes(columnId)) {
-      alert("Cannot delete default columns.");
+    if(defaultColumnIds.includes(columnId)){
+      alert("Cannot delete default columns");
       return;
     }
 
-    try {
+    try{
       const val = tasks.filter((t) => String(t.columnId) === columnId);
-      if (val.length !== 0) {
+      if(val.length !== 0){
         alert('Column is Not empty');
         return;
       }
@@ -385,26 +429,28 @@ export const BoardPage = () => {
             String(t.toColumnId) !== columnId,
         ),
       );
-    } catch (err) {
+    }
+    catch(err){
       console.error(err);
     }
   };
 
-  if (loading) return <div className={styles.state}>Loading columns...</div>;
+  if(loading)return <div className={styles.state}>Loading columns</div>;
 
+  // render board page ui
   return (
     <div className={`${sharedStyles.pageShell} ${styles.page}`}>
       <header className={sharedStyles.pageTopBar}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div className={styles.headerActions}>
           <button
             className={sharedStyles.backButton}
             onClick={() => navigate(`/project/${projectId}`)}
           >
-            ← Back to Boards
+            Back to Boards
           </button>
           {projectRole && (
-            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#4b5563', background: '#f3f4f6', padding: '0.25rem 0.75rem', borderRadius: '999px', border: '1px solid #e5e7eb' }}>
-              Role: {projectRole.replace('PROJECT_', '')}
+            <span className={sharedStyles.tinyButton}>
+              Role {projectRole.replace('PROJECT_', '')}
             </span>
           )}
         </div>
@@ -423,14 +469,14 @@ export const BoardPage = () => {
         <div className={sharedStyles.pageTitleBlock}>
           <h1 className={sharedStyles.pageTitle}>Board Workflow</h1>
           <p className={sharedStyles.pageSubtitle}>
-            Drag and drop tasks to update status.
+            Drag and drop tasks to update status
           </p>
         </div>
         <button
           className={sharedStyles.primaryButton}
           onClick={() => SetAddModal(!addModal)}
         >
-          + Add Column
+          Add Column
         </button>
       </section>
 
@@ -441,20 +487,21 @@ export const BoardPage = () => {
           onDrop={(e) => {
             e.preventDefault();
             const dataStr = e.dataTransfer.getData('text/plain');
-            if (!dataStr) return;
-            try {
+            if(!dataStr)return;
+            try{
               const data = JSON.parse(dataStr);
-              if (data.type === 'column') {
+              if(data.type === 'column'){
                 handleColumnMove(data.columnId, columns.length);
               }
-            } catch (err) {
+            }
+            catch(err){
               console.error(err);
             }
           }}
         >
           {columns.length === 0 ? (
             <div className={styles.emptyCard}>
-              No columns defined for this board yet.
+              No columns defined for this board yet
             </div>
           ) : (
             [...columns].sort((a, b) => a.order - b.order).map((col) => (

@@ -12,6 +12,7 @@ interface Props {
   onClose: () => void;
 }
 
+// set of allowed html tags for rich text
 const ALLOWED_TAGS = new Set([
   'A',
   'B',
@@ -29,6 +30,7 @@ const ALLOWED_TAGS = new Set([
   'UL',
 ]);
 
+// escapes html characters to prevent xss
 const escapeHtml = (value: string) =>
   value
     .replaceAll('&', '&amp;')
@@ -37,6 +39,7 @@ const escapeHtml = (value: string) =>
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
 
+// sanitizes rich text input keeping only allowed tags
 const sanitizeRichText = (value: string) => {
   if (!value.trim()) return '';
 
@@ -48,6 +51,7 @@ const sanitizeRichText = (value: string) => {
     return '';
   }
 
+  // recursive function to clean child nodes
   const sanitizeNode = (node: Node): string => {
     if (node.nodeType === Node.TEXT_NODE) {
       return escapeHtml(node.textContent ?? '');
@@ -88,6 +92,7 @@ const sanitizeRichText = (value: string) => {
   return Array.from(root.childNodes).map(sanitizeNode).join('').trim();
 };
 
+// extracts plain text from html string
 const getPlainText = (value: string) => {
   if (!value.trim()) return '';
 
@@ -95,15 +100,19 @@ const getPlainText = (value: string) => {
   return doc.body.textContent?.replace(/\u00a0/g, ' ').trim() ?? '';
 };
 
+// normalizes empty editor value
 const normalizeEditorValue = (value: string) => {
   const sanitized = sanitizeRichText(value);
   return sanitized === '<br />' ? '' : sanitized;
 };
 
+// main modal component for task comments
 export const CommentModal = ({ task, projectId, onClose }: Props) => {
   const { user } = useAuth();
   const composerRef = useRef<HTMLDivElement | null>(null);
   const editingRef = useRef<HTMLDivElement | null>(null);
+  
+  // component state variables
   const [comments, setComments] = useState<CommentWithAuthor[]>([]);
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [commentContent, setCommentContent] = useState('');
@@ -114,6 +123,7 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // loads comments and members on mount
   useEffect(() => {
     const loadModalData = async () => {
       try {
@@ -136,6 +146,7 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
     void loadModalData();
   }, [projectId, task.id]);
 
+  // updates composer html when content changes
   useEffect(() => {
     if (
       composerRef.current &&
@@ -145,12 +156,14 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
     }
   }, [commentContent]);
 
+  // updates editing html when content changes
   useEffect(() => {
     if (editingRef.current && editingRef.current.innerHTML !== editingContent) {
       editingRef.current.innerHTML = editingContent;
     }
   }, [editingContent]);
 
+  // sets focus to the end of the editor text
   const focusEditor = (editor: HTMLDivElement | null) => {
     if (!editor) return;
     editor.focus();
@@ -165,10 +178,12 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
     selection.addRange(range);
   };
 
+  // executes document formatting command
   const runFormatCommand = (command: string, value?: string) => {
     document.execCommand(command, false, value);
   };
 
+  // applies formatting to the selected text
   const applyFormat = (
     command:
       | 'bold'
@@ -182,6 +197,7 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
     runFormatCommand(command);
   };
 
+  // prompts for url and inserts a link
   const applyLink = (editor: HTMLDivElement | null) => {
     focusEditor(editor);
     const url = window.prompt('Enter link URL');
@@ -189,18 +205,21 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
     runFormatCommand('createLink', url);
   };
 
+  // syncs composer inner html to state
   const syncComposer = () => {
     setCommentContent(
       normalizeEditorValue(composerRef.current?.innerHTML ?? ''),
     );
   };
 
+  // syncs editing inner html to state
   const syncEditing = () => {
     setEditingContent(
       normalizeEditorValue(editingRef.current?.innerHTML ?? ''),
     );
   };
 
+  // inserts member mention into the composer
   const insertMention = (username: string) => {
     if (!username) return;
 
@@ -210,6 +229,7 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
     setSelectedMember('');
   };
 
+  // creates a new comment
   const handleCreateComment = async () => {
     const sanitizedContent = normalizeEditorValue(commentContent);
     if (!getPlainText(sanitizedContent)) return;
@@ -237,17 +257,20 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
     }
   };
 
+  // prepares comment for editing
   const startEditingComment = (comment: CommentWithAuthor) => {
     const sanitizedContent = normalizeEditorValue(comment.content);
     setEditingCommentId(comment.id);
     setEditingContent(sanitizedContent);
   };
 
+  // cancels the editing mode
   const cancelEditingComment = () => {
     setEditingCommentId(null);
     setEditingContent('');
   };
 
+  // updates an existing comment
   const handleUpdateComment = async (commentId: number) => {
     const sanitizedContent = normalizeEditorValue(editingContent);
     if (!getPlainText(sanitizedContent)) return;
@@ -274,6 +297,7 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
     }
   };
 
+  // deletes a comment
   const handleDeleteComment = async (commentId: number) => {
     try {
       setError(null);

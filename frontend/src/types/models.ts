@@ -180,10 +180,11 @@ export interface Notification {
   taskId: number | null;
   taskTitle?: string | null;
   projectId?: number | null;
+  boardId?: number | null;
+  columnId?: number | null;
   type: NotificationType;
   message: string;
   isRead: boolean;
-  boardId?: number;
   createdAt: string;
 }
 

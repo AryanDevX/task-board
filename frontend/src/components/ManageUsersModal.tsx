@@ -8,11 +8,14 @@ interface ManageUsersModalProps {
   onClose: () => void;
 }
 
+// modal component to manage users and roles
 export const ManageUsersModal = ({ onClose }: ManageUsersModalProps) => {
+  // state for role overrides
   const [roleOverrides, setRoleOverrides] = useState<
     Record<number, User['globalRole']>
   >({});
 
+  // handle updating user global role
   const handleRoleChange = async (
     userId: string | number,
     newRole: 'GLOBAL_ADMIN' | 'USER',
@@ -22,11 +25,12 @@ export const ManageUsersModal = ({ onClose }: ManageUsersModalProps) => {
 
       await adminApi.updateUserGlobalRole(userId, newRole);
     } catch (error) {
-      console.error('Failed to update role:', error);
-      alert('Failed to update user role. Please try again.');
+      console.error('Failed to update role', error);
+      alert('Failed to update user role Please try again');
     }
   };
 
+  // render manage users modal
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>

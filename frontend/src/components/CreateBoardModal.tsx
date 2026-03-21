@@ -9,11 +9,14 @@ interface Props {
   onSuccess: (newBoard: Board) => void;
 }
 
+// modal component to create a new board
 export const CreateBoardModal = ({ projectId, onClose, onSuccess }: Props) => {
+  // state for board form fields
   const [name, setName] = useState('');
   const [description, setDescription] = useState(' ');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -34,6 +37,7 @@ export const CreateBoardModal = ({ projectId, onClose, onSuccess }: Props) => {
     }
   };
 
+  // render modal ui
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
