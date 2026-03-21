@@ -6,7 +6,7 @@ import { prisma } from '../lib/prisma.js';
 //mock setup
 const prismaMock = prisma as unknown as {
   user: {
-    findUnique: (args: unknown) => Promise<any>;
+    findUnique: (args: unknown) => Promise<unknown>;
   };
 };
 test('getUsername: returns username when user exists', async () => {

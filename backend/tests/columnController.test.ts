@@ -7,7 +7,6 @@ import {
   deleteColumn,
 } from '../src/controllers/columnController.js';
 import * as columnService from '../src/services/columnService.js';
-import { AppError } from '../types/appError.js';
 
 //type defintions:
 type mockRequest = {

@@ -13,15 +13,15 @@ import { AppError } from '../types/appError.js';
 
 //mock setup:
 const prismaMock = prisma as unknown as {
-  column: { findUnique: (args: unknown) => Promise<any> };
+  column: { findUnique: (args: unknown) => Promise<unknown> };
   task: {
     count: (args: unknown) => Promise<number>;
-    findUnique: (args: unknown) => Promise<any>;
-    update: (args: unknown) => Promise<any>;
+    findUnique: (args: unknown) => Promise<unknown>;
+    update: (args: unknown) => Promise<unknown>;
   };
-  projectMembership: { findUnique: (args: unknown) => Promise<any> };
-  workflowTransition: { findFirst: (args: unknown) => Promise<any> };
-  auditLog: { create: (args: unknown) => Promise<any> };
+  projectMembership: { findUnique: (args: unknown) => Promise<unknown> };
+  workflowTransition: { findFirst: (args: unknown) => Promise<unknown> };
+  auditLog: { create: (args: unknown) => Promise<unknown> };
 };
 
 // enforceWipLimit
@@ -139,9 +139,10 @@ test('syncStoryStatus: moves story to DONE if all children are DONE', async () =
       },
     },
   });
-  prismaMock.task.update = async (args: any) => {
+  prismaMock.task.update = async (args: unknown) => {
     updateCalled = true;
-    assert.equal(args.data.columnId, 3);
+    const updateArgs = args as { data: { columnId: number } };
+    assert.equal(updateArgs.data.columnId, 3);
     return {};
   };
   prismaMock.auditLog.create = async () => {
@@ -169,9 +170,10 @@ test('syncStoryStatus: moves story to IN_PROGRESS if children are mixed', async 
       },
     },
   });
-  prismaMock.task.update = async (args: any) => {
+  prismaMock.task.update = async (args: unknown) => {
     updateCalled = true;
-    assert.equal(args.data.columnId, 2);
+    const updateArgs = args as { data: { columnId: number } };
+    assert.equal(updateArgs.data.columnId, 2);
     return {};
   };
   prismaMock.auditLog.create = async () => ({});
