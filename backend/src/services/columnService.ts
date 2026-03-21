@@ -7,7 +7,7 @@ import { CreateColumnDTO, UpdateColumnDTO } from '../types/dtos.js';
 export const createColumn = async (boardId: number, data: CreateColumnDTO) => {
   const { title, order, wipLimit, status } = data;
 
-  if(!title) throw new AppError('Column title is required.', 400);
+  if (!title) throw new AppError('Column title is required.', 400);
 
   return await prisma.column.create({
     data: {
@@ -36,16 +36,16 @@ export const updateColumn = async (columnId: number, data: UpdateColumnDTO) => {
   const { title, wipLimit, order, status } = data;
 
   const oldColumn = await prisma.column.findUnique({ where: { id: columnId } });
-  if(!oldColumn) throw new AppError('Column not found.', 404);
+  if (!oldColumn) throw new AppError('Column not found.', 404);
 
   //Case 1: order changed
-  if(order !== undefined && Number(order) !== oldColumn.order){
+  if (order !== undefined && Number(order) !== oldColumn.order) {
     const newOrderInt = Number(order);
     const oldOrderInt = oldColumn.order;
 
     // Using a transaction so "Either all columns safely shift or if fails then stop and update nothing.
     await prisma.$transaction(async (tx) => {
-      if(oldOrderInt < newOrderInt){
+      if (oldOrderInt < newOrderInt) {
         // Moving column to the right so Shift intermediate columns left
         await tx.column.updateMany({
           where: {
@@ -54,8 +54,7 @@ export const updateColumn = async (columnId: number, data: UpdateColumnDTO) => {
           },
           data: { order: { decrement: 1 } },
         });
-      }
-      else {
+      } else {
         // Moving column to the left so shift intermediate columns right
         await tx.column.updateMany({
           where: {
@@ -108,14 +107,13 @@ export const updateColumn = async (columnId: number, data: UpdateColumnDTO) => {
 
 //Deleting a column:
 export const deleteColumn = async (columnId: number) => {
-  try{
+  try {
     return await prisma.column.delete({
       where: { id: columnId },
     });
-  }
-  catch (error){
-    if(error instanceof Prisma.PrismaClientKnownRequestError){
-      if(error.code === 'P2025'){
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
         throw new AppError('Record not found.', 404);
       }
     }

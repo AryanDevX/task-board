@@ -3,38 +3,40 @@ import { AppError } from '../../types/appError.js';
 import { prisma } from '../../lib/prisma.js';
 
 export const getUsers = async (
-  req: Request, 
-  res: Response, 
-  next: NextFunction
+  req: Request,
+  res: Response,
+  next: NextFunction,
 ) => {
   try {
     const rawPage = Number(req.query.page ?? 1);
     const rawLimit = Number(req.query.limit ?? 10);
     const search = String(req.query.search ?? '').trim();
 
-    const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
-    const limit = Number.isFinite(rawLimit) && rawLimit > 0
-      ? Math.min(Math.floor(rawLimit), 50)
-      : 10;
+    const page =
+      Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
+    const limit =
+      Number.isFinite(rawLimit) && rawLimit > 0
+        ? Math.min(Math.floor(rawLimit), 50)
+        : 10;
     const skip = (page - 1) * limit;
 
     const where = search
       ? {
-        OR: [
-          {
-            username: {
-              contains: search,
-              mode: 'insensitive' as const,
+          OR: [
+            {
+              username: {
+                contains: search,
+                mode: 'insensitive' as const,
+              },
             },
-          },
-          {
-            email: {
-              contains: search,
-              mode: 'insensitive' as const,
+            {
+              email: {
+                contains: search,
+                mode: 'insensitive' as const,
+              },
             },
-          },
-        ],
-      }
+          ],
+        }
       : undefined;
 
     const [users, total] = await Promise.all([
@@ -48,7 +50,7 @@ export const getUsers = async (
           avatar: true,
         },
         orderBy: {
-          id: 'asc'
+          id: 'asc',
         },
         skip,
         take: limit,
@@ -73,17 +75,19 @@ export const getUsers = async (
 export const updateUserGlobalRole = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { id } = req.params;
     const { globalRole } = req.body;
 
-    if(req.user?.globalRole !== 'GLOBAL_ADMIN') {
-      return next(new AppError('Unauthorized: Only Global Admins can modify roles', 403));
+    if (req.user?.globalRole !== 'GLOBAL_ADMIN') {
+      return next(
+        new AppError('Unauthorized: Only Global Admins can modify roles', 403),
+      );
     }
 
-    if(globalRole !== 'GLOBAL_ADMIN') {
+    if (globalRole !== 'GLOBAL_ADMIN') {
       return next(new AppError('Invalid role provided', 400));
     }
 
@@ -95,7 +99,7 @@ export const updateUserGlobalRole = async (
         username: true,
         email: true,
         globalRole: true,
-      }
+      },
     });
 
     res.status(200).json({
@@ -112,10 +116,10 @@ export const updateAvatar = async (
   res: Response,
   next: NextFunction,
 ) => {
-  try{
+  try {
     const userId = req.user?.userId;
 
-    if(!req.file){
+    if (!req.file) {
       return next(new AppError('No file uploaded', 400));
     }
     const avatarUrl = `/uploads/avatars/${req.file.filename}`;
@@ -129,8 +133,7 @@ export const updateAvatar = async (
       message: 'Avatar updated',
       avatar: user.avatar,
     });
-  }
-  catch (err){
+  } catch (err) {
     next(err);
   }
 };

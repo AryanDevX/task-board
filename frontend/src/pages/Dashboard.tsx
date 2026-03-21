@@ -19,17 +19,17 @@ export const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isManageUsersOpen, setIsManageUsersOpen] = useState(false);
-  
+
   const isGlobalAdmin = () => {
-    if(!user) return false;
-    else if(user.globalRole==='GLOBAL_ADMIN') return true;
+    if (!user) return false;
+    else if (user.globalRole === 'GLOBAL_ADMIN') return true;
     else return false;
-  }
-  const isAdmin = (project:Project) => {
-    if(isGlobalAdmin()) return true;
-    if(project.userRole === 'PROJECT_ADMIN') return true;
+  };
+  const isAdmin = (project: Project) => {
+    if (isGlobalAdmin()) return true;
+    if (project.userRole === 'PROJECT_ADMIN') return true;
     else return false;
-  }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -42,32 +42,33 @@ export const Dashboard = () => {
 
   const handleUpdateSuccess = (updatedProject: Project) => {
     setAllProjects((prevProjects) =>
-      prevProjects.map((p) => (p.id === updatedProject.id ? updatedProject : p))
+      prevProjects.map((p) =>
+        p.id === updatedProject.id ? updatedProject : p,
+      ),
     );
   };
 
-  const handleArchiveProject = async (projectId: string | number)=>{
-    try{
+  const handleArchiveProject = async (projectId: string | number) => {
+    try {
       await projectApi.archiveProject(String(projectId));
       setAllProjects((prevProjects) =>
         prevProjects.map((project) =>
-          project.id === projectId ? { ...project, archived: true } : project
-        )
+          project.id === projectId ? { ...project, archived: true } : project,
+        ),
       );
-    }
-    catch(error){
+    } catch (error) {
       console.error('Failed to archieve project', error);
       alert('Failed to archieve project. Please try again later.');
     }
-  }
+  };
 
   const handleUnarchiveProject = async (projectId: string | number) => {
     try {
       await projectApi.unarchiveProject(String(projectId));
       setAllProjects((prevProjects) =>
         prevProjects.map((project) =>
-          project.id === projectId ? { ...project, archived: false } : project
-        )
+          project.id === projectId ? { ...project, archived: false } : project,
+        ),
       );
     } catch (error) {
       console.error('Failed to unarchive project', error);
@@ -75,8 +76,13 @@ export const Dashboard = () => {
     }
   };
 
-   const handleDeleteProject = async (projectId: string | number) => {
-    if(!window.confirm('Are you sure you want to permanently delete this project?')) return;
+  const handleDeleteProject = async (projectId: string | number) => {
+    if (
+      !window.confirm(
+        'Are you sure you want to permanently delete this project?',
+      )
+    )
+      return;
     try {
       await projectApi.deleteProject(String(projectId));
       setAllProjects((prev) => prev.filter((p) => p.id !== projectId));
@@ -91,16 +97,16 @@ export const Dashboard = () => {
       try {
         const data = await projectApi.getProjects();
         setAllProjects(data.projects);
-      } 
-      catch(error){
+      } catch (error) {
         console.error('Failed to load projects', error);
       }
     };
     loadProjects();
   }, []);
 
-  const displayedProjects = allProjects.filter(p => showArchived ? p.archived : !p.archived);
-
+  const displayedProjects = allProjects.filter((p) =>
+    showArchived ? p.archived : !p.archived,
+  );
 
   const avatarSrc = getAvatarSrc(user?.avatar);
 
@@ -114,23 +120,22 @@ export const Dashboard = () => {
               onClick={() => setIsModalOpen(true)}
             >
               + New Project
-            </button>  
+            </button>
             <button
-              className={styles.newProjectBtn} 
+              className={styles.newProjectBtn}
               onClick={() => setIsManageUsersOpen(true)}
             >
               Manage Users
             </button>
           </div>
-          
         )}
-          <div className={styles.actions}>
-            <button
-              className={`${styles.newProjectBtn} ${showArchived ? styles.archiveToggleActive : ""}`}
-              onClick={() => setShowArchived(!showArchived)}
-            >
-              {showArchived ? 'Active Projects' : 'Archived Projects'}
-            </button>
+        <div className={styles.actions}>
+          <button
+            className={`${styles.newProjectBtn} ${showArchived ? styles.archiveToggleActive : ''}`}
+            onClick={() => setShowArchived(!showArchived)}
+          >
+            {showArchived ? 'Active Projects' : 'Archived Projects'}
+          </button>
           <NotificationCenter />
           <button className={styles.logoutBtn} onClick={handleLogout}>
             Log out
@@ -155,10 +160,14 @@ export const Dashboard = () => {
       <main>
         <h2>{showArchived ? 'Archived Projects' : 'My Projects'}</h2>
         {displayedProjects.length === 0 ? (
-          <p>{showArchived ? "No archived projects." : "You don't have any projects yet. Click \"New Project\" to start!"}</p>
+          <p>
+            {showArchived
+              ? 'No archived projects.'
+              : 'You don\'t have any projects yet. Click "New Project" to start!'}
+          </p>
         ) : (
           <div className={styles.projectGrid}>
-           {displayedProjects.map((project) => (
+            {displayedProjects.map((project) => (
               <div key={project.id} className={styles.projectCardWrapper}>
                 <Link
                   to={`/project/${project.id}`}
@@ -166,32 +175,34 @@ export const Dashboard = () => {
                 >
                   <h3>{project.name}</h3>
                 </Link>
-                <p className={styles.projectDesc}>{project.description || 'No description provided.'}</p>
+                <p className={styles.projectDesc}>
+                  {project.description || 'No description provided.'}
+                </p>
                 <div className={styles.projectMeta}>
                   <p>Created: {new Date(project.createdAt).toLocaleString()}</p>
                   <p>Updated: {new Date(project.updatedAt).toLocaleString()}</p>
                 </div>
-                  {isAdmin(project) && !showArchived && (
+                {isAdmin(project) && !showArchived && (
                   <div className={styles.cardActions}>
                     <button
                       onClick={() => setEditingProject(project)}
                       className={styles.editBtn}
                     >
-                     Edit
+                      Edit
                     </button>
                     <button
                       onClick={() => handleArchiveProject(project.id)}
                       className={styles.editBtn}
                     >
                       Archive
-                  </button>
-                   <button
-                    onClick={() => handleDeleteProject(project.id)}
-                    className={styles.archieveBtn}
-                  >
-                    Delete
-                  </button>
-                </div>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProject(project.id)}
+                      className={styles.archieveBtn}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 )}
                 {isAdmin(project) && showArchived && (
                   <div className={styles.cardActions}>
@@ -214,7 +225,7 @@ export const Dashboard = () => {
           </div>
         )}
       </main>
-      
+
       {isModalOpen && (
         <CreateProjectModal
           onClose={() => setIsModalOpen(false)}
@@ -229,9 +240,7 @@ export const Dashboard = () => {
         />
       )}
       {isManageUsersOpen && (
-        <ManageUsersModal 
-          onClose={() => setIsManageUsersOpen(false)} 
-        />
+        <ManageUsersModal onClose={() => setIsManageUsersOpen(false)} />
       )}
     </div>
   );

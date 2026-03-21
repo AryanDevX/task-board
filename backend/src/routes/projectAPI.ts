@@ -18,18 +18,35 @@ import {
 } from '../controllers/manageMembers.js';
 const router = express.Router();
 
-router.patch('/projects/:projectId',authenticateJWT,requireProjectRole(["PROJECT_ADMIN"]), requireGlobalAdmin,updateProject)
-router.delete('/projects/:projectId', authenticateJWT,requireGlobalAdmin, deleteProject);
-router.post('/projects/', authenticateJWT,requireGlobalAdmin, createProject);
+router.patch(
+  '/projects/:projectId',
+  authenticateJWT,
+  requireProjectRole(['PROJECT_ADMIN']),
+  requireGlobalAdmin,
+  updateProject,
+);
+router.delete(
+  '/projects/:projectId',
+  authenticateJWT,
+  requireGlobalAdmin,
+  deleteProject,
+);
+router.post('/projects/', authenticateJWT, requireGlobalAdmin, createProject);
 router.get('/projects/:projectId', authenticateJWT, getProjects);
 router.get('/projects', authenticateJWT, getProjects);
-router.get(
-  '/projects/:projectId/members',
+router.get('/projects/:projectId/members', authenticateJWT, getMembers);
+router.post(
+  '/projects/:projectId/archive',
   authenticateJWT,
-  getMembers,
+  requireGlobalAdmin,
+  projectArchive,
 );
-router.post('/projects/:projectId/archive',authenticateJWT,requireGlobalAdmin,projectArchive)
-router.post('/projects/:projectId/unarchive',authenticateJWT,requireGlobalAdmin,unarchiveProject)
+router.post(
+  '/projects/:projectId/unarchive',
+  authenticateJWT,
+  requireGlobalAdmin,
+  unarchiveProject,
+);
 router.post(
   '/projects/:projectId/members/:email',
   authenticateJWT,

@@ -8,7 +8,7 @@ export const getTransitions = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try{
+  try {
     const { boardId } = req.params;
     const transitions = await prisma.workflowTransition.findMany({
       where: { boardId: parseInt(boardId) },
@@ -20,8 +20,7 @@ export const getTransitions = async (
       },
     });
     res.status(200).json(transitions);
-  }
-  catch (error){
+  } catch (error) {
     next(error);
   }
 };
@@ -31,24 +30,24 @@ export const updateTransitions = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try{
+  try {
     const { boardId } = req.params;
     const { transitions } = req.body as { transitions: WorkflowTransition[] };
-    if(!Array.isArray(transitions)){
+    if (!Array.isArray(transitions)) {
       return next(new AppError('Transitions must be an array', 400));
     }
     const board = await prisma.board.findUnique({
       where: { id: Number(boardId) },
       select: { projectId: true },
     });
-    if(!board){
+    if (!board) {
       return next(new AppError('Board not found.', 404));
     }
     await prisma.$transaction(async (tx) => {
       await tx.workflowTransition.deleteMany({
         where: { boardId: Number(boardId) },
       });
-      if(transitions.length > 0){
+      if (transitions.length > 0) {
         const dataToInsert = transitions.map((t) => ({
           projectId: board.projectId,
           boardId: Number(boardId),
@@ -65,14 +64,13 @@ export const updateTransitions = async (
       where: { boardId: Number(boardId) },
     });
     res.status(200).json({ updatedTransitions });
-  }
-  catch (error){
+  } catch (error) {
     next(error);
   }
 };
 
 // POST route to add a new workflow transition
-export const createTransition= async (
+export const createTransition = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -82,8 +80,8 @@ export const createTransition= async (
     const { fromColumnId, toColumnId } = req.body;
 
     if (!projectId || !boardId || !fromColumnId || !toColumnId) {
-       next(new AppError('Missing required fields for transition', 400));
-       return;
+      next(new AppError('Missing required fields for transition', 400));
+      return;
     }
 
     // Optional: Check if the transition already exists to prevent duplicates
@@ -96,8 +94,8 @@ export const createTransition= async (
     });
 
     if (existing) {
-       next(new AppError('Transition already exists', 400));
-       return;
+      next(new AppError('Transition already exists', 400));
+      return;
     }
 
     const newTransition = await prisma.workflowTransition.create({
@@ -123,20 +121,25 @@ export const deleteTransition = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    
+
     if (!id) {
-       next(new AppError('Transition ID is required', 400));
-       return;
+      next(new AppError('Transition ID is required', 400));
+      return;
     }
-    
+
     await prisma.workflowTransition.delete({
       where: { id: Number(id) },
     });
-    res.status(200).json({ success: true, message: 'Transition deleted successfully' });
+    res
+      .status(200)
+      .json({ success: true, message: 'Transition deleted successfully' });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-       next(new AppError('Transition not found', 404));
-       return;
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2025'
+    ) {
+      next(new AppError('Transition not found', 404));
+      return;
     }
     next(error);
   }

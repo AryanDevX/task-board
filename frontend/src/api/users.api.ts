@@ -16,7 +16,7 @@ export const usersApi = {
       limit: String(limit),
     });
 
-    if(search.trim()){
+    if (search.trim()) {
       params.set('search', search.trim());
     }
 
@@ -46,4 +46,3 @@ export const usersApi = {
     });
   },
 };
-

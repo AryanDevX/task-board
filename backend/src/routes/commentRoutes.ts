@@ -12,14 +12,14 @@ const router = Router({ mergeParams: true });
 router.get(
   '/',
   authenticateJWT,
-  requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER','PROJECT_VIEWER']),
+  requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER', 'PROJECT_VIEWER']),
   getComments,
 );
 //Creating Comment
 router.post(
   '/',
   authenticateJWT,
-  requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER' ]),
+  requireProjectRole(['PROJECT_ADMIN', 'PROJECT_MEMBER']),
   createComment,
 );
 

@@ -3,7 +3,7 @@ import { type Notification } from '../types/models';
 
 export const notificationApi = {
   //Get all notifications of current user:
-  getNotifications: (): Promise<{notifications: Notification[]}> =>
+  getNotifications: (): Promise<{ notifications: Notification[] }> =>
     apiFetch(`/notifications`),
 
   //Read notification of current user:

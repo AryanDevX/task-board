@@ -3,23 +3,21 @@ import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../types/appError.js';
 import { Prisma, NotificationType } from '@prisma/client';
 
+// get all comments for a specific task.
 
-
- // get all comments for a specific task.
- 
 export const getComments = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try{
+  try {
     const taskIdParam = req.params.taskId;
-    if(!taskIdParam){
+    if (!taskIdParam) {
       return next(new AppError('Task ID is required.', 400));
     }
 
     const taskId = parseInt(taskIdParam);
-    if(Number.isNaN(taskId)){
+    if (Number.isNaN(taskId)) {
       return next(new AppError('Task ID must be a number.', 400));
     }
 
@@ -27,7 +25,7 @@ export const getComments = async (
       where: { id: taskId },
       select: { id: true },
     });
-    if(!task){
+    if (!task) {
       return next(new AppError('Task not found.', 404));
     }
 
@@ -40,32 +38,31 @@ export const getComments = async (
     });
 
     res.status(200).json(comments);
-  }
-  catch (error){
+  } catch (error) {
     next(error);
   }
 };
 
- // creates a new comment for a task and handles notifications for mentions and task assignee.
- 
+// creates a new comment for a task and handles notifications for mentions and task assignee.
+
 export const createComment = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try{
+  try {
     const { content } = req.body;
     const taskId = req.params.taskId;
-    if(!req.user){
+    if (!req.user) {
       return next(new AppError('Unauthorized', 400));
     }
     const authorId = req.user.userId;
-    if(!content || !taskId){
+    if (!content || !taskId) {
       return next(new AppError('Task ID and content are required.', 400));
     }
     const newComment = await prisma.comment.create({
       data: {
-        content,                                                            // creating the comment in database
+        content, // creating the comment in database
         taskId: parseInt(taskId),
         authorId: authorId,
       },
@@ -82,9 +79,11 @@ export const createComment = async (
     const notificationsToCreate: Prisma.NotificationCreateManyInput[] = [];
     // regex to find mentions (e.g., @username) in the comment content.
     const mentionMatches = content.match(/@([a-zA-Z0-9_]+)/g);
-    if(mentionMatches){                                                           
-      const usernames = mentionMatches.map((match: string) =>                   // finding match for usernames in @UserName notation
-        match.substring(1),
+    if (mentionMatches) {
+      const usernames = mentionMatches.map(
+        (
+          match: string, // finding match for usernames in @UserName notation
+        ) => match.substring(1),
       );
       // find the user IDs for the mentioned usernames, excluding the comment author.
       const mentionedUsers = await prisma.user.findMany({
@@ -98,18 +97,18 @@ export const createComment = async (
       });
       mentionedUsers.forEach((user) => {
         notificationsToCreate.push({
-          userId: user.id,                                                    // mentioning the existing usernames database found in text
+          userId: user.id, // mentioning the existing usernames database found in text
           taskId: parseInt(taskId),
           type: 'USER_MENTIONED',
           message: `${newComment.author.username} mentioned you in a comment of "${task?.title}"`,
         });
       });
     }
-    if(task && task.assigneeId && task.assigneeId !== authorId){
+    if (task && task.assigneeId && task.assigneeId !== authorId) {
       const alreadMentioned = notificationsToCreate.some(
         (n) => n.userId === task.assigneeId,
       );
-      if(!alreadMentioned){
+      if (!alreadMentioned) {
         await prisma.notification.create({
           data: {
             userId: task.assigneeId,
@@ -120,7 +119,7 @@ export const createComment = async (
         });
       }
     }
-    if(notificationsToCreate.length > 0){
+    if (notificationsToCreate.length > 0) {
       await prisma.notification.createMany({
         data: notificationsToCreate,
       });
@@ -134,13 +133,12 @@ export const createComment = async (
       },
     });
     res.status(201).json(newComment);
-  }
-  catch (error){
+  } catch (error) {
     next(error);
   }
 };
 
- // updates an existing comment. Only the author of the comment can update it.
+// updates an existing comment. Only the author of the comment can update it.
 export const updateComment = async (
   req: Request,
   res: Response,
@@ -149,20 +147,20 @@ export const updateComment = async (
   try {
     const { commentId } = req.params;
     const { content } = req.body;
-    
+
     if (!req.user) {
       return next(new AppError('Unauthorized', 400));
     }
     const userId = req.user.userId;
-    if(!content){                                                       
+    if (!content) {
       return next(new AppError('Content is required.', 400));
     }
-    
+
     const existingComment = await prisma.comment.findUnique({
       where: { id: parseInt(commentId) },
-      include: { author: true }, 
+      include: { author: true },
     });
-    
+
     if (!existingComment) {
       return next(new AppError('Comment not found.', 404));
     }
@@ -172,7 +170,7 @@ export const updateComment = async (
         new AppError('Unauthorized: You can only edit your own comments.', 403),
       );
     }
-    
+
     const updatedComment = await prisma.comment.update({
       where: { id: parseInt(commentId) },
       data: { content },
@@ -199,7 +197,7 @@ export const updateComment = async (
     const newMentions = extractMentions(content);
 
     const newlyAddedMentions = newMentions.filter(
-      (username) => !oldMentions.includes(username)
+      (username) => !oldMentions.includes(username),
     );
 
     if (newlyAddedMentions.length > 0) {
@@ -212,7 +210,7 @@ export const updateComment = async (
       if (validUsersToNotify.length > 0) {
         const notificationsData = validUsersToNotify.map((user) => ({
           userId: user.id,
-          type: NotificationType.USER_MENTIONED, 
+          type: NotificationType.USER_MENTIONED,
           message: `${existingComment.author.username} mentioned you in an edited comment.`,
           taskId: existingComment.taskId,
         }));
@@ -229,23 +227,23 @@ export const updateComment = async (
   }
 };
 
- // deletes a specific comment. Only the author of the comment can delete it.
- 
+// deletes a specific comment. Only the author of the comment can delete it.
+
 export const deleteComment = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try{
+  try {
     const { commentId } = req.params;
     const userId = req.user?.userId;
     const existingComment = await prisma.comment.findUnique({
       where: { id: parseInt(commentId) },
     });
-    if(!existingComment){
+    if (!existingComment) {
       return next(new AppError('Comment not found.', 404));
     }
-    if(existingComment.authorId !== userId){
+    if (existingComment.authorId !== userId) {
       return next(
         new AppError(
           'Unauthorized: You can only delete your own comments.',
@@ -269,8 +267,7 @@ export const deleteComment = async (
     res
       .status(200)
       .json({ message: 'Comment deleted successfully', deletedComment });
-  }
-  catch (error){
+  } catch (error) {
     next(error);
   }
 };

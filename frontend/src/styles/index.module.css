@@ -2,7 +2,11 @@
   min-height: calc(100vh - 4rem);
   padding: clamp(1rem, 2vw, 2rem);
   background:
-    radial-gradient(circle at top left, rgba(99, 102, 241, 0.08), transparent 28%),
+    radial-gradient(
+      circle at top left,
+      rgba(99, 102, 241, 0.08),
+      transparent 28%
+    ),
     linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
 }
 
@@ -450,7 +454,7 @@
 }
 
 .codeButton {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 }
 
 .editActionRow {
