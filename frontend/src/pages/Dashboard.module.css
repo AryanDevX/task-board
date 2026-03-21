@@ -1,8 +1,8 @@
 .container {
   padding: 1rem 2rem;
   max-width: 100%;
-  width: 100%;            
-  box-sizing: border-box;  
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
 }
 
@@ -19,12 +19,12 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-left: auto; 
+  margin-left: auto;
 }
 
 .projectGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
   width: 100%;
 }
@@ -37,8 +37,10 @@
   display: flex;
   flex-direction: column;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
-  transition: box-shadow 0.2s, transform 0.2s;
-  overflow: hidden; 
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
+  overflow: hidden;
 }
 
 .projectCardWrapper:hover {
@@ -67,7 +69,7 @@
   line-height: 1.5;
   margin-bottom: 1rem;
   flex-grow: 1;
-  word-break: break-word; 
+  word-break: break-word;
 }
 
 .projectMeta {
@@ -99,7 +101,9 @@
   font-weight: 500;
   cursor: pointer;
   flex: 1;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .editBtn:hover {
@@ -117,7 +121,9 @@
   font-weight: 500;
   cursor: pointer;
   flex: 1;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .archieveBtn:hover {
@@ -134,7 +140,9 @@
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
 }
 
 .newProjectBtn:hover {
@@ -209,5 +217,5 @@
 
 .adminActions {
   display: flex;
-  gap: 1rem; 
+  gap: 1rem;
 }

@@ -16,8 +16,12 @@ type ColumnWithStatus = Column & { status?: string };
 export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditColumnModalProps) => {
   const { projectId, boardId } = useParams<{ projectId: string; boardId: string }>();
   const [title, setTitle] = useState(column.title);
-  const [status, setStatus] = useState<string>((column as ColumnWithStatus).status || 'TODO');
-  const [wipLimit, setWipLimit] = useState<string>(column.wipLimit ? String(column.wipLimit) : '');
+  const [status, setStatus] = useState<string>(
+    (column as ColumnWithStatus).status || 'TODO',
+  );
+  const [wipLimit, setWipLimit] = useState<string>(
+    column.wipLimit ? String(column.wipLimit) : '',
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,15 +38,18 @@ export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditC
       setIsSubmitting(true);
       setError(null);
 
-      const updatedColumn = await apiFetch<Column>(`/projects/${projectId}/boards/${boardId}/columns/${column.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: title.trim(),
-          wipLimit: wipLimit !== '' ? Number(wipLimit) : null,
-          status
-        })
-      });
+      const updatedColumn = await apiFetch<Column>(
+        `/projects/${projectId}/boards/${boardId}/columns/${column.id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: title.trim(),
+            wipLimit: wipLimit !== '' ? Number(wipLimit) : null,
+            status,
+          }),
+        },
+      );
 
       onSuccess(updatedColumn);
       onClose();
@@ -59,13 +66,25 @@ export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditC
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h3>Edit Column</h3>
-          <button className={styles.closeButton} onClick={onClose} type="button">×</button>
+          <button
+            className={styles.closeButton}
+            onClick={onClose}
+            type="button"
+          >
+            ×
+          </button>
         </div>
 
         <form className={styles.modalForm} onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <label htmlFor="title">Column Title</label>
-            <input id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
+            <input
+              id="title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
           </div>
 
           <div className={styles.inputGroup}>
@@ -85,16 +104,31 @@ export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditC
 
           <div>
             <label htmlFor="wipLimit">WIP Limit (Optional)</label>
-            <input id="wipLimit" type="number" min="1" value={wipLimit} onChange={(e) => setWipLimit(e.target.value)} placeholder="No limit" />
+            <input
+              id="wipLimit"
+              type="number"
+              min="1"
+              value={wipLimit}
+              onChange={(e) => setWipLimit(e.target.value)}
+              placeholder="No limit"
+            />
           </div>
 
           {error && <p className={styles.error}>{error}</p>}
 
           <div className={styles.buttonRow}>
-            <button type="button" className={styles.secondaryButton} onClick={onClose}>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={onClose}
+            >
               Cancel
             </button>
-            <button type="submit" className={styles.primaryButton} disabled={isSubmitting || !title.trim()}>
+            <button
+              type="submit"
+              className={styles.primaryButton}
+              disabled={isSubmitting || !title.trim()}
+            >
               {isSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
           </div>

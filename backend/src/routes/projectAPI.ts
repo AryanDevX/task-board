@@ -23,10 +23,18 @@ router.delete('/projects/:projectId', authenticateJWT,requireProjectRole(["PROJE
 router.post('/projects/', authenticateJWT,requireGlobalAdmin, createProject);
 router.get('/projects/:projectId', authenticateJWT, getProjects);
 router.get('/projects', authenticateJWT, getProjects);
-router.get(
-  '/projects/:projectId/members',
+router.get('/projects/:projectId/members', authenticateJWT, getMembers);
+router.post(
+  '/projects/:projectId/archive',
   authenticateJWT,
-  getMembers,
+  requireGlobalAdmin,
+  projectArchive,
+);
+router.post(
+  '/projects/:projectId/unarchive',
+  authenticateJWT,
+  requireGlobalAdmin,
+  unarchiveProject,
 );
 router.post('/projects/:projectId/archive',authenticateJWT,requireProjectRole(["PROJECT_ADMIN"]),projectArchive)
 router.post('/projects/:projectId/unarchive',authenticateJWT,requireProjectRole(["PROJECT_ADMIN"]),unarchiveProject)

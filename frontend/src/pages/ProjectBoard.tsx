@@ -49,7 +49,7 @@ export const ProjectBoard = () => {
         setBoards(data);
       } catch (err) {
         console.error(err);
-        setError("Failed to load boards");
+        setError('Failed to load boards');
       } finally {
         setLoading(false);
       }
@@ -66,7 +66,7 @@ export const ProjectBoard = () => {
       <header className={sharedStyles.pageTopBar}>
         <button
           className={sharedStyles.backButton}
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate('/dashboard')}
         >
           ← Dashboard
         </button>
@@ -76,7 +76,9 @@ export const ProjectBoard = () => {
       <section className={sharedStyles.pageSplitHeader}>
         <div className={sharedStyles.pageTitleBlock}>
           <h1 className={sharedStyles.pageTitle}>Project Boards</h1>
-          <p className={sharedStyles.pageSubtitle}>Manage and organize your team workflows.</p>
+          <p className={sharedStyles.pageSubtitle}>
+            Manage and organize your team workflows.
+          </p>
         </div>
         <button
           className={sharedStyles.primaryButton}
@@ -97,7 +99,9 @@ export const ProjectBoard = () => {
               <article
                 key={board.id}
                 className={`${styles.boardCard} ${styles.clickableCard}`}
-                onClick={() => navigate(`/project/${projectId}/boards/${board.id}`)}
+                onClick={() =>
+                  navigate(`/project/${projectId}/boards/${board.id}`)
+                }
               >
                 <div className={styles.boardCardHeader}>
                   <h3>{board.title}</h3>

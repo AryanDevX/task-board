@@ -22,10 +22,10 @@ export const OrganizationUsersBrowser = ({
 }: Props) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  
+
   //fetching a big list of users to avoid server pagination
   const { users, isLoading, error } = useOrganizationUsers({
-    page: 1, 
+    page: 1,
     limit: 1000,
     search: searchQuery,
   });
@@ -35,10 +35,16 @@ export const OrganizationUsersBrowser = ({
 
   //Page calculation and index
   const totalAvailable = allAvailableUsers.length;
-  const calculatedTotalPages = Math.max(1, Math.ceil(totalAvailable / pageSize));
+  const calculatedTotalPages = Math.max(
+    1,
+    Math.ceil(totalAvailable / pageSize),
+  );
   const currentPage = Math.min(page, calculatedTotalPages);
   const startIndex = (currentPage - 1) * pageSize;
-  const visibleUsers = allAvailableUsers.slice(startIndex, startIndex + pageSize);
+  const visibleUsers = allAvailableUsers.slice(
+    startIndex,
+    startIndex + pageSize,
+  );
 
   return (
     <div className={styles.browser}>
@@ -58,7 +64,9 @@ export const OrganizationUsersBrowser = ({
       </div>
 
       <p className={styles.metaText}>
-        {isLoading ? 'Loading users...' : `${totalAvailable} available users found`}
+        {isLoading
+          ? 'Loading users...'
+          : `${totalAvailable} available users found`}
       </p>
 
       {error ? (
@@ -97,7 +105,9 @@ export const OrganizationUsersBrowser = ({
           <button
             type="button"
             className={styles.pageButton}
-            onClick={() => setPage(Math.min(calculatedTotalPages, currentPage + 1))}
+            onClick={() =>
+              setPage(Math.min(calculatedTotalPages, currentPage + 1))
+            }
             disabled={currentPage === calculatedTotalPages || isLoading}
           >
             Next

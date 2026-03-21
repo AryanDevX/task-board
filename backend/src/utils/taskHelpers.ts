@@ -7,7 +7,7 @@ export const enforceWipLimit = async (columnId: number, issueType?: string): Pro
   if (issueType === 'STORY') return;
 
   const column = await prisma.column.findUnique({ where: { id: columnId } });
-  if(!column || column.wipLimit === null) return;
+  if (!column || column.wipLimit === null) return;
 
   const currentTaskCount = await prisma.task.count({ where: { columnId, issueType: { not: 'STORY' } } });
   if(currentTaskCount >= column.wipLimit){
@@ -27,7 +27,7 @@ export const validateAssigneeMembership = async (
     where: { id: columnId },
     include: { board: { select: { projectId: true } } },
   });
-  if(!column) throw new AppError('Target column not found.', 404);
+  if (!column) throw new AppError('Target column not found.', 404);
 
   const membership = await prisma.projectMembership.findUnique({
     where: {
@@ -38,7 +38,7 @@ export const validateAssigneeMembership = async (
     },
   });
 
-  if(!membership){
+  if (!membership) {
     throw new AppError(
       'Validation Error: You cannot assign a task to a user who is not a member of this project.',
       400,
@@ -53,15 +53,15 @@ export const validateTaskHierarchy = async (
   parentId: number | null,
   issueType: string,
 ): Promise<void> => {
-  if(parentId){
+  if (parentId) {
     const parent = await prisma.task.findUnique({ where: { id: parentId } });
-    if(!parent || parent.issueType !== 'STORY'){
+    if (!parent || parent.issueType !== 'STORY') {
       throw new AppError(
         'Hierarchy Error: A task or bug can only be a child of a STORY.',
         400,
       );
     }
-    if(issueType === 'STORY'){
+    if (issueType === 'STORY') {
       throw new AppError(
         'Hierarchy Error: A STORY cannot be a child of another task.',
         400,
@@ -84,7 +84,7 @@ export const validateTransition = async (
     },
   });
 
-  if(!allowedTransition){
+  if (!allowedTransition) {
     throw new AppError(
       "Invalid status transition for this board's workflow.",
       400,
@@ -101,17 +101,16 @@ export const getResolutionDatesForColumn = async (
     where: { id: columnId },
   });
 
-  if(!targetColumn){
+  if (!targetColumn) {
     return { resolvedAt: null, closedAt: null };
   }
 
-  if(targetColumn.status === 'DONE'){
+  if (targetColumn.status === 'DONE') {
     return {
       resolvedAt: currentResolvedAt || new Date(),
       closedAt: new Date(),
     };
-  }
-  else if(targetColumn.status === 'IN_REVIEW'){
+  } else if (targetColumn.status === 'IN_REVIEW') {
     return { resolvedAt: currentResolvedAt || new Date(), closedAt: null };
   }
 
@@ -128,7 +127,7 @@ export const syncStoryStatus = async (
     where: { id: storyId },
     include: {
       children: {
-        include: { column: true }
+        include: { column: true },
       },
       column: {
         include: {
@@ -138,30 +137,31 @@ export const syncStoryStatus = async (
     },
   });
 
-  if(!story || story.issueType !== 'STORY' || story.children.length === 0)
+  if (!story || story.issueType !== 'STORY' || story.children.length === 0)
     return;
   const boardColumns = story.column.board.columns;
-  if(boardColumns.length === 0) return;
+  if (boardColumns.length === 0) return;
 
   const childStatuses = story.children.map((c) => c.column.status);
   const allDone = childStatuses.every((s) => s === 'DONE');
   const allTodo = childStatuses.every((s) => s === 'TODO');
 
   let targetStatus = 'TODO';
-  if(allDone){
+  if (allDone) {
     targetStatus = 'DONE';
-  } else if(allTodo){
+  } else if (allTodo) {
     targetStatus = 'TODO';
   } else {
     targetStatus = 'IN_PROGRESS';
   }
 
   // Find the first column on the board matching the target status
-  const derivedColumn = boardColumns.find((col) => col.status === targetStatus) || boardColumns[0];
+  const derivedColumn =
+    boardColumns.find((col) => col.status === targetStatus) || boardColumns[0];
   const derivedColumnId = derivedColumn.id;
 
   // If story column not same as derived then update it:
-  if(story.columnId !== derivedColumnId){
+  if (story.columnId !== derivedColumnId) {
     const isFinal = derivedColumn.status === 'DONE';
     await prisma.task.update({
       where: { id: storyId },

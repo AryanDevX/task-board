@@ -5,7 +5,6 @@ import jwt from 'jsonwebtoken';
 import { JwtPayload } from '../../types/express.js';
 import { AppError } from '../../types/appError.js';
 
-
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const isProduction = process.env.NODE_ENV === 'production';
 const cookieOptions = {
@@ -22,7 +21,7 @@ export const registerUser = async (
 ): Promise<void> => {
   const { username, email, password } = req.body;
 
-  try{
+  try {
     // Check if username or email already exists
     const existingUser = await prisma.user.findFirst({
       where: {
@@ -30,7 +29,7 @@ export const registerUser = async (
       },
     });
 
-    if(existingUser){
+    if (existingUser) {
       return next(new AppError('Username or email already exists', 400));
     }
 
@@ -54,8 +53,7 @@ export const registerUser = async (
         globalRole: newUser.globalRole,
       },
     });
-  }
-  catch (err){
+  } catch (err) {
     next(err);
   }
 };
@@ -68,25 +66,25 @@ export const loginUser = async (
 ): Promise<void> => {
   const { email, password } = req.body;
 
-  try{
+  try {
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
-    if(!user){
+    if (!user) {
       return next(new AppError('Invalid username or password', 400)); // Invalidating the user if it doesn't exist in the database
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
-    if(!isMatch){
+    if (!isMatch) {
       return next(new AppError('Invalid username or password', 400));
     }
 
     const token = jwt.sign(
       {
         userId: user.id,
-        globalRole: user.globalRole,            //signing tokens
+        globalRole: user.globalRole, //signing tokens
       },
       JWT_SECRET,
       { expiresIn: '1h' },
@@ -119,21 +117,21 @@ export const loginUser = async (
       avatar: user.avatar,
       globalRole: user.globalRole,
     });
-  }
-  catch (err){
+  } catch (err) {
     next(err);
   }
 };
 
-export const refreshUser = async (                // re-issuing of accesstoken
+export const refreshUser = async (
+  // re-issuing of accesstoken
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try{
+  try {
     const refreshToken = req.cookies.refreshToken;
-    if(!refreshToken){
-      return next(new AppError('Refresh Token missing', 401));        // no token generation without refresh token
+    if (!refreshToken) {
+      return next(new AppError('Refresh Token missing', 401)); // no token generation without refresh token
     }
 
     const payload = jwt.verify(refreshToken, JWT_SECRET) as JwtPayload;
@@ -142,7 +140,7 @@ export const refreshUser = async (                // re-issuing of accesstoken
       where: { token: refreshToken },
     });
 
-    if(!dbtoken){
+    if (!dbtoken) {
       return next(new AppError('Token revoked', 403));
     }
 
@@ -155,8 +153,7 @@ export const refreshUser = async (                // re-issuing of accesstoken
     res.cookie('accessToken', accessToken, cookieOptions);
 
     res.json({ message: 'token refreshed' });
-  }
-  catch (err){
+  } catch (err) {
     next(err);
   }
 };
@@ -166,43 +163,44 @@ export const logoutUser = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try{
+  try {
     const token = req.cookies.refreshToken;
 
-    if(token){
-      await prisma.refreshToken.deleteMany({                        // deleting the refresh token
+    if (token) {
+      await prisma.refreshToken.deleteMany({
+        // deleting the refresh token
         where: { token },
       });
     }
 
-    res.clearCookie('accessToken', cookieOptions);                      //clearing the cookies
+    res.clearCookie('accessToken', cookieOptions); //clearing the cookies
     res.clearCookie('refreshToken', cookieOptions);
 
     res.json({ message: 'logged out' });
-  }
-  catch (err){
+  } catch (err) {
     next(err);
   }
 };
 
-export const myProfile= async (req:Request, res:Response ,next:NextFunction ):Promise<void> =>{
-  try{
-     if(!req.user?.userId)
-      return next(new AppError('Unauthorized', 401));
+export const myProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    if (!req.user?.userId) return next(new AppError('Unauthorized', 401));
 
     const user = await prisma.user.findUnique({
-      where:{id: req.user.userId}
+      where: { id: req.user.userId },
     });
-    if(!user){
-      return next(new AppError("No such user in database",404));
+    if (!user) {
+      return next(new AppError('No such user in database', 404));
     }
 
-    const {password , ...safeUser} =user;
+    const { password, ...safeUser } = user;
 
     res.status(200).json(safeUser);
-  }
-  catch(err){
+  } catch (err) {
     next(err);
   }
-
 };

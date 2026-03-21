@@ -71,7 +71,9 @@ const sanitizeRichText = (value: string) => {
     if (tag === 'A') {
       const href = node.getAttribute('href')?.trim() ?? '';
       const safeHref =
-        href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:')
+        href.startsWith('http://') ||
+        href.startsWith('https://') ||
+        href.startsWith('mailto:')
           ? href
           : '';
       if (!safeHref) {
@@ -135,7 +137,10 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
   }, [projectId, task.id]);
 
   useEffect(() => {
-    if (composerRef.current && composerRef.current.innerHTML !== commentContent) {
+    if (
+      composerRef.current &&
+      composerRef.current.innerHTML !== commentContent
+    ) {
       composerRef.current.innerHTML = commentContent;
     }
   }, [commentContent]);
@@ -165,7 +170,12 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
   };
 
   const applyFormat = (
-    command: 'bold' | 'italic' | 'underline' | 'insertUnorderedList' | 'insertOrderedList',
+    command:
+      | 'bold'
+      | 'italic'
+      | 'underline'
+      | 'insertUnorderedList'
+      | 'insertOrderedList',
     editor: HTMLDivElement | null,
   ) => {
     focusEditor(editor);
@@ -180,11 +190,15 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
   };
 
   const syncComposer = () => {
-    setCommentContent(normalizeEditorValue(composerRef.current?.innerHTML ?? ''));
+    setCommentContent(
+      normalizeEditorValue(composerRef.current?.innerHTML ?? ''),
+    );
   };
 
   const syncEditing = () => {
-    setEditingContent(normalizeEditorValue(editingRef.current?.innerHTML ?? ''));
+    setEditingContent(
+      normalizeEditorValue(editingRef.current?.innerHTML ?? ''),
+    );
   };
 
   const insertMention = (username: string) => {
@@ -203,9 +217,13 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
     try {
       setIsSubmittingComment(true);
       setError(null);
-      const createdComment = await commentApi.createComment(String(task.id), projectId, {
-        content: sanitizedContent,
-      });
+      const createdComment = await commentApi.createComment(
+        String(task.id),
+        projectId,
+        {
+          content: sanitizedContent,
+        },
+      );
       setComments((prev) => [createdComment, ...prev]);
       setCommentContent('');
       if (composerRef.current) {
@@ -259,7 +277,11 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
   const handleDeleteComment = async (commentId: number) => {
     try {
       setError(null);
-      await commentApi.deleteComment(String(commentId), String(task.id), projectId);
+      await commentApi.deleteComment(
+        String(commentId),
+        String(task.id),
+        projectId,
+      );
       setComments((prev) => prev.filter((comment) => comment.id !== commentId));
       if (editingCommentId === commentId) {
         cancelEditingComment();
@@ -295,7 +317,10 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
         <h3 className={styles.sectionTitle}>Comments</h3>
         <div className={styles.commentComposer}>
           <div className={styles.composerToolbar}>
-            <label className={styles.memberPickerLabel} htmlFor="comment-member">
+            <label
+              className={styles.memberPickerLabel}
+              htmlFor="comment-member"
+            >
               Add user
             </label>
             <select
@@ -345,14 +370,18 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
             <button
               type="button"
               className={styles.toolbarBtn}
-              onClick={() => applyFormat('insertUnorderedList', composerRef.current)}
+              onClick={() =>
+                applyFormat('insertUnorderedList', composerRef.current)
+              }
             >
               Bullet List
             </button>
             <button
               type="button"
               className={styles.toolbarBtn}
-              onClick={() => applyFormat('insertOrderedList', composerRef.current)}
+              onClick={() =>
+                applyFormat('insertOrderedList', composerRef.current)
+              }
             >
               Numbered List
             </button>
@@ -377,7 +406,9 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
           />
 
           <div className={styles.commentActions}>
-            <span className={styles.helperText}>{commentText.length} characters</span>
+            <span className={styles.helperText}>
+              {commentText.length} characters
+            </span>
             <button
               className={styles.saveBtn}
               onClick={handleCreateComment}
@@ -419,35 +450,48 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
                         <button
                           type="button"
                           className={styles.toolbarBtn}
-                          onClick={() => applyFormat('bold', editingRef.current)}
+                          onClick={() =>
+                            applyFormat('bold', editingRef.current)
+                          }
                         >
                           Bold
                         </button>
                         <button
                           type="button"
                           className={styles.toolbarBtn}
-                          onClick={() => applyFormat('italic', editingRef.current)}
+                          onClick={() =>
+                            applyFormat('italic', editingRef.current)
+                          }
                         >
                           Italic
                         </button>
                         <button
                           type="button"
                           className={styles.toolbarBtn}
-                          onClick={() => applyFormat('underline', editingRef.current)}
+                          onClick={() =>
+                            applyFormat('underline', editingRef.current)
+                          }
                         >
                           Underline
                         </button>
                         <button
                           type="button"
                           className={styles.toolbarBtn}
-                          onClick={() => applyFormat('insertUnorderedList', editingRef.current)}
+                          onClick={() =>
+                            applyFormat(
+                              'insertUnorderedList',
+                              editingRef.current,
+                            )
+                          }
                         >
                           Bullet List
                         </button>
                         <button
                           type="button"
                           className={styles.toolbarBtn}
-                          onClick={() => applyFormat('insertOrderedList', editingRef.current)}
+                          onClick={() =>
+                            applyFormat('insertOrderedList', editingRef.current)
+                          }
                         >
                           Numbered List
                         </button>

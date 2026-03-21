@@ -3,21 +3,26 @@ import { prisma } from '../../lib/prisma.js';
 import { NextFunction, Request, Response } from 'express';
 import { AppError } from '../../types/appError.js';
 
-const validRoles: ProjectRole[] = ['PROJECT_VIEWER', 'PROJECT_ADMIN', 'PROJECT_MEMBER'];
+const validRoles: ProjectRole[] = [
+  'PROJECT_VIEWER',
+  'PROJECT_ADMIN',
+  'PROJECT_MEMBER',
+];
 
-export const getMembers = async (         // get members in a project
+export const getMembers = async (
+  // get members in a project
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try{
+  try {
     const projectId = parseInt(req.params.projectId);
 
     const project = await prisma.project.findUnique({
       where: { id: projectId },
     });
     // checking if project exists
-    if(!project){
+    if (!project) {
       return next(new AppError('Project not found', 404));
     }
 
@@ -49,24 +54,23 @@ export const getMembers = async (         // get members in a project
         username: member.user.username,
       })),
     });
-  }
-  catch (err){
+  } catch (err) {
     next(err);
   }
 };
 
-export const addMember = async (      //add a member in  a project with specific role 
+export const addMember = async (
+  //add a member in  a project with specific role
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try{
-    
+  try {
     const projectId = parseInt(req.params.projectId);
     const email = req.params.email;
     const role = req.body.role;
 
-    if(!email){
+    if (!email) {
       return next(new AppError('Missing userId to add', 400));
     }
     //check if user exists
@@ -74,7 +78,7 @@ export const addMember = async (      //add a member in  a project with specific
       where: { email: email },
     });
 
-    if(!user){
+    if (!user) {
       return next(new AppError('User not found', 404));
     }
 
@@ -83,7 +87,7 @@ export const addMember = async (      //add a member in  a project with specific
       where: { id: projectId },
     });
 
-    if(!project){
+    if (!project) {
       return next(new AppError('Project not found', 404));
     }
 
@@ -97,15 +101,25 @@ export const addMember = async (      //add a member in  a project with specific
       },
     });
 
-    if(existingMembership){
+    if (existingMembership) {
       return next(
         new AppError('User is already a member of this project', 400),
       );
     }
 
-    const finalRole = validRoles.includes(role as ProjectRole) ? (role as ProjectRole) : 'PROJECT_VIEWER';
-    if(finalRole === 'PROJECT_ADMIN' && req.user?.globalRole !== 'GLOBAL_ADMIN') {
-      return next(new AppError('Only Global Admins can assign the Project Admin role.', 403));
+    const finalRole = validRoles.includes(role as ProjectRole)
+      ? (role as ProjectRole)
+      : 'PROJECT_VIEWER';
+    if (
+      finalRole === 'PROJECT_ADMIN' &&
+      req.user?.globalRole !== 'GLOBAL_ADMIN'
+    ) {
+      return next(
+        new AppError(
+          'Only Global Admins can assign the Project Admin role.',
+          403,
+        ),
+      );
     }
 
     const membership = await prisma.projectMembership.create({
@@ -117,22 +131,21 @@ export const addMember = async (      //add a member in  a project with specific
     });
 
     res.status(201).json({ message: 'Member added successfully', membership });
-  }
-  catch (err){
+  } catch (err) {
     next(err);
   }
 };
 
-export const deleteMember = async (       
+export const deleteMember = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try{
+  try {
     const projectId = parseInt(req.params.projectId);
     const email = req.params.email;
 
-    if(!email){
+    if (!email) {
       return next(new AppError('Missing userId to remove', 400));
     }
 
@@ -140,7 +153,7 @@ export const deleteMember = async (
       where: { email: email },
     });
 
-    if(!user){
+    if (!user) {
       return next(new AppError('User not found', 404));
     }
 
@@ -148,7 +161,7 @@ export const deleteMember = async (
       where: { id: projectId },
     });
 
-    if(!project){
+    if (!project) {
       return next(new AppError('Project not found', 404));
     }
 
@@ -161,11 +174,11 @@ export const deleteMember = async (
       },
     });
 
-    if(!membership){
+    if (!membership) {
       return next(new AppError('User is not a member of this project', 400));
     }
 
-    if(membership.role == 'PROJECT_ADMIN'){
+    if (membership.role == 'PROJECT_ADMIN') {
       return next(new AppError('User is an ADMIN of this project.', 400));
     }
     await prisma.projectMembership.delete({
@@ -178,8 +191,7 @@ export const deleteMember = async (
     });
 
     res.status(200).json({ message: 'Member removed successfully' });
-  }
-  catch (err){
+  } catch (err) {
     next(err);
   }
 };
@@ -189,24 +201,31 @@ export const updateMember = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  try{
+  try {
     const incomingRole = req.body.role;
 
-    if(!validRoles.includes(incomingRole as ProjectRole)){
-      res.status(400).json({ error: 'Invalid role' });
+    if (!validRoles.includes(incomingRole as ProjectRole)) {
+      return next(new AppError('Invalid role', 400));
     }
 
     const newRole: ProjectRole = incomingRole as ProjectRole;
 
-    if (newRole === 'PROJECT_ADMIN' && req.user?.globalRole !== 'GLOBAL_ADMIN') {
-      return next(new AppError('Only Global Admins can assign the Project Admin role.', 403));
+    if (
+      newRole === 'PROJECT_ADMIN' &&
+      req.user?.globalRole !== 'GLOBAL_ADMIN'
+    ) {
+      return next(
+        new AppError(
+          'Only Global Admins can assign the Project Admin role.',
+          403,
+        ),
+      );
     }
 
-    
     const projectId = parseInt(req.params.projectId);
     const email = req.params.email;
 
-    if(!email){
+    if (!email) {
       return next(new AppError('Missing userId to update', 400));
     }
 
@@ -214,19 +233,19 @@ export const updateMember = async (
       where: { email },
     });
 
-    if(!user){
+    if (!user) {
       return next(new AppError('User not found', 404));
     }
 
-    if(user.globalRole==='GLOBAL_ADMIN'){
-      return next(new AppError('Can\'t change role of ADMIN', 404));
+    if (user.globalRole === 'GLOBAL_ADMIN') {
+      return next(new AppError("Can't change role of ADMIN", 404));
     }
 
     const project = await prisma.project.findUnique({
       where: { id: projectId },
     });
 
-    if(!project){
+    if (!project) {
       return next(new AppError('Project not found', 404));
     }
 
@@ -239,7 +258,7 @@ export const updateMember = async (
       },
     });
 
-    if(!membership){
+    if (!membership) {
       return next(new AppError('User is not a member of this project', 400));
     }
 
@@ -256,8 +275,7 @@ export const updateMember = async (
     });
 
     res.status(200).json({ message: 'Member Role updated successfully' });
-  }
-  catch (err){
+  } catch (err) {
     next(err);
   }
 };

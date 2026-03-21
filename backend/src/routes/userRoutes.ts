@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { getUsers, updateAvatar, updateUserGlobalRole } from '../controllers/userController.js';
+import {
+  getUsers,
+  updateAvatar,
+  updateUserGlobalRole,
+} from '../controllers/userController.js';
 import { authenticateJWT } from '../middleware/authenticateJWT.js';
 import { uploadAvatar } from '../middleware/uploadAvatar.js';
 

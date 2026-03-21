@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { boardApi } from "../api/boards.api";
-import { type Board } from "../types/models";
-import styles from "../styles/index.module.css";
+import { useState } from 'react';
+import { boardApi } from '../api/boards.api';
+import { type Board } from '../types/models';
+import styles from '../styles/index.module.css';
 
 interface Props {
   projectId: string;
@@ -10,8 +10,8 @@ interface Props {
 }
 
 export const CreateBoardModal = ({ projectId, onClose, onSuccess }: Props) => {
-  const [name, setName] = useState("");
-  const [description,setDescription] = useState(" ");
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState(' ');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,8 +21,11 @@ export const CreateBoardModal = ({ projectId, onClose, onSuccess }: Props) => {
     setIsSubmitting(true);
 
     try {
-      const data = await boardApi.createBoard(projectId, { title:name , description });
-      onSuccess(data);   
+      const data = await boardApi.createBoard(projectId, {
+        title: name,
+        description,
+      });
+      onSuccess(data);
       onClose();
     } catch (err) {
       console.error(err);
@@ -71,7 +74,7 @@ export const CreateBoardModal = ({ projectId, onClose, onSuccess }: Props) => {
               className={styles.primaryButton}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Creating..." : "Create"}
+              {isSubmitting ? 'Creating...' : 'Create'}
             </button>
           </div>
         </form>

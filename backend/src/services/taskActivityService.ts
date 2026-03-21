@@ -17,8 +17,8 @@ export const notifyStatusChanged = async (
   const usersToNotify = new Set<number>();
 
   // Not notifying who actually made the change:
-  if(assigneeId && assigneeId !== userId) usersToNotify.add(assigneeId);
-  if(reporterId && reporterId !== userId) usersToNotify.add(reporterId);
+  if (assigneeId && assigneeId !== userId) usersToNotify.add(assigneeId);
+  if (reporterId && reporterId !== userId) usersToNotify.add(reporterId);
 
   const statusNotifications = Array.from(usersToNotify).map((targetUserId) => ({
     userId: targetUserId,
@@ -27,7 +27,7 @@ export const notifyStatusChanged = async (
     message: `The status of "${title}" was updated.`,
   }));
 
-  if(statusNotifications.length > 0){
+  if (statusNotifications.length > 0) {
     await prisma.notification.createMany({ data: statusNotifications });
   }
 };
@@ -40,7 +40,7 @@ export const notifyTaskAssigned = async (
   userId: number,
 ): Promise<void> => {
   // Only notify if someone else assigned it to them
-  if(assigneeId !== userId){
+  if (assigneeId !== userId) {
     await prisma.notification.create({
       data: {
         userId: assigneeId,

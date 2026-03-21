@@ -17,29 +17,43 @@ interface ProjectMemberPayload {
   role: ProjectRole;
 }
 
-export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModalProps) => {
+export const EditProjectModal = ({
+  project,
+  onClose,
+  onSuccess,
+}: EditProjectModalProps) => {
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description || '');
   const [isLoading, setIsLoading] = useState(false);
   const [isMembersLoading, setIsMembersLoading] = useState(true);
 
-  const [initialMembers, setInitialMembers] = useState<ProjectMemberPayload[]>([]);
-  const [activeMembers, setActiveMembers] = useState<ProjectMemberPayload[]>([]);
+  const [initialMembers, setInitialMembers] = useState<ProjectMemberPayload[]>(
+    [],
+  );
+  const [activeMembers, setActiveMembers] = useState<ProjectMemberPayload[]>(
+    [],
+  );
   const { user } = useAuth();
   const isGlobalAdmin = user?.globalRole === 'GLOBAL_ADMIN';
 
   //pagination:
   const [membersPage, setMembersPage] = useState(1);
   const membersPerPage = 5;
-  const totalMembersPages = Math.max(1, Math.ceil(activeMembers.length / membersPerPage));
+  const totalMembersPages = Math.max(
+    1,
+    Math.ceil(activeMembers.length / membersPerPage),
+  );
   const currentMembersPage = Math.min(membersPage, totalMembersPages);
   const startIndex = (currentMembersPage - 1) * membersPerPage;
-  const visibleActiveMembers = activeMembers.slice(startIndex, startIndex + membersPerPage);
+  const visibleActiveMembers = activeMembers.slice(
+    startIndex,
+    startIndex + membersPerPage,
+  );
 
   useEffect(() => {
     const fetchMembers = async () => {
       setIsMembersLoading(true);
-      try{
+      try {
         const data = await projectApi.getMembers(String(project.id));
         const members = data.members.map((member) => ({
           email: member.email,
@@ -47,12 +61,10 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
         }));
         setInitialMembers(members);
         setActiveMembers(members);
-      }
-      catch (error){
+      } catch (error) {
         console.error('Failed to load project members', error);
         alert('Failed to load project members. Please try again.');
-      }
-      finally{
+      } finally {
         setIsMembersLoading(false);
       }
     };
@@ -61,59 +73,80 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
 
   const handleAddOrganizationUser = (email: string) => {
     const normalizedEmail = email.trim().toLowerCase();
-    if(!normalizedEmail) return;
-    if(activeMembers.some((member) => member.email.toLowerCase() === normalizedEmail)) {
+    if (!normalizedEmail) return;
+    if (
+      activeMembers.some(
+        (member) => member.email.toLowerCase() === normalizedEmail,
+      )
+    ) {
       alert('This user is already in the project.');
       return;
     }
-    setActiveMembers((prev) => [{ email: normalizedEmail, role: 'PROJECT_MEMBER' }, ...prev]);
+    setActiveMembers((prev) => [
+      { email: normalizedEmail, role: 'PROJECT_MEMBER' },
+      ...prev,
+    ]);
     setMembersPage(1);
   };
 
   const handleRemoveMember = (emailToRemove: string) => {
-    setActiveMembers(activeMembers.filter((member) => member.email !== emailToRemove));
+    setActiveMembers(
+      activeMembers.filter((member) => member.email !== emailToRemove),
+    );
   };
 
   const handleRoleChange = (email: string, newRole: ProjectRole) => {
-    setActiveMembers(activeMembers.map(m => 
-      m.email === email ? { ...m, role: newRole } : m
-    ));
+    setActiveMembers(
+      activeMembers.map((m) =>
+        m.email === email ? { ...m, role: newRole } : m,
+      ),
+    );
   };
 
-  const handleSubmit = async(e:React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try{
+    try {
       const data = await projectApi.updateProject(String(project.id), {
         projectname: name,
-        description
+        description,
       });
 
-      const addedMembers = activeMembers.filter(am => !initialMembers.some(im => im.email === am.email));
-      const removedMembers = initialMembers.filter(im => !activeMembers.some(am => am.email === im.email));
-      const updatedMembers = activeMembers.filter(am => {
-        const initial = initialMembers.find(im => im.email === am.email);
+      const addedMembers = activeMembers.filter(
+        (am) => !initialMembers.some((im) => im.email === am.email),
+      );
+      const removedMembers = initialMembers.filter(
+        (im) => !activeMembers.some((am) => am.email === im.email),
+      );
+      const updatedMembers = activeMembers.filter((am) => {
+        const initial = initialMembers.find((im) => im.email === am.email);
         return initial && initial.role !== am.role;
       });
 
-      for(const member of addedMembers){
-        await projectApi.addMember(String(project.id), member.email, member.role);
+      for (const member of addedMembers) {
+        await projectApi.addMember(
+          String(project.id),
+          member.email,
+          member.role,
+        );
       }
-      for(const member of removedMembers){
+      for (const member of removedMembers) {
         await projectApi.removeMember(String(project.id), member.email);
       }
-      for(const member of updatedMembers){
-        await projectApi.updateMemberRole(String(project.id), member.email, member.role);
+      for (const member of updatedMembers) {
+        await projectApi.updateMemberRole(
+          String(project.id),
+          member.email,
+          member.role,
+        );
       }
 
       onSuccess(data);
       onClose();
-    }
-    catch(error){
+    } catch (error) {
       console.error('Failed to update project', error);
       alert('Failed to update project. Please try again.');
-    }
-    finally{
+    } finally {
       setIsLoading(false);
     }
   };
@@ -123,7 +156,6 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
       <div className={sharedStyles.modalCard}>
         <h2 className={sharedStyles.cardTitle}>Edit Project & Team</h2>
         <form className={sharedStyles.form} onSubmit={handleSubmit}>
-          
           <div className={sharedStyles.fieldGroup}>
             <label>Project Name</label>
             <input
@@ -147,13 +179,16 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
 
           <hr className={styles.separator} />
           <h3>Users in Project</h3>
-          
+
           <OrganizationUsersBrowser
             title="Browse organization users and add them to this project."
             pageSize={10}
             emptyMessage="No available organization users found."
             filterUsers={(user) =>
-              !activeMembers.some((member) => member.email.toLowerCase() === user.email.toLowerCase())
+              !activeMembers.some(
+                (member) =>
+                  member.email.toLowerCase() === user.email.toLowerCase(),
+              )
             }
             renderAction={(user) => (
               <button
@@ -168,84 +203,102 @@ export const EditProjectModal = ({project, onClose, onSuccess}: EditProjectModal
 
           {isMembersLoading ? (
             <p className={styles.loadingText}>Loading team members...</p>
-          ) : activeMembers.length > 0 && (
-            <>
-              <ul className={styles.memberList}>
-                {visibleActiveMembers.map((member) => (
-                  <li key={member.email} className={styles.memberItem}>
+          ) : (
+            activeMembers.length > 0 && (
+              <>
+                <ul className={styles.memberList}>
+                  {visibleActiveMembers.map((member) => (
+                    <li key={member.email} className={styles.memberItem}>
+                      <strong>{member.email}</strong>
 
-                    <strong>{member.email}</strong>
-                    
-                    <div className={styles.memberActions}>
-                      <select
-                        className={`${sharedStyles.input} ${styles.roleSelect} ${styles[member.role] || ''}`}
-                        value={member.role}
-                        onChange={(e) => handleRoleChange(member.email, e.target.value as ProjectRole)}
+                      <div className={styles.memberActions}>
+                        <select
+                          className={`${sharedStyles.input} ${styles.roleSelect} ${styles[member.role] || ''}`}
+                          value={member.role}
+                          onChange={(e) =>
+                            handleRoleChange(
+                              member.email,
+                              e.target.value as ProjectRole,
+                            )
+                          }
+                        >
+                          <option value="PROJECT_MEMBER">Member</option>
+                          {(isGlobalAdmin ||
+                            member.role === 'PROJECT_ADMIN') && (
+                            <option
+                              value="PROJECT_ADMIN"
+                              disabled={!isGlobalAdmin}
+                            >
+                              Admin
+                            </option>
+                          )}
+
+                          <option value="PROJECT_VIEWER">Viewer</option>
+                        </select>
+
+                        <button
+                          type="button"
+                          className={styles.removeBtn}
+                          onClick={() => handleRemoveMember(member.email)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Added the Fragment wrapper up above, so this renders perfectly now! */}
+                {totalMembersPages > 1 && (
+                  <div
+                    className={sharedStyles.inlineControls}
+                    style={{ marginTop: '1rem', padding: '0 0.5rem' }}
+                  >
+                    <p className={sharedStyles.helperText}>
+                      Page {currentMembersPage} of {totalMembersPages}
+                    </p>
+                    <div className={sharedStyles.inlineControls}>
+                      <button
+                        type="button"
+                        className={sharedStyles.smallButton}
+                        onClick={() =>
+                          setMembersPage((p) => Math.max(1, p - 1))
+                        }
+                        disabled={currentMembersPage === 1}
                       >
-                        <option value="PROJECT_MEMBER">Member</option>
-                        {(isGlobalAdmin || member.role === 'PROJECT_ADMIN') && (
-                          <option value="PROJECT_ADMIN" disabled={!isGlobalAdmin}>
-                            Admin
-                          </option>
-                        )}
-                        
-                        <option value="PROJECT_VIEWER">Viewer</option>
-                      </select>
-                      
-                      <button 
-                        type="button" 
-                        className={styles.removeBtn}
-                        onClick={() => handleRemoveMember(member.email)}
+                        Previous
+                      </button>
+                      <button
+                        type="button"
+                        className={sharedStyles.smallButton}
+                        onClick={() =>
+                          setMembersPage((p) =>
+                            Math.min(totalMembersPages, p + 1),
+                          )
+                        }
+                        disabled={currentMembersPage === totalMembersPages}
                       >
-                        Remove
+                        Next
                       </button>
                     </div>
-                    
-                  </li>
-                ))}
-              </ul>
-
-              {/* Added the Fragment wrapper up above, so this renders perfectly now! */}
-              {totalMembersPages > 1 && (
-                <div className={sharedStyles.inlineControls} style={{ marginTop: '1rem', padding: '0 0.5rem' }}>
-                  <p className={sharedStyles.helperText}>
-                    Page {currentMembersPage} of {totalMembersPages}
-                  </p>
-                  <div className={sharedStyles.inlineControls}>
-                    <button
-                      type="button"
-                      className={sharedStyles.smallButton}
-                      onClick={() => setMembersPage((p) => Math.max(1, p - 1))}
-                      disabled={currentMembersPage === 1}
-                    >
-                      Previous
-                    </button>
-                    <button
-                      type="button"
-                      className={sharedStyles.smallButton}
-                      onClick={() => setMembersPage((p) => Math.min(totalMembersPages, p + 1))}
-                      disabled={currentMembersPage === totalMembersPages}
-                    >
-                      Next
-                    </button>
                   </div>
-                </div>
-              )}
-            </>
+                )}
+              </>
+            )
           )}
 
           <div className={styles.modalActions}>
-            <button 
-              type="button" 
-              className={sharedStyles.secondaryButton} 
-              onClick={onClose} 
+            <button
+              type="button"
+              className={sharedStyles.secondaryButton}
+              onClick={onClose}
               disabled={isLoading}
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
-              className={sharedStyles.primaryButton} 
+            <button
+              type="submit"
+              className={sharedStyles.primaryButton}
               disabled={isLoading}
             >
               {isLoading ? 'Saving...' : 'Save Changes'}

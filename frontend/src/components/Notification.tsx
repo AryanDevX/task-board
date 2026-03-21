@@ -12,12 +12,11 @@ export const NotificationCenter = () => {
 
   useEffect(() => {
     const loadNotifications = async () => {
-      try{
+      try {
         setIsLoading(true);
         const data = await notificationApi.getNotifications();
         setNotifications(data.notifications);
-      }
-      catch (error){
+      } catch (error) {
         console.error('Failed to load notifications', error);
       } finally {
         setIsLoading(false);
@@ -30,8 +29,8 @@ export const NotificationCenter = () => {
   }, []);
 
   const handleNotificationClick = async (notification: Notification) => {
-    try{
-      if(!notification.isRead){
+    try {
+      if (!notification.isRead) {
         await notificationApi.markAsRead(String(notification.id));
         setNotifications((currentNotifications) =>
           currentNotifications.map((item) =>
@@ -39,15 +38,15 @@ export const NotificationCenter = () => {
           ),
         );
       }
-    }
-    catch (error){
+    } catch (error) {
       console.error('Failed to mark notification as read', error);
     }
 
-    if(notification.projectId && notification.boardId && notification.taskId){ 
-      navigate(`/project/${notification.projectId}/boards/${notification.boardId}`);
-    } 
-    else if(notification.projectId){
+    if (notification.projectId && notification.boardId && notification.taskId) {
+      navigate(
+        `/project/${notification.projectId}/boards/${notification.boardId}`,
+      );
+    } else if (notification.projectId) {
       navigate(`/project/${notification.projectId}`);
     }
     setIsOpen(false);
@@ -81,7 +80,9 @@ export const NotificationCenter = () => {
                   type="button"
                 >
                   <p>{n.message}</p>
-                  {n.taskTitle && <p className={styles.taskTitle}>{n.taskTitle}</p>}
+                  {n.taskTitle && (
+                    <p className={styles.taskTitle}>{n.taskTitle}</p>
+                  )}
                   <div className={styles.time}>
                     {new Date(n.createdAt).toLocaleDateString()}
                   </div>

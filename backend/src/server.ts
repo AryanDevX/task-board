@@ -14,7 +14,7 @@ const server = app.listen(PORT, HOST, () => {
 });
 
 server.on('error', (error: NodeJS.ErrnoException) => {
-  if(error.code === 'EADDRINUSE'){
+  if (error.code === 'EADDRINUSE') {
     console.error(
       `Port ${PORT} is already in use. Stop the existing process or change PORT in backend/.env.`,
     );

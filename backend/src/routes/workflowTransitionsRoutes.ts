@@ -3,7 +3,7 @@ import {
   getTransitions,
   updateTransitions,
   createTransition,
-  deleteTransition
+  deleteTransition,
 } from '../controllers/workflowController.js';
 import { authenticateJWT } from '../middleware/authenticateJWT.js';
 import { requireProjectRole } from '../middleware/requireProjectRole.js';
@@ -25,6 +25,16 @@ router.put(
   updateTransitions,
 );
 
-router.post('/', authenticateJWT, requireProjectRole(['PROJECT_ADMIN']), createTransition);
-router.delete('/:id', authenticateJWT, requireProjectRole(['PROJECT_ADMIN']) ,deleteTransition);
+router.post(
+  '/',
+  authenticateJWT,
+  requireProjectRole(['PROJECT_ADMIN']),
+  createTransition,
+);
+router.delete(
+  '/:id',
+  authenticateJWT,
+  requireProjectRole(['PROJECT_ADMIN']),
+  deleteTransition,
+);
 export default router;
