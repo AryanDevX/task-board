@@ -83,6 +83,15 @@ export const createTask = async (data: TaskDTO, reporterId: number) => {
   //Changing story status if added to a story:
   if (newTask.parentId) await syncStoryStatus(newTask.parentId, reporterId);
 
+  // Touch project timestamp
+  const col = await prisma.column.findUnique({
+    where: { id: Number(columnId) },
+    select: { board: { select: { projectId: true } } },
+  });
+  if (col) {
+    await prisma.project.update({ where: { id: col.board.projectId }, data: { updatedAt: new Date() } });
+  }
+
   return newTask;
 };
 
@@ -146,7 +155,7 @@ export const updateTask = async (
       assigneeId: true,
       reporterId: true,
       resolvedAt: true,
-      column: true,
+      column: { select: { boardId: true, board: { select: { projectId: true } } } },
     },
   });
   if (!oldTask) throw new AppError('Task not found.', 404);
@@ -292,6 +301,12 @@ export const updateTask = async (
     await syncStoryStatus(updatedTask.parentId, userId);
   }
 
+  // Touch project timestamp
+  await prisma.project.update({
+    where: { id: oldTask.column.board.projectId },
+    data: { updatedAt: new Date() },
+  });
+
   return updatedTask;
 };
 
@@ -305,7 +320,7 @@ export const moveTask = async (
   //Pulling issueType:
   const taskToMove = await prisma.task.findUnique({
     where: { id: taskId },
-    include: { column: true },
+    include: { column: { include: { board: true } } },
   });
   if (!taskToMove) throw new AppError('Task not found.', 404);
   if (taskToMove.issueType === 'STORY')
@@ -318,8 +333,10 @@ export const moveTask = async (
   if (taskToMove.column.boardId !== targetColumn.boardId)
     throw new AppError('Cross-board transfers are not allowed.', 400);
 
+  const isSameColumn = taskToMove.columnId === Number(targetColumnId);
+
   //Processing drag and drop:
-  if (taskToMove.columnId !== Number(targetColumnId)) {
+  if (!isSameColumn) {
     await validateTransition(
       taskToMove.column.boardId,
       taskToMove.columnId,
@@ -344,16 +361,19 @@ export const moveTask = async (
   }
 
   //WIP Limits and Timestamps
-  await enforceWipLimit(Number(targetColumnId), taskToMove.issueType);
-  const dates = await getResolutionDatesForColumn(
-    Number(targetColumnId),
-    taskToMove.resolvedAt,
-  );
+  if (!isSameColumn) {
+    await enforceWipLimit(Number(targetColumnId), taskToMove.issueType);
+  }
+  const dates = isSameColumn
+    ? { resolvedAt: undefined, closedAt: undefined }
+    : await getResolutionDatesForColumn(
+        Number(targetColumnId),
+        taskToMove.resolvedAt,
+      );
 
   //Updating db
   const newOrderInt = Number(newOrder);
   const oldOrderInt = taskToMove.order;
-  const isSameColumn = taskToMove.columnId === Number(targetColumnId);
 
   const updatedTask = await prisma.$transaction(async (tx) => {
     if (!isSameColumn) {
@@ -411,16 +431,32 @@ export const moveTask = async (
   if (taskToMove.parentId && taskToMove.columnId !== Number(targetColumnId)) {
     await syncStoryStatus(taskToMove.parentId, userId);
   }
+
+  // Touch project timestamp
+  await prisma.project.update({
+    where: { id: taskToMove.column.board.projectId },
+    data: { updatedAt: new Date() },
+  });
+
   return updatedTask;
 };
 
 export const deleteTask = async (taskId: number, userId: number) => {
   try {
-    const deletedTask = await prisma.task.delete({ where: { id: taskId } });
+    const deletedTask = await prisma.task.delete({
+      where: { id: taskId },
+      include: { column: { include: { board: true } } }
+    });
 
     //Recalculating parent story status if deleted a child of it:
     if (deletedTask.parentId)
       await syncStoryStatus(deletedTask.parentId, userId);
+
+    // Touch project timestamp
+    await prisma.project.update({
+      where: { id: deletedTask.column.board.projectId },
+      data: { updatedAt: new Date() },
+    });
 
     return deletedTask;
   } catch (error) {

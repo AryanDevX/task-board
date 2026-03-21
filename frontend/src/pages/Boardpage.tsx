@@ -6,7 +6,7 @@ import Column from './Column';
 import styles from './ProjectBoard.module.css';
 import sharedStyles from '../styles/index.module.css';
 import { CreateColumnModal } from '../components/CreateColumnModal';
-import type { Task, WorkflowTransition } from '../types/models';
+import type { Task, WorkflowTransition, Project } from '../types/models';
 import { taskApi } from '../api/tasks.api';
 import { apiFetch } from '../api/client';
 import { WorkflowSettingsModal } from '../components/WorkflowSettingsModal';
@@ -26,6 +26,7 @@ export const BoardPage = () => {
   const [transitions, setTransitions] = useState<WorkflowTransition[]>([]);
   const [loading, setLoading] = useState(false);
   const [workflowModalOpen, setWorkflowModalOpen] = useState(false);
+  const [projectRole, setProjectRole] = useState<string | null>(null);
 
   const handleColumnCreator = (col: Columntype) => {
     setColumns((prev) => [...prev, col]);
@@ -300,6 +301,11 @@ export const BoardPage = () => {
           `/projects/${projectId}/boards/${boardId}/workflows`,
         );
         setTransitions(transData);
+
+        const projectData = await apiFetch<{ projects: Project[] }>(`/projects/${projectId}`);
+        if (projectData.projects && projectData.projects.length > 0) {
+          setProjectRole(projectData.projects[0].userRole);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -389,12 +395,19 @@ export const BoardPage = () => {
   return (
     <div className={`${sharedStyles.pageShell} ${styles.page}`}>
       <header className={sharedStyles.pageTopBar}>
-        <button
-          className={sharedStyles.backButton}
-          onClick={() => navigate(`/project/${projectId}`)}
-        >
-          ← Back to Boards
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <button
+            className={sharedStyles.backButton}
+            onClick={() => navigate(`/project/${projectId}`)}
+          >
+            ← Back to Boards
+          </button>
+          {projectRole && (
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#4b5563', background: '#f3f4f6', padding: '0.25rem 0.75rem', borderRadius: '999px', border: '1px solid #e5e7eb' }}>
+              Role: {projectRole.replace('PROJECT_', '')}
+            </span>
+          )}
+        </div>
 
         <div className={styles.headerActions}>
           <button

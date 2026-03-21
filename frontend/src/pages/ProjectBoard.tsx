@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { boardApi } from "../api/boards.api";
-import { type Board } from "../types/models";
+import { type Board, type Project } from "../types/models";
 import { CreateBoardModal } from "../components/CreateBoardModal";
 import { NotificationCenter } from "../components/Notification";
 import { EditBoardModal } from "../components/EditBoardModal";
@@ -17,6 +17,7 @@ export const ProjectBoard = () => {
   const [boards, setBoards] = useState<Board[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
+  const [projectRole, setProjectRole] = useState<string | null>(null);
 
   const handleCreateBoard = (newBoard: Board) => {
     setBoards((prev) => [newBoard, ...prev]);
@@ -47,6 +48,11 @@ export const ProjectBoard = () => {
         setLoading(true);
         const data = await boardApi.getBoardsByProject(projectId);
         setBoards(data);
+
+        const projectData = await apiFetch<{ projects: Project[] }>(`/projects/${projectId}`);
+        if (projectData.projects && projectData.projects.length > 0) {
+          setProjectRole(projectData.projects[0].userRole);
+        }
       } catch (err) {
         console.error(err);
         setError('Failed to load boards');
@@ -64,12 +70,19 @@ export const ProjectBoard = () => {
   return (
     <div className={`${sharedStyles.pageShell} ${styles.page}`}>
       <header className={sharedStyles.pageTopBar}>
-        <button
-          className={sharedStyles.backButton}
-          onClick={() => navigate('/dashboard')}
-        >
-          ← Dashboard
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <button
+            className={sharedStyles.backButton}
+            onClick={() => navigate('/dashboard')}
+          >
+            ← Dashboard
+          </button>
+          {projectRole && (
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#4b5563', background: '#f3f4f6', padding: '0.25rem 0.75rem', borderRadius: '999px', border: '1px solid #e5e7eb' }}>
+              Role: {projectRole.replace('PROJECT_', '')}
+            </span>
+          )}
+        </div>
         <NotificationCenter />
       </header>
 

@@ -34,6 +34,12 @@ const prismaMock = prisma as unknown as {
   $transaction: (
     callback: (tx: unknown) => Promise<unknown>,
   ) => Promise<unknown>;
+  column: {
+    findUnique: (args: unknown) => Promise<unknown>;
+  };
+  project: {
+    update: (args: unknown) => Promise<unknown>;
+  };
 };
 
 //faking the different method so that actual method are not called:
@@ -49,6 +55,9 @@ mock.method(taskHelpers, 'syncStoryStatus', async () => {});
 mock.method(taskActivityService, 'notifyStatusChanged', async () => {});
 mock.method(taskActivityService, 'notifyTaskAssigned', async () => {});
 mock.method(taskActivityService, 'buildActivityTimeline', () => []);
+
+prismaMock.column = { findUnique: async () => ({ board: { projectId: 1 } }) };
+prismaMock.project = { update: async () => ({}) };
 
 //create task:
 test('createTask - successfully creates a task', async () => {
@@ -110,7 +119,7 @@ test('updateTask - successfully updates a task', async () => {
     title: 'Old Task',
     issueType: 'TASK',
     columnId: 5,
-    column: { boardId: 1 },
+    column: { boardId: 1, board: { projectId: 1 } },
   });
   prismaMock.task.update = async (args: unknown) => {
     const requestArgs = args as { data: Record<string, unknown> };
@@ -154,7 +163,7 @@ test('moveTask - successfully moves a task via transaction', async () => {
     issueType: 'TASK',
     columnId: 5,
     order: 1,
-    column: { boardId: 1 },
+    column: { boardId: 1, board: { projectId: 1 } },
   });
   prismaMock.$transaction = async (
     callback: (tx: unknown) => Promise<unknown>,
@@ -178,7 +187,7 @@ test('moveTask - throws 400 if trying to move a STORY directly', async () => {
   prismaMock.task.findUnique = async () => ({
     id: 10,
     issueType: 'STORY',
-    column: { boardId: 1 },
+    column: { boardId: 1, board: { projectId: 1 } },
   });
   let caughtError: unknown;
   try {
@@ -196,6 +205,7 @@ test('deleteTask - successfully deletes a task', async () => {
     id: 10,
     title: 'Deleted',
     parentId: null,
+    column: { board: { projectId: 1 } },
   });
   const result = (await taskService.deleteTask(10, 1)) as TaskPayload;
   assert.equal(result.id, 10);

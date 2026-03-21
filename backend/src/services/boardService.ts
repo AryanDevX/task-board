@@ -76,6 +76,11 @@ export const createBoard = async (projectId: number, data: CreateBoardDTO) => {
     ],
   });
 
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { updatedAt: new Date() },
+  });
+
   return newBoard;
 };
 
@@ -114,21 +119,35 @@ export const updateBoard = async (boardId: number, data: CreateBoardDTO) => {
   });
   if (!existingBoard) throw new AppError('Board not found.', 404);
 
-  return await prisma.board.update({
+  const updatedBoard = await prisma.board.update({
     where: { id: boardId },
     data: {
       title: title !== undefined ? title : undefined,
       description: description !== undefined ? description : undefined,
     },
   });
+
+  await prisma.project.update({
+    where: { id: existingBoard.projectId },
+    data: { updatedAt: new Date() },
+  });
+
+  return updatedBoard;
 };
 
 //Deleting a board:
 export const deleteBoard = async (boardId: number) => {
   try {
-    return await prisma.board.delete({
+    const deletedBoard = await prisma.board.delete({
       where: { id: boardId },
     });
+
+    await prisma.project.update({
+      where: { id: deletedBoard.projectId },
+      data: { updatedAt: new Date() },
+    });
+
+    return deletedBoard;
   } catch (error) {
     //Telling typeScript that this is a Prisma error
     if (error instanceof Prisma.PrismaClientKnownRequestError) {

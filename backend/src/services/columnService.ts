@@ -9,7 +9,7 @@ export const createColumn = async (boardId: number, data: CreateColumnDTO) => {
 
   if (!title) throw new AppError('Column title is required.', 400);
 
-  return await prisma.column.create({
+  const newColumn = await prisma.column.create({
     data: {
       title,
       boardId,
@@ -18,6 +18,16 @@ export const createColumn = async (boardId: number, data: CreateColumnDTO) => {
       status: status || 'TODO',
     },
   });
+
+  const board = await prisma.board.findUnique({ where: { id: boardId } });
+  if (board) {
+    await prisma.project.update({
+      where: { id: board.projectId },
+      data: { updatedAt: new Date() },
+    });
+  }
+
+  return newColumn;
 };
 
 //fetching all columns for a board:
@@ -35,7 +45,7 @@ export const getColumnsByBoardId = async (boardId: number) => {
 export const updateColumn = async (columnId: number, data: UpdateColumnDTO) => {
   const { title, wipLimit, order, status } = data;
 
-  const oldColumn = await prisma.column.findUnique({ where: { id: columnId } });
+  const oldColumn = await prisma.column.findUnique({ where: { id: columnId }, include: { board: true } });
   if (!oldColumn) throw new AppError('Column not found.', 404);
 
   // Implement strategy: Fetch the 4 default columns based on ascending ID order
@@ -92,6 +102,11 @@ export const updateColumn = async (columnId: number, data: UpdateColumnDTO) => {
       });
     });
 
+    await prisma.project.update({
+      where: { id: oldColumn.board.projectId },
+      data: { updatedAt: new Date() },
+    });
+
     return await prisma.column.findUnique({
       where: { id: columnId },
       include: { tasks: { orderBy: { order: 'asc' } } },
@@ -99,7 +114,7 @@ export const updateColumn = async (columnId: number, data: UpdateColumnDTO) => {
   }
 
   // Case 2: Order did not change
-  return await prisma.column.update({
+  const updatedColumn = await prisma.column.update({
     where: { id: columnId },
     include: { tasks: { orderBy: { order: 'asc' } } },
     data: {
@@ -113,12 +128,19 @@ export const updateColumn = async (columnId: number, data: UpdateColumnDTO) => {
           : undefined,
     },
   });
+
+  await prisma.project.update({
+    where: { id: oldColumn.board.projectId },
+    data: { updatedAt: new Date() },
+  });
+
+  return updatedColumn;
 };
 
 //Deleting a column:
 export const deleteColumn = async (columnId: number) => {
   try{
-    const col = await prisma.column.findUnique({ where: { id: columnId } });
+    const col = await prisma.column.findUnique({ where: { id: columnId }, include: { board: true } });
     if (col) {
       const defaultColumns = await prisma.column.findMany({
         where: { boardId: col.boardId },
@@ -130,9 +152,18 @@ export const deleteColumn = async (columnId: number) => {
       }
     }
 
-    return await prisma.column.delete({
+    const deletedColumn = await prisma.column.delete({
       where: { id: columnId },
     });
+
+    if (col) {
+      await prisma.project.update({
+        where: { id: col.board.projectId },
+        data: { updatedAt: new Date() },
+      });
+    }
+
+    return deletedColumn;
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2025') {

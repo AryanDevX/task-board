@@ -11,20 +11,20 @@ export const NotificationCenter = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadNotifications = async () => {
+    const loadNotifications = async (showLoading = true) => {
       try {
-        setIsLoading(true);
+        if (showLoading) setIsLoading(true);
         const data = await notificationApi.getNotifications();
         setNotifications(data.notifications);
       } catch (error) {
         console.error('Failed to load notifications', error);
       } finally {
-        setIsLoading(false);
+        if (showLoading) setIsLoading(false);
       }
     };
 
-    void loadNotifications();
-    const intervalId = setInterval(loadNotifications, 6000000);
+    void loadNotifications(true);
+    const intervalId = setInterval(() => loadNotifications(false), 10000);
     return () => clearInterval(intervalId);
   }, []);
 
