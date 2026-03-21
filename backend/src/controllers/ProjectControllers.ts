@@ -1,6 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
 import { NextFunction, Request, Response } from 'express';
-import { getUsername } from '../utils/helpers.js';
 import { AppError } from '../../types/appError.js';
 
 export const createProject = async (

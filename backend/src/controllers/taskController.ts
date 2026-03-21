@@ -101,7 +101,7 @@ export const moveTask = async (
       if(!req.user || !req.user.userId){
       return next(new AppError('Missing user authentication', 401));
     }
-    const { taskId, userId } = req.params;
+    const { taskId } = req.params;
 
 const { targetColumnId, newOrder } = req.body;
     const updatedTask = await taskService.moveTask(

@@ -4,7 +4,6 @@ import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import cookieParser from 'cookie-parser';
 import { errorMiddleware } from './middleware/errorMiddleware.js';
-import { error } from 'console';
 import boardRoutes from './routes/boardRoutes.js';
 import columnRoutes from './routes/columnRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
@@ -49,7 +48,7 @@ app.get('/', (req, res) => {
   res.send('Welcome to our server ROHIT.');
 });
 
-let users: User[] = [];
+const users: User[] = [];
 app.post('/users', (req: Request, res: Response) => {
   const user = req.body;
   users.push(user);

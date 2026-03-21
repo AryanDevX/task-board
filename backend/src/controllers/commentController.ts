@@ -2,10 +2,9 @@ import { NextFunction, Request, Response } from 'express';
 import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../types/appError.js';
 import { Prisma } from '@prisma/client';
-import { getTaskWithTimeline } from '../services/taskService.js';
 
 
-export const getComments = async (
+export const getComments = async (              // get comments by taskId
   req: Request,
   res: Response,
   next: NextFunction,
@@ -61,7 +60,7 @@ export const createComment = async (
     }
     const newComment = await prisma.comment.create({
       data: {
-        content,
+        content,                                                            // creating the comment in database
         taskId: parseInt(taskId),
         authorId: authorId,
       },
@@ -77,8 +76,8 @@ export const createComment = async (
 
     const notificationsToCreate: Prisma.NotificationCreateManyInput[] = [];
     const mentionMatches = content.match(/@([a-zA-Z0-9_]+)/g);
-    if(mentionMatches){
-      const usernames = mentionMatches.map((match: string) =>
+    if(mentionMatches){                                                           
+      const usernames = mentionMatches.map((match: string) =>                   // finding match for usernames in @UserName notation
         match.substring(1),
       );
       const mentionedUsers = await prisma.user.findMany({
@@ -92,7 +91,7 @@ export const createComment = async (
       });
       mentionedUsers.forEach((user) => {
         notificationsToCreate.push({
-          userId: user.id,
+          userId: user.id,                                                    // mentioning the existing usernames database found in text
           taskId: parseInt(taskId),
           type: 'USER_MENTIONED',
           message: `${newComment.author.username} mentioned you in a comment of "${task?.title}"`,
@@ -146,7 +145,7 @@ export const updateComment = async (
       return next(new AppError('Unauthorized', 400));
     }
     const userId = req.user.userId;
-    if(!content){
+    if(!content){                                                       
       return next(new AppError('Content is required.', 400));
     }
     const existingComment = await prisma.comment.findUnique({

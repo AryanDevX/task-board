@@ -74,7 +74,7 @@ export const loginUser = async (
     });
 
     if(!user){
-      return next(new AppError('Invalid username or password', 400));
+      return next(new AppError('Invalid username or password', 400)); // Invalidating the user if it doesn't exist in the database
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -86,7 +86,7 @@ export const loginUser = async (
     const token = jwt.sign(
       {
         userId: user.id,
-        globalRole: user.globalRole,
+        globalRole: user.globalRole,            //signing tokens
       },
       JWT_SECRET,
       { expiresIn: '1h' },
@@ -125,7 +125,7 @@ export const loginUser = async (
   }
 };
 
-export const refreshUser = async (
+export const refreshUser = async (                // re-issuing of accesstoken
   req: Request,
   res: Response,
   next: NextFunction,
@@ -133,7 +133,7 @@ export const refreshUser = async (
   try{
     const refreshToken = req.cookies.refreshToken;
     if(!refreshToken){
-      return next(new AppError('Refresh Token missing', 401));
+      return next(new AppError('Refresh Token missing', 401));        // no token generation without refresh token
     }
 
     const payload = jwt.verify(refreshToken, JWT_SECRET) as JwtPayload;
@@ -170,12 +170,12 @@ export const logoutUser = async (
     const token = req.cookies.refreshToken;
 
     if(token){
-      await prisma.refreshToken.deleteMany({
+      await prisma.refreshToken.deleteMany({                        // deleting the refresh token
         where: { token },
       });
     }
 
-    res.clearCookie('accessToken', cookieOptions);
+    res.clearCookie('accessToken', cookieOptions);                      //clearing the cookies
     res.clearCookie('refreshToken', cookieOptions);
 
     res.json({ message: 'logged out' });
