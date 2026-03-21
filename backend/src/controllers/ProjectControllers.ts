@@ -3,6 +3,9 @@ import { NextFunction, Request, Response } from 'express';
 import { AppError } from '../../types/appError.js';
 
 export const createProject = async (
+  //creates a new project and assigns the creating user as a 'PROJECT_ADMIN' member.
+ // requires user authentication.
+ 
   req: Request,
   res: Response,
   next: NextFunction,
@@ -22,6 +25,7 @@ export const createProject = async (
       },
     });
 
+    // Assign the creating user as a PROJECT_ADMIN for the new project
     await prisma.projectMembership.create({
       data: {
         userId,
@@ -40,10 +44,14 @@ export const createProject = async (
 };
 
 export const updateProject = 
+  //Updates an existing project's name and description.
+ //Requires the project to exist and not be archived.
    async (req: Request, res: Response, next: NextFunction) => {
     try{
       const projectId= parseInt(req.params.projectId);
       const {description, projectname}=req.body;
+      
+      // Find the project, ensuring it's not archived
       const project = await prisma.project.findUnique({
         where: { id: projectId, archived: false },
       });
@@ -68,6 +76,9 @@ export const updateProject =
 
 
 export const getProjects = async (
+
+  //Retrieves projects associated with the authenticated user.
+  //Can fetch a specific project by ID or all projects the user is a member of.
   req: Request,
   res: Response,
   next: NextFunction,
@@ -81,6 +92,7 @@ export const getProjects = async (
 
     let memberships;
     if(!projectId){
+      // If no specific projectId is provided, fetch all memberships for the user
       // fetches archived and non archived together
       memberships = await prisma.projectMembership.findMany({
         where: { userId  },
@@ -88,6 +100,7 @@ export const getProjects = async (
       });
     }
     else {
+      // If a projectId is provided, fetch the specific membership
       memberships = await prisma.projectMembership.findMany({
         where: {
           userId,
@@ -96,6 +109,7 @@ export const getProjects = async (
         include: { project: true,  },
       });
     }
+    // Map memberships to project details, including the user's role in each project
     const projects = memberships.map((membership) => ({...membership.project, userRole:membership.role,}));
     return res.status(200).json({ projects });
   }
@@ -105,6 +119,7 @@ export const getProjects = async (
 };
 
 export const projectArchive = 
+//archives the project
    async (req: Request, res: Response, next: NextFunction) => {
     try{
       const projectId= req.params.projectId;
@@ -133,6 +148,7 @@ export const projectArchive =
   };
 
 export const unarchiveProject = async (req: Request, res: Response, next: NextFunction) => {
+  //unarchives the project
   try {
     const projectId = req.params.projectId;
     const project = await prisma.project.findUnique({

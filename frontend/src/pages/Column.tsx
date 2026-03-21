@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from 'react-router-dom';
 import { type Column as ColumnType, type Task } from "../types/models";
 import { CreateTaskModal } from "../components/CreateTaskModal";
 import { EditColumnModal } from "../components/EditColumnModal";
@@ -37,9 +38,23 @@ export default function Column({
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const taskIdFromUrl = searchParams.get("taskId");
+  const urlTask = taskIdFromUrl ? tasks.find(t => String(t.id) === taskIdFromUrl) : null;
+
+  const activeTask = selectedTask || urlTask;
+
+  const handleCloseModal = () => {
+    setSelectedTask(null); // Clear local state
+    if (taskIdFromUrl) {
+      searchParams.delete("taskId");
+      setSearchParams(searchParams, { replace: true });
+    }
+  };
 
   useEffect(() => {
-    if (!selectedTask) return;
+    if (!activeTask) return;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -47,7 +62,7 @@ export default function Column({
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [selectedTask]);
+  }, [activeTask]);
 
   const handleDrop = (e: React.DragEvent<HTMLElement>, targetTask?: Task, isBelow?: boolean) => {    
     e.preventDefault();
@@ -87,7 +102,7 @@ export default function Column({
     onTaskMove(String(taskId), String(sourceColumnId), targetColumnId, Math.max(0, newOrder));
   };
 
-  // Helper to safely strip HTML tags for the task card preview (Your version)
+  // Helper to safely strip HTML tags for the task card preview 
   const stripHtml = (html: string) => {
     const doc = new DOMParser().parseFromString(html, "text/html");
     return doc.body.textContent?.trim() ?? "";
@@ -115,7 +130,6 @@ export default function Column({
           )}
         </div>
         
-        {/* Using your clean CSS classes instead of his inline styles */}
         <div className={styles.columnActions}>
           <button className={styles.iconActionBtn} onClick={() => setShowEditModal(true)}>Edit</button>
           <button className={`${styles.iconActionBtn} ${styles.deleteBtn}`} onClick={() => onColumnDelete(String(column.id))}>x</button>
@@ -155,7 +169,7 @@ export default function Column({
                   JSON.stringify({ type: 'task', taskId: task.id, sourceColumnId: task.columnId, sourceOrder: task.order })
                 );
               }}
-              onClick={() => setSelectedTask(task)} // Opening modal from your version
+              onClick={() => setSelectedTask(task)} 
             >
               <button 
                 className={styles.taskDeleteBtn}
@@ -261,18 +275,18 @@ export default function Column({
       )}
 
       {/* TASK DETAILS MODAL */}
-      {selectedTask && (
-        <div className={modalStyles.modalOverlay} onClick={() => setSelectedTask(null)}>
+      {activeTask && (
+        <div className={modalStyles.modalOverlay} onClick={handleCloseModal}>
           <div className={modalStyles.modalContent} onClick={(e) => e.stopPropagation()}>
             <CreateTaskModal
-              order={selectedTask.order}
+              order={activeTask.order}
               columnId={String(column.id)}
-              task={selectedTask}
-              stories={allTasks.filter((t) => t.issueType === 'STORY')} // MERGED: Ensure stories list is passed during update too
-              onClose={() => setSelectedTask(null)}
+              task={activeTask}
+              stories={[]} 
+              onClose={handleCloseModal}
               onSuccess={(updatedTask) => {
                 onTaskUpdated(updatedTask);
-                setSelectedTask(null);
+                handleCloseModal();
               }}
             />
           </div>

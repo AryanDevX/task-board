@@ -5,7 +5,7 @@ import { AppError } from '../../types/appError.js';
 
 const validRoles: ProjectRole[] = ['PROJECT_VIEWER', 'PROJECT_ADMIN', 'PROJECT_MEMBER'];
 
-export const getMembers = async (
+export const getMembers = async (         // get members in a project
   req: Request,
   res: Response,
   next: NextFunction,
@@ -16,7 +16,7 @@ export const getMembers = async (
     const project = await prisma.project.findUnique({
       where: { id: projectId },
     });
-
+    // checking if project exists
     if(!project){
       return next(new AppError('Project not found', 404));
     }
@@ -55,7 +55,7 @@ export const getMembers = async (
   }
 };
 
-export const addMember = async (
+export const addMember = async (      //add a member in  a project with specific role 
   req: Request,
   res: Response,
   next: NextFunction,
@@ -123,7 +123,7 @@ export const addMember = async (
   }
 };
 
-export const deleteMember = async (
+export const deleteMember = async (       
   req: Request,
   res: Response,
   next: NextFunction,

@@ -27,7 +27,7 @@ router.get(
   getColumns,
 );
 
-//update: Only Admins and Members can rename, change WIP limits, or reorder columns
+//update: Only Admins  can rename, change WIP limits, or reorder columns
 router.put(
   '/:columnId',
   authenticateJWT,
@@ -35,7 +35,7 @@ router.put(
   updateColumn,
 );
 
-//delete: Only Admins and Members can delete a column
+//delete: Only Admins  can delete a column
 router.delete(
   '/:columnId',
   authenticateJWT,

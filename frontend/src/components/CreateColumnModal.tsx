@@ -35,8 +35,6 @@ export const CreateColumnModal = ({projectId, nextOrder = 0, onClose, onSuccess 
     try {
       setIsSubmitting(true);
       setError(null);
-
-      // Assuming your API takes boardId and the column data
       const newColumn = await columnApi.createColumn(projectId , boardId, data);
 
       onSuccess(newColumn); // This updates the list and closes the modal in the parent
