@@ -139,7 +139,7 @@ test('getProjects - passes unexpected errors to next()', async () => {
   assert.strictEqual(calls[0], mockError);
 });
 test('projectArchive - successfully archives', async () => {
-  prismaMock.project.findUnique = async () => ({ id: 5, archived: false });
+  prismaMock.project.findUnique = async () => ({ id: 5, archived: false, createdById: 1 });
   prismaMock.project.update = async () => ({ id: 5 });
   const req = createReq({ params: { projectId: '5' } });
   const res = createRes();
@@ -159,7 +159,7 @@ test('projectArchive - passes unexpected errors to next()', async () => {
   assert.strictEqual(calls[0], mockError);
 });
 test('unarchiveProject - successfully unarchives', async () => {
-  prismaMock.project.findUnique = async () => ({ id: 5, archived: true });
+  prismaMock.project.findUnique = async () => ({ id: 5, archived: true, createdById: 1 });
   prismaMock.project.update = async () => ({ id: 5 });
   const req = createReq({ params: { projectId: '5' } });
   const res = createRes();
@@ -179,7 +179,7 @@ test('unarchiveProject - passes unexpected errors to next()', async () => {
   assert.strictEqual(calls[0], mockError);
 });
 test('deleteProject - successfully deletes', async () => {
-  prismaMock.project.findUnique = async () => ({ id: 5 });
+  prismaMock.project.findUnique = async () => ({ id: 5, createdById: 1 });
   prismaMock.project.delete = async () => ({ id: 5 });
   const req = createReq({ params: { projectId: '5' } });
   const res = createRes();

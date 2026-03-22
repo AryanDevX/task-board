@@ -31,8 +31,13 @@ const prismaMock = prisma as unknown as {
   workflowTransition: {
     createMany: (args: unknown) => Promise<unknown>;
   };
+  project: {
+    update: (args: unknown) => Promise<unknown>;
+  };
   $transaction: (args: unknown[]) => Promise<unknown[]>;
 };
+
+prismaMock.project = { update: async () => ({}) };
 
 //started testing:
 
