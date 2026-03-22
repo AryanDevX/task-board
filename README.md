@@ -213,7 +213,10 @@ npx prisma generate
 # Run database migrations
 npx prisma migrate dev --name init
 
-# (Optional) Seed the database with sample data
+# Seed the db for adding a global admin.
+# Email: admin@taskboard.com
+# Username: admin
+# Password: a
 npx prisma db seed
 ```
 
@@ -796,6 +799,7 @@ npx tsx --test tests/integration/apiE2E.test.ts
 ```
 
 **Available integration test files (in `backend/tests/integration/`):**
+
 - `apiE2E.test.ts` - Express endpoints E2E tests for Boards, Columns, and Tasks with database assertions.
 - `testSetup.ts` - Database teardown and JWT test cookie helper.
 

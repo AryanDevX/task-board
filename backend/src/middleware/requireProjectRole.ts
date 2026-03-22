@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../types/appError.js';
 
-export const requireProjectRole = (allowedRoles: string[]) => {       
+export const requireProjectRole = (allowedRoles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.userId;

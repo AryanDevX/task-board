@@ -108,7 +108,7 @@ const resetMocks = () => {
 
   // mock interactive transaction to execute the callback using our fake prisma client
   prismaMock.$transaction = async (cb: unknown) => {
-    if(typeof cb === 'function'){
+    if (typeof cb === 'function') {
       return await cb(prismaMock);
     }
     return [];
@@ -121,20 +121,28 @@ resetMocks();
 // create task tests
 test('createTask - successfully creates a task', async () => {
   resetMocks();
-  const result = await taskService.createTask({
-    title: 'New Task',
-    columnId: 5,
-    issueType: 'TASK',
-  } as unknown as Parameters<typeof taskService.createTask>[0], 1);
-  
+  const result = await taskService.createTask(
+    {
+      title: 'New Task',
+      columnId: 5,
+      issueType: 'TASK',
+    } as unknown as Parameters<typeof taskService.createTask>[0],
+    1,
+  );
+
   assert.ok(result);
   assert.equal((result as { title: string }).title, 'New Task');
 });
 
 test('createTask - throws 400 if title or columnid is missing', async () => {
   resetMocks();
-  const err = await catchError(taskService.createTask({ title: '' } as unknown as Parameters<typeof taskService.createTask>[0], 1));
-  
+  const err = await catchError(
+    taskService.createTask(
+      { title: '' } as unknown as Parameters<typeof taskService.createTask>[0],
+      1,
+    ),
+  );
+
   assert.ok(err instanceof AppError);
   assert.equal(err.statusCode, 400);
 });
@@ -146,7 +154,9 @@ test('getTaskWithTimeline - successfully fetches task and builds timeline', asyn
 
   assert.ok(result);
   assert.equal((result as { title: string }).title, 'Existing Task');
-  assert.ok(Array.isArray((result as { activityTimeline: unknown[] }).activityTimeline));
+  assert.ok(
+    Array.isArray((result as { activityTimeline: unknown[] }).activityTimeline),
+  );
 });
 
 test('getTaskWithTimeline - throws 404 if task not found', async () => {
@@ -162,8 +172,14 @@ test('getTaskWithTimeline - throws 404 if task not found', async () => {
 // update task tests
 test('updateTask - successfully updates a task', async () => {
   resetMocks();
-  const result = await taskService.updateTask(10, { title: 'Updated Task' } as unknown as Parameters<typeof taskService.updateTask>[1], 1);
-  
+  const result = await taskService.updateTask(
+    10,
+    { title: 'Updated Task' } as unknown as Parameters<
+      typeof taskService.updateTask
+    >[1],
+    1,
+  );
+
   assert.ok(result);
   assert.equal((result as { title: string }).title, 'Updated Task');
 });
@@ -171,19 +187,38 @@ test('updateTask - successfully updates a task', async () => {
 test('updateTask - throws 404 if task not found', async () => {
   resetMocks();
   prismaMock.task.findUnique = async () => null;
-  
-  const err = await catchError(taskService.updateTask(99, { title: 'Updated Task' } as unknown as Parameters<typeof taskService.updateTask>[1], 1));
-  
+
+  const err = await catchError(
+    taskService.updateTask(
+      99,
+      { title: 'Updated Task' } as unknown as Parameters<
+        typeof taskService.updateTask
+      >[1],
+      1,
+    ),
+  );
+
   assert.ok(err instanceof AppError);
   assert.equal(err.statusCode, 404);
 });
 
 test('updateTask - throws 400 for invalid issue type conversion', async () => {
   resetMocks();
-  prismaMock.task.findUnique = async () => ({ issueType: 'STORY', column: { board: {} } });
-  
-  const err = await catchError(taskService.updateTask(10, { issueType: 'TASK' } as unknown as Parameters<typeof taskService.updateTask>[1], 1));
-  
+  prismaMock.task.findUnique = async () => ({
+    issueType: 'STORY',
+    column: { board: {} },
+  });
+
+  const err = await catchError(
+    taskService.updateTask(
+      10,
+      { issueType: 'TASK' } as unknown as Parameters<
+        typeof taskService.updateTask
+      >[1],
+      1,
+    ),
+  );
+
   assert.ok(err instanceof AppError);
   assert.equal(err.statusCode, 400);
 });
@@ -191,18 +226,35 @@ test('updateTask - throws 400 for invalid issue type conversion', async () => {
 // move task tests
 test('moveTask - successfully moves a task', async () => {
   resetMocks();
-  const result = await taskService.moveTask(10, { targetColumnId: 6, newOrder: 2 } as unknown as Parameters<typeof taskService.moveTask>[1], 1);
-  
+  const result = await taskService.moveTask(
+    10,
+    { targetColumnId: 6, newOrder: 2 } as unknown as Parameters<
+      typeof taskService.moveTask
+    >[1],
+    1,
+  );
+
   assert.ok(result);
   assert.equal((result as { columnId: number }).columnId, 6);
 });
 
 test('moveTask - throws 400 if trying to move a story directly', async () => {
   resetMocks();
-  prismaMock.task.findUnique = async () => ({ issueType: 'STORY', column: { boardId: 2 } });
-  
-  const err = await catchError(taskService.moveTask(10, { targetColumnId: 6, newOrder: 2 } as unknown as Parameters<typeof taskService.moveTask>[1], 1));
-  
+  prismaMock.task.findUnique = async () => ({
+    issueType: 'STORY',
+    column: { boardId: 2 },
+  });
+
+  const err = await catchError(
+    taskService.moveTask(
+      10,
+      { targetColumnId: 6, newOrder: 2 } as unknown as Parameters<
+        typeof taskService.moveTask
+      >[1],
+      1,
+    ),
+  );
+
   assert.ok(err instanceof AppError);
   assert.equal(err.statusCode, 400);
 });
@@ -210,10 +262,18 @@ test('moveTask - throws 400 if trying to move a story directly', async () => {
 test('moveTask - throws 400 for cross board transfers', async () => {
   resetMocks();
   prismaMock.task.findUnique = async () => ({ column: { boardId: 2 } });
-  prismaMock.column.findUnique = async () => ({ id: 6, boardId: 99 }); 
-  
-  const err = await catchError(taskService.moveTask(10, { targetColumnId: 6, newOrder: 2 } as unknown as Parameters<typeof taskService.moveTask>[1], 1));
-  
+  prismaMock.column.findUnique = async () => ({ id: 6, boardId: 99 });
+
+  const err = await catchError(
+    taskService.moveTask(
+      10,
+      { targetColumnId: 6, newOrder: 2 } as unknown as Parameters<
+        typeof taskService.moveTask
+      >[1],
+      1,
+    ),
+  );
+
   assert.ok(err instanceof AppError);
   assert.equal(err.statusCode, 400);
 });
