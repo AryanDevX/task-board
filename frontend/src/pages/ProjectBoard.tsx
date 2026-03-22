@@ -122,14 +122,7 @@ export const ProjectBoard = () => {
                   <h3>{board.title}</h3>
                 </div>
                 <p>{board.description || 'No description provided'}</p>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '8px',
-                    marginTop: 'auto',
-                    paddingTop: '8px',
-                  }}
-                >
+                <div className={styles.boardCardActions}>
                   <button
                     className={sharedStyles.tinyButton}
                     onClick={(e) => {

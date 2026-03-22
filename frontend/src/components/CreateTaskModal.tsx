@@ -493,14 +493,9 @@ export const CreateTaskModal = ({
           <div className={styles.fieldGroup}>
             <label>Reporter</label>
             <input
-              className={styles.input}
+              className={`${styles.input} ${styles.disabledInput}`}
               value={reporterName}
               disabled
-              style={{
-                opacity: 0.7,
-                cursor: 'not-allowed',
-                backgroundColor: '#f9fafb',
-              }}
             />
           </div>
         )}

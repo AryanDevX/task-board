@@ -277,8 +277,7 @@ export default function Column({
               {task.issueType === 'STORY' && (
                 <div className={styles.storyMeta}>
                   <span
-                    className={styles.storyCountChip}
-                    style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                    className={`${styles.storyCountChip} ${styles.clickableChip}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowSubIssuesTask(task);
@@ -389,12 +388,7 @@ export default function Column({
               </button>
             </div>
             <div
-              className={modalStyles.timelineList}
-              style={{
-                maxHeight: '60vh',
-                overflowY: 'auto',
-                marginTop: '1rem',
-              }}
+              className={`${modalStyles.timelineList} ${styles.subIssuesList}`}
             >
               {allTasks.filter((t) => t.parentId === showSubIssuesTask.id)
                 .length === 0 ? (
@@ -417,12 +411,7 @@ export default function Column({
                       </div>
                       {child.description && (
                         <p
-                          className={modalStyles.timelineComment}
-                          style={{
-                            marginTop: '0.25rem',
-                            fontSize: '0.9rem',
-                            color: '#4b5563',
-                          }}
+                          className={`${modalStyles.timelineComment} ${styles.subIssueComment}`}
                         >
                           {stripHtml(child.description)}
                         </p>

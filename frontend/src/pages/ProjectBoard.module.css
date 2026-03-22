@@ -214,3 +214,10 @@
   background-color: #fef08a !important;
   transition: background-color 0.5s ease;
 }
+
+.boardCardActions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+}
