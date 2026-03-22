@@ -122,7 +122,7 @@ export const getTaskWithTimeline = async (taskId: number) => {
 
   //format the unified activity feed
   const timeline = buildActivityTimeline(task.comments, task.auditLogs);
-  
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { comments, auditLogs, ...taskDetails } = task;
 
@@ -196,7 +196,7 @@ export const updateTask = async (
   }
 
   const auditLogsData: Prisma.AuditLogCreateManyInput[] = [];
-  
+
   //if column changed:
   if (columnId && oldTask.columnId !== Number(columnId)) {
     await validateTransition(
@@ -271,7 +271,7 @@ export const updateTask = async (
       oldTask.resolvedAt,
     );
   }
-  
+
   //updating the database:
   const updatedTask = await prisma.task.update({
     where: { id: taskId },

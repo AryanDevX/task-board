@@ -57,7 +57,9 @@ test('createColumn - successfully creates a column', async () => {
 
 test('createColumn - throws 400 if title is missing', async () => {
   const err = await catchError(
-    columnService.createColumn(5, { title: '' } as unknown as Parameters<typeof columnService.createColumn>[1]),
+    columnService.createColumn(5, { title: '' } as unknown as Parameters<
+      typeof columnService.createColumn
+    >[1]),
   );
 
   assert.ok(err instanceof AppError);
@@ -134,7 +136,9 @@ test('updateColumn - successfully shifts columns and updates order', async () =>
   prismaMock.$transaction = async () => {};
   prismaMock.project.update = async () => ({});
 
-  const result = await columnService.updateColumn(10, { order: 2 } as unknown as Parameters<typeof columnService.updateColumn>[1]);
+  const result = await columnService.updateColumn(10, {
+    order: 2,
+  } as unknown as Parameters<typeof columnService.updateColumn>[1]);
 
   assert.ok(result); // fixes typescript possibly null error
   assert.equal((result as { order: number }).order, 2);
@@ -144,7 +148,9 @@ test('updateColumn - throws 404 if column to update is not found', async () => {
   prismaMock.column.findUnique = async () => null;
 
   const err = (await catchError(
-    columnService.updateColumn(10, { title: 'Updated Title' } as unknown as Parameters<typeof columnService.updateColumn>[1]),
+    columnService.updateColumn(10, {
+      title: 'Updated Title',
+    } as unknown as Parameters<typeof columnService.updateColumn>[1]),
   )) as AppError;
 
   assert.ok(err instanceof AppError);

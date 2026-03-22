@@ -2,7 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 import { AppError } from '../../types/appError.js';
 import * as boardService from '../services/boardService.js';
 
-export const createBoard = async (  // creates the board
+export const createBoard = async (
+  // creates the board
   req: Request,
   res: Response,
   next: NextFunction,

@@ -105,7 +105,7 @@ describe('e2e api routes test', () => {
     //db checks
     const tskCheck = await prisma.task.findUnique({
       where: { id: resp.body.id },
-      include: { assignee: true, reporter: true }, 
+      include: { assignee: true, reporter: true },
     });
 
     assert.ok(tskCheck, 'task must be stored in db');
@@ -130,7 +130,7 @@ describe('e2e api routes test', () => {
         boardId: brd.id,
         fromColumnId: colA.id,
         toColumnId: colB.id,
-      }
+      },
     });
 
     // put a task in colA
@@ -144,7 +144,9 @@ describe('e2e api routes test', () => {
     });
     // try moving it
     const resp = await request(app)
-      .patch(`/api/projects/${proj.id}/boards/${brd.id}/columns/${colA.id}/tasks/${tsk.id}/move`)
+      .patch(
+        `/api/projects/${proj.id}/boards/${brd.id}/columns/${colA.id}/tasks/${tsk.id}/move`,
+      )
       .set('Cookie', myCookie)
       .send({ targetColumnId: colB.id, newOrder: 1 });
 
@@ -170,20 +172,32 @@ describe('e2e api routes test', () => {
         boardId: brd.id,
         fromColumnId: colA.id,
         toColumnId: colB.id,
-      }
+      },
     });
 
     // fill col b up
     await prisma.task.create({
-      data: { title: 'already here', columnId: colB.id, order: 1, reporterId: usr.id },
+      data: {
+        title: 'already here',
+        columnId: colB.id,
+        order: 1,
+        reporterId: usr.id,
+      },
     });
     const tsk = await prisma.task.create({
-      data: { title: 'stuck task', columnId: colA.id, order: 1, reporterId: usr.id },
+      data: {
+        title: 'stuck task',
+        columnId: colA.id,
+        order: 1,
+        reporterId: usr.id,
+      },
     });
 
     // try to move it
     const resp = await request(app)
-      .patch(`/api/projects/${proj.id}/boards/${brd.id}/columns/${colA.id}/tasks/${tsk.id}/move`)
+      .patch(
+        `/api/projects/${proj.id}/boards/${brd.id}/columns/${colA.id}/tasks/${tsk.id}/move`,
+      )
       .set('Cookie', myCookie)
       .send({ targetColumnId: colB.id, newOrder: 2 });
     assert.strictEqual(resp.status, 400);
@@ -209,7 +223,7 @@ describe('e2e api routes test', () => {
       .post(`/api/projects/${proj.id}/boards`)
       .set('Cookie', myCookie)
       .send({ title: 'crud brd', description: 'test test' });
-    
+
     assert.strictEqual(mkResp.status, 201);
     const newBrdId = mkResp.body.id;
     assert.strictEqual(mkResp.body.title, 'crud brd');
@@ -232,9 +246,16 @@ describe('e2e api routes test', () => {
     const delResp = await request(app)
       .delete(`/api/projects/${proj.id}/boards/${newBrdId}`)
       .set('Cookie', myCookie);
-    assert.ok([200, 204].includes(delResp.status), `weird status: ${delResp.status}`);
+    assert.ok(
+      [200, 204].includes(delResp.status),
+      `weird status: ${delResp.status}`,
+    );
     //verify db delete
     const chk = await prisma.board.findUnique({ where: { id: newBrdId } });
-    assert.strictEqual(chk, null, 'db should be completely empty of this board');
+    assert.strictEqual(
+      chk,
+      null,
+      'db should be completely empty of this board',
+    );
   });
 });
