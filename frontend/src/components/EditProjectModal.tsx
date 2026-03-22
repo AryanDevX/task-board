@@ -17,11 +17,13 @@ interface ProjectMemberPayload {
   role: ProjectRole;
 }
 
+// modal component to edit project details and members
 export const EditProjectModal = ({
   project,
   onClose,
   onSuccess,
 }: EditProjectModalProps) => {
+  // state for project and members
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +38,7 @@ export const EditProjectModal = ({
   const { user } = useAuth();
   const isGlobalAdmin = user?.globalRole === 'GLOBAL_ADMIN';
 
-  //pagination:
+  // pagination setup
   const [membersPage, setMembersPage] = useState(1);
   const membersPerPage = 5;
   const totalMembersPages = Math.max(
@@ -50,6 +52,7 @@ export const EditProjectModal = ({
     startIndex + membersPerPage,
   );
 
+  // fetch project members on mount
   useEffect(() => {
     const fetchMembers = async () => {
       setIsMembersLoading(true);
@@ -63,7 +66,7 @@ export const EditProjectModal = ({
         setActiveMembers(members);
       } catch (error) {
         console.error('Failed to load project members', error);
-        alert('Failed to load project members. Please try again.');
+        alert('Failed to load project members Please try again');
       } finally {
         setIsMembersLoading(false);
       }
@@ -71,6 +74,7 @@ export const EditProjectModal = ({
     void fetchMembers();
   }, [project.id]);
 
+  // handle adding organization user
   const handleAddOrganizationUser = (email: string) => {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail) return;
@@ -79,7 +83,7 @@ export const EditProjectModal = ({
         (member) => member.email.toLowerCase() === normalizedEmail,
       )
     ) {
-      alert('This user is already in the project.');
+      alert('This user is already in the project');
       return;
     }
     setActiveMembers((prev) => [
@@ -89,12 +93,14 @@ export const EditProjectModal = ({
     setMembersPage(1);
   };
 
+  // handle removing member
   const handleRemoveMember = (emailToRemove: string) => {
     setActiveMembers(
       activeMembers.filter((member) => member.email !== emailToRemove),
     );
   };
 
+  // handle member role change
   const handleRoleChange = (email: string, newRole: ProjectRole) => {
     setActiveMembers(
       activeMembers.map((m) =>
@@ -103,6 +109,7 @@ export const EditProjectModal = ({
     );
   };
 
+  // submit project and member updates
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -145,16 +152,17 @@ export const EditProjectModal = ({
       onClose();
     } catch (error) {
       console.error('Failed to update project', error);
-      alert('Failed to update project. Please try again.');
+      alert('Failed to update project Please try again');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // render edit project ui
   return (
     <div className={sharedStyles.modalOverlay}>
       <div className={sharedStyles.modalCard}>
-        <h2 className={sharedStyles.cardTitle}>Edit Project & Team</h2>
+        <h2 className={sharedStyles.cardTitle}>Edit Project</h2>
         <form className={sharedStyles.form} onSubmit={handleSubmit}>
           <div className={sharedStyles.fieldGroup}>
             <label>Project Name</label>
@@ -181,9 +189,9 @@ export const EditProjectModal = ({
           <h3>Users in Project</h3>
 
           <OrganizationUsersBrowser
-            title="Browse organization users and add them to this project."
+            title="Browse organization users and add them to this project"
             pageSize={10}
-            emptyMessage="No available organization users found."
+            emptyMessage="No available organization users found"
             filterUsers={(user) =>
               !activeMembers.some(
                 (member) =>
@@ -202,7 +210,7 @@ export const EditProjectModal = ({
           />
 
           {isMembersLoading ? (
-            <p className={styles.loadingText}>Loading team members...</p>
+            <p className={styles.loadingText}>Loading team members</p>
           ) : (
             activeMembers.length > 0 && (
               <>
@@ -248,11 +256,10 @@ export const EditProjectModal = ({
                   ))}
                 </ul>
 
-                {/* Added the Fragment wrapper up above, so this renders perfectly now! */}
                 {totalMembersPages > 1 && (
                   <div
                     className={sharedStyles.inlineControls}
-                    style={{ marginTop: '1rem', padding: '0 0.5rem' }}
+                    style={{ marginTop: '1rem', padding: '0 05rem' }}
                   >
                     <p className={sharedStyles.helperText}>
                       Page {currentMembersPage} of {totalMembersPages}
@@ -301,7 +308,7 @@ export const EditProjectModal = ({
               className={sharedStyles.primaryButton}
               disabled={isLoading}
             >
-              {isLoading ? 'Saving...' : 'Save Changes'}
+              {isLoading ? 'Saving' : 'Save Changes'}
             </button>
           </div>
         </form>

@@ -10,12 +10,15 @@ interface Props {
   onSuccess: (updatedBoard: Board) => void;
 }
 
+// modal component to edit an existing board
 export const EditBoardModal = ({ projectId, board, onClose, onSuccess }: Props) => {
+  // state for edit board form
   const [title, setTitle] = useState(board.title);
   const [description, setDescription] = useState(board.description || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // handle board update submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -33,12 +36,13 @@ export const EditBoardModal = ({ projectId, board, onClose, onSuccess }: Props) 
       onClose();
     } catch (err) {
       console.error(err);
-      setError("Failed to update board. Please try again.");
+      setError("Failed to update board Please try again");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // render modal ui
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
@@ -68,7 +72,7 @@ export const EditBoardModal = ({ projectId, board, onClose, onSuccess }: Props) 
           </div>
           <div className={styles.buttonRow}>
             <button type="button" className={styles.secondaryButton} onClick={onClose}>Cancel</button>
-            <button type="submit" className={styles.primaryButton} disabled={isSubmitting || !title.trim()}>{isSubmitting ? "Saving..." : "Save Changes"}</button>
+            <button type="submit" className={styles.primaryButton} disabled={isSubmitting || !title.trim()}>{isSubmitting ? "Saving" : "Save Changes"}</button>
           </div>
         </form>
       </div>

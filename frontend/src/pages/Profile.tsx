@@ -7,12 +7,15 @@ import { useAuth } from '../context/AuthContext';
 import { getAvatarSrc, getInitials } from '../utils/avatar';
 import styles from './Profile.module.css';
 
+// user profile component
 export const Profile = () => {
+  // state for avatar upload
   const { user, logout, dispatch } = useAuth();
   const navigate = useNavigate();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  // handle user logout
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -21,26 +24,30 @@ export const Profile = () => {
   const initials = getInitials(user?.username);
   const avatarSrc = getAvatarSrc(user?.avatar);
 
+  // handle avatar image selection and upload
   const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if(!file)return;
 
-    try {
+    try{
       setIsUploading(true);
       setUploadError(null);
       await usersApi.uploadAvatar(file);
       const refreshedUser = await authApi.myProfile();
       dispatch({ type: 'LOGIN', payload: refreshedUser });
-    } catch (error) {
+    }
+    catch(error){
       setUploadError(
-        error instanceof Error ? error.message : 'Unable to upload avatar.',
+        error instanceof Error ? error.message : 'Unable to upload avatar',
       );
-    } finally {
+    }
+    finally{
       setIsUploading(false);
       event.target.value = '';
     }
   };
 
+  // render profile ui
   return (
     <div className={styles.page}>
       <div className={styles.topBar}>
@@ -48,7 +55,7 @@ export const Profile = () => {
           className={styles.backButton}
           onClick={() => navigate('/dashboard')}
         >
-          ← Dashboard
+          Dashboard
         </button>
         <NotificationCenter />
       </div>
@@ -77,7 +84,7 @@ export const Profile = () => {
             onChange={handleAvatarChange}
             disabled={isUploading}
           />
-          {isUploading ? 'Uploading...' : 'Upload Avatar'}
+          {isUploading ? 'Uploading' : 'Upload Avatar'}
         </label>
         {uploadError && <p className={styles.error}>{uploadError}</p>}
         <button className={styles.logoutButton} onClick={handleLogout}>

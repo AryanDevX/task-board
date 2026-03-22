@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { commentApi } from '../api/comment.api';
 import { taskApi } from '../api/tasks.api';
 import { projectApi } from '../api/project.api';
+import { columnApi } from '../api/column.api';
 import { IssueType, Priority, type ProjectMember } from '../types/models';
 import type {
   CommentWithAuthor,
@@ -10,7 +11,7 @@ import type {
   UpdateTaskDTO,
 } from '../types/dtos';
 import { useParams } from 'react-router-dom';
-import { type Task, type User } from '../types/models';
+import { type Task, type User, type Column } from '../types/models';
 import { useAuth } from '../context/AuthContext';
 import styles from '../styles/index.module.css';
 
@@ -35,6 +36,9 @@ export const CreateTaskModal = ({ order, columnId, stories, wipLimit, wipCount, 
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [isMembersLoading, setIsMembersLoading] = useState(true);
   const [membersPage, setMembersPage] = useState(1);
+
+  // Managing columns for activity timeline formatting
+  const [columns, setColumns] = useState<Column[]>([]);
 
   // Comments and timeline
   const [comments, setComments] = useState<CommentWithAuthor[]>([]);
@@ -78,6 +82,20 @@ export const CreateTaskModal = ({ order, columnId, stories, wipLimit, wipCount, 
     };
     void loadMembers();
   }, [projectId]);
+
+  // Fetching board columns for activity timeline formatting
+  useEffect(() => {
+    if (!projectId || !boardId) return;
+    const loadColumns = async () => {
+      try {
+        const boardColumns = await columnApi.getColumns(projectId, boardId);
+        setColumns(boardColumns);
+      } catch (err) {
+        console.error('Failed to load board columns:', err);
+      }
+    };
+    void loadColumns();
+  }, [projectId, boardId]);
 
   // Setting the correct task details as task change
   useEffect(() => {
@@ -207,14 +225,28 @@ export const CreateTaskModal = ({ order, columnId, stories, wipLimit, wipCount, 
   };
 
   //making prety for user:
-  const formatTimelineEvent = (entry: TimelineEntry) => {
+  const formatTimelineEvent = (entry: TimelineEntry, projectMembers: ProjectMember[], boardColumns: Column[]) => {
+    // Helper to get username by userId
+    const getUserName = (userId: string | null | undefined) => {
+      if (!userId || userId === 'Unassigned') return 'Unassigned';
+      const member = projectMembers.find((m) => String(m.userId) === userId);
+      return member?.username || `User ${userId}`;
+    };
+
+    // Helper to get column title by columnId
+    const getColumnTitle = (columnId: string | null | undefined) => {
+      if (!columnId) return 'Unknown';
+      const column = boardColumns.find((c) => String(c.id) === columnId);
+      return column?.title || `Column ${columnId}`;
+    };
+
     switch (entry.field) {
       case 'TASK_CREATED':
         return 'created this task.';
       case 'STATUS_CHANGE':
-        return `changed status from ${entry.oldValue ?? 'Unknown'} to ${entry.newValue ?? 'Unknown'}.`;
+        return `changed status from ${getColumnTitle(entry.oldValue)} to ${getColumnTitle(entry.newValue)}.`;
       case 'ASSIGNEE_CHANGE':
-        return `changed assignee from ${entry.oldValue ?? 'Unassigned'} to ${entry.newValue ?? 'Unassigned'}.`;
+        return `changed assignee from ${getUserName(entry.oldValue)} to ${getUserName(entry.newValue)}.`;
       case 'PRIORITY_CHANGE':
         return `changed priority from ${entry.oldValue ?? 'Unknown'} to ${entry.newValue ?? 'Unknown'}.`;
       case 'COMMENT_ADDED':
@@ -937,7 +969,7 @@ export const CreateTaskModal = ({ order, columnId, stories, wipLimit, wipCount, 
                       </p>
                     ) : (
                       <p className={styles.timelineEvent}>
-                        {formatTimelineEvent(entry)}
+                        {formatTimelineEvent(entry, members, columns)}
                       </p>
                     )}
                   </article>

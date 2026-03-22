@@ -4,12 +4,15 @@ import { type Notification } from '../types/models';
 import { notificationApi } from '../api/notification.api';
 import styles from './Notifications.module.css';
 
+// component for notification center
 export const NotificationCenter = () => {
   const navigate = useNavigate();
+  // state for notifications
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // load notifications and set interval
   useEffect(() => {
     const loadNotifications = async (showLoading = true) => {
       try {
@@ -28,6 +31,7 @@ export const NotificationCenter = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  // handle click and mark as read
   const handleNotificationClick = async (notification: Notification) => {
     try {
       if (!notification.isRead) {
@@ -42,18 +46,28 @@ export const NotificationCenter = () => {
       console.error('Failed to mark notification as read', error);
     }
 
-    if (notification.projectId && notification.boardId && notification.taskId) {
-      navigate(
-        `/project/${notification.projectId}/boards/${notification.boardId}`,
-      );
+    // Navigate to the board with task and column information as query parameters
+    if (notification.projectId && notification.boardId) {
+      const queryParams = new URLSearchParams();
+      if (notification.taskId) {
+        queryParams.append('taskId', String(notification.taskId));
+      }
+      if (notification.columnId) {
+        queryParams.append('columnId', String(notification.columnId));
+      }
+      
+      const url = `/project/${notification.projectId}/boards/${notification.boardId}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      navigate(url);
     } else if (notification.projectId) {
       navigate(`/project/${notification.projectId}`);
     }
     setIsOpen(false);
   };
 
+  // count unread notifications
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
+  // render notification center ui
   return (
     <div className={styles.container}>
       <button className={styles.bellBtn} onClick={() => setIsOpen(!isOpen)}>
@@ -68,9 +82,9 @@ export const NotificationCenter = () => {
           </div>
           <div className={styles.list}>
             {isLoading ? (
-              <p className={styles.emptyText}>Loading...</p>
+              <p className={styles.emptyText}>Loading</p>
             ) : notifications.length === 0 ? (
-              <p className={styles.emptyText}>No notifications!</p>
+              <p className={styles.emptyText}>No notifications</p>
             ) : (
               notifications.map((n) => (
                 <button

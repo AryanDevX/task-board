@@ -8,12 +8,15 @@ interface Props {
   onSuccess: (newProject: Project) => void;
 }
 
+// modal component to create a new project
 export const CreateProjectModal = ({ onClose, onSuccess }: Props) => {
+  // state for project form fields
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -30,13 +33,14 @@ export const CreateProjectModal = ({ onClose, onSuccess }: Props) => {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('Something went wrong connecting to the server.');
+        setError('Something went wrong connecting to the server');
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // render modal ui
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
@@ -69,7 +73,7 @@ export const CreateProjectModal = ({ onClose, onSuccess }: Props) => {
             className={`${styles.primaryButton} ${styles.fullWidth}`}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Creating Project...' : 'Create'}
+            {isSubmitting ? 'Creating Project' : 'Create'}
           </button>
         </form>
       </div>

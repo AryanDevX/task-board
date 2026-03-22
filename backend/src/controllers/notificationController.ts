@@ -31,6 +31,7 @@ export const getUserNotifications = async (
             title: true,
             column: {
               select: {
+                id: true,
                 board: {
                   select: {
                     id: true,
@@ -55,6 +56,7 @@ export const getUserNotifications = async (
       createdAt: n.createdAt,
       projectId: n.task?.column?.board?.projectId || null,
       boardId: n.task?.column?.board?.id || null,
+      columnId: n.task?.column?.id || null,
       taskTitle: n.task?.title || null,
     }));
     res.status(200).json({ notifications: formattedNotifications });

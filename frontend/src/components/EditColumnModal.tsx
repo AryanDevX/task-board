@@ -13,8 +13,11 @@ interface EditColumnModalProps {
 
 type ColumnWithStatus = Column & { status?: string };
 
+// modal component to edit an existing column
 export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditColumnModalProps) => {
   const { projectId, boardId } = useParams<{ projectId: string; boardId: string }>();
+  
+  // state for edit column form
   const [title, setTitle] = useState(column.title);
   const [status, setStatus] = useState<string>(
     (column as ColumnWithStatus).status || 'TODO',
@@ -25,16 +28,17 @@ export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditC
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // handle column update submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !boardId || !projectId) return;
+    if(!title.trim() || !boardId || !projectId)return;
 
-    if (isDefault && status !== ((column as ColumnWithStatus).status || 'TODO')) {
-      alert('Cannot change the status of a default column.');
+    if(isDefault && status !== ((column as ColumnWithStatus).status || 'TODO')){
+      alert('Cannot change the status of a default column');
       return;
     }
 
-    try {
+    try{
       setIsSubmitting(true);
       setError(null);
 
@@ -53,14 +57,17 @@ export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditC
 
       onSuccess(updatedColumn);
       onClose();
-    } catch (err) {
-      setError('Failed to update column.');
+    }
+    catch(err){
+      setError('Failed to update column');
       console.error(err);
-    } finally {
+    }
+    finally{
       setIsSubmitting(false);
     }
   };
 
+  // render modal ui
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
@@ -71,7 +78,7 @@ export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditC
             onClick={onClose}
             type="button"
           >
-            ×
+            x
           </button>
         </div>
 
@@ -80,6 +87,7 @@ export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditC
             <label htmlFor="title">Column Title</label>
             <input
               id="title"
+              className={styles.input}
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -91,6 +99,7 @@ export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditC
             <label htmlFor="status">Status Mapping</label>
             <select
               id="status"
+              className={styles.input}
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               required
@@ -102,10 +111,11 @@ export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditC
             </select>
           </div>
 
-          <div>
-            <label htmlFor="wipLimit">WIP Limit (Optional)</label>
+          <div className={styles.inputGroup}>
+            <label htmlFor="wipLimit">WIP Limit</label>
             <input
               id="wipLimit"
+              className={styles.input}
               type="number"
               min="1"
               value={wipLimit}
@@ -129,7 +139,7 @@ export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditC
               className={styles.primaryButton}
               disabled={isSubmitting || !title.trim()}
             >
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
+              {isSubmitting ? 'Saving' : 'Save Changes'}
             </button>
           </div>
         </form>

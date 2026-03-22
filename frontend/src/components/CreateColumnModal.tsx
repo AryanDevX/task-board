@@ -12,6 +12,7 @@ interface CreateColumnModalProps {
   onSuccess: (newColumn: Column) => void;
 }
 
+// modal component to create a new column
 export const CreateColumnModal = ({
   projectId,
   nextOrder = 0,
@@ -19,12 +20,15 @@ export const CreateColumnModal = ({
   onSuccess,
 }: CreateColumnModalProps) => {
   const { boardId } = useParams<{ boardId: string }>();
+  
+  // state for column form
   const [title, setTitle] = useState('');
   const [status, setStatus] = useState('TODO');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [wipLimit, setWipLimit] = useState<string>();
   const [error, setError] = useState<string | null>(null);
 
+  // handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !boardId) return;
@@ -41,10 +45,11 @@ export const CreateColumnModal = ({
       setError(null);
       const newColumn = await columnApi.createColumn(projectId, boardId, data);
 
-      onSuccess(newColumn); // This updates the list and closes the modal in the parent
+      // update list and close modal
+      onSuccess(newColumn); 
     } catch (err) {
       setError(
-        'Failed to create column. Please try again  (Maybe Order is already occupied)',
+        'Failed to create column Please try again Maybe Order is already occupied',
       );
       console.error(err);
     } finally {
@@ -52,6 +57,7 @@ export const CreateColumnModal = ({
     }
   };
 
+  // render modal ui
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
@@ -74,7 +80,7 @@ export const CreateColumnModal = ({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Done"
+              placeholder="eg Done"
               required
             />
           </div>
@@ -94,9 +100,8 @@ export const CreateColumnModal = ({
             </select>
           </div>
 
-          {/* WIP Limit - Number Input */}
           <div className={styles.inputGroup}>
-            <label htmlFor="wipLimit">WIP Limit (Optional)</label>
+            <label htmlFor="wipLimit">WIP Limit</label>
             <input
               id="wipLimit"
               type="number"
@@ -122,7 +127,7 @@ export const CreateColumnModal = ({
               className={styles.primaryButton}
               disabled={isSubmitting || !title.trim()}
             >
-              {isSubmitting ? 'Adding...' : 'Add Column'}
+              {isSubmitting ? 'Adding' : 'Add Column'}
             </button>
           </div>
         </form>

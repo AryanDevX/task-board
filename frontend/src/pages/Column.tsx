@@ -13,7 +13,7 @@ interface Props {
   column: ColumnType;
   isDefault?: boolean;
   tasks: Task[];
-  allTasks: Task[]; // Added from his version to track parent/child relationships
+  allTasks: Task[]; 
   onTaskCreated: (task: Task) => void;
   onTaskUpdated: (task: Task) => void;
   onTaskMove: (
@@ -28,6 +28,7 @@ interface Props {
   onColumnUpdate: (column: ColumnType) => void;
 }
 
+// main column component for kanban board
 export default function Column({ 
   column, 
   isDefault,
@@ -41,12 +42,14 @@ export default function Column({
   onColumnMove,
   onColumnUpdate,
 }: Props) {
+  // state for modals and selected tasks
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showSubIssuesTask, setShowSubIssuesTask] = useState<Task | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // get active task from url or state
   const taskIdFromUrl = searchParams.get('taskId');
   const urlTask = taskIdFromUrl
     ? tasks.find((t) => String(t.id) === taskIdFromUrl)
@@ -54,16 +57,18 @@ export default function Column({
 
   const activeTask = selectedTask || urlTask;
 
+  // handle closing task modal
   const handleCloseModal = () => {
-    setSelectedTask(null); // Clear local state
-    if (taskIdFromUrl) {
+    setSelectedTask(null); 
+    if(taskIdFromUrl){
       searchParams.delete('taskId');
       setSearchParams(searchParams, { replace: true });
     }
   };
 
+  // prevent body scroll when modal is open
   useEffect(() => {
-    if (!activeTask) return;
+    if(!activeTask)return;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -73,6 +78,7 @@ export default function Column({
     };
   }, [activeTask]);
 
+  // handle drag and drop logic
   const handleDrop = (
     e: React.DragEvent<HTMLElement>,
     targetTask?: Task,
@@ -81,33 +87,35 @@ export default function Column({
     e.preventDefault();
     e.stopPropagation();
     const dataStr = e.dataTransfer.getData('text/plain');
-    if (!dataStr) return;
+    if(!dataStr)return;
 
     const data = JSON.parse(dataStr);
 
-    if (data.type === 'column' && onColumnMove) {
+    if(data.type === 'column' && onColumnMove){
       onColumnMove(data.columnId, column.order);
       return;
     }
 
     const { taskId, sourceColumnId, sourceOrder } = data;
-    if (!taskId) return;
+    if(!taskId)return;
     const targetColumnId = String(column.id);
 
-    if (targetTask && String(targetTask.id) === String(taskId)) {
+    if(targetTask && String(targetTask.id) === String(taskId)){
       return;
     }
 
     let newOrder = tasks.length;
-    if (targetTask !== undefined) {
+    if(targetTask !== undefined){
       const isSameColumn = String(sourceColumnId) === targetColumnId;
-      if (isSameColumn && sourceOrder !== undefined) {
-        if (sourceOrder < targetTask.order) {
+      if(isSameColumn && sourceOrder !== undefined){
+        if(sourceOrder < targetTask.order){
           newOrder = isBelow ? targetTask.order : targetTask.order - 1;
-        } else {
+        }
+        else{
           newOrder = isBelow ? targetTask.order + 1 : targetTask.order;
         }
-      } else {
+      }
+      else{
         newOrder = isBelow ? targetTask.order + 1 : targetTask.order;
       }
     }
@@ -120,14 +128,16 @@ export default function Column({
     );
   };
 
-  // Helper to safely strip HTML tags for the task card preview
+  // helper to strip html for plain text preview
   const stripHtml = (html: string) => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     return doc.body.textContent?.trim() ?? '';
   };
 
+  // calculate current wip count excluding stories
   const wipCount = tasks.filter(t => t.issueType !== 'STORY').length;
 
+  // render column ui
   return (
     <div
       className={styles.columnContainer}
@@ -181,6 +191,7 @@ export default function Column({
         ) : (
           tasks.map((task) => (
             <article
+              id={`task-${task.id}`}
               key={task.id}
               className={styles.taskCard}
               draggable
@@ -191,11 +202,11 @@ export default function Column({
                 handleDrop(e, task, isBelowMidpoint);
               }}
               onDragStart={(e) => {
-                // MERGED: Prevent Stories from being dragged directly
-                if (task.issueType === 'STORY') {
+                // prevent dragging stories directly
+                if(task.issueType === 'STORY'){
                   e.preventDefault();
                   alert(
-                    'Stories cannot be dragged directly. They automatically follow their sub-issues.',
+                    'Stories cannot be dragged directly They automatically follow their sub issues',
                   );
                   return;
                 }
@@ -216,14 +227,14 @@ export default function Column({
                 className={styles.taskDeleteBtn}
                 onClick={(e) => {
                   e.stopPropagation();
-                  // MERGED: Prevent deleting a Story if it has active sub-issues
-                  if (task.issueType === 'STORY') {
+                  // prevent deleting story with active sub issues
+                  if(task.issueType === 'STORY'){
                     const hasChildren = allTasks.some(
                       (t) => t.parentId === task.id,
                     );
-                    if (hasChildren) {
+                    if(hasChildren){
                       alert(
-                        'Cannot delete a story that has active sub-issues.',
+                        'Cannot delete a story that has active sub issues',
                       );
                       return;
                     }
@@ -262,12 +273,11 @@ export default function Column({
 
               {task.description && (
                 <p className={styles.taskDescription}>
-                  {/* Applied stripHtml to ensure clean text preview */}
                   {stripHtml(task.description)}
                 </p>
               )}
 
-              {/* MERGED: Sub-issues tracker for Stories */}
+              {/* render sub issues tracker for stories */}
               {task.issueType === 'STORY' && (
                 <div className={styles.storyMeta}>
                   <span 
@@ -278,7 +288,7 @@ export default function Column({
                       setShowSubIssuesTask(task);
                     }}
                   >
-                    {allTasks.filter(t => t.parentId === task.id).length} Sub-issues
+                    {allTasks.filter(t => t.parentId === task.id).length} Sub issues
                   </span>
                   <span className={styles.storyStatusChip}>
                     {(column as ColumnWithStatus).status || 'TODO'}
@@ -286,10 +296,10 @@ export default function Column({
                 </div>
               )}
 
-              {/* MERGED: Due Date Display for Tasks and Bugs */}
+              {/* render due date for normal tasks */}
               {task.issueType !== 'STORY' && task.dueDate && (
                 <div className={styles.dueDate}>
-                  📅 Due: {new Date(task.dueDate).toLocaleDateString()}
+                  Due {new Date(task.dueDate).toLocaleDateString()}
                 </div>
               )}
             </article>
@@ -301,31 +311,31 @@ export default function Column({
         <button
           className={`${modalStyles.secondaryButton} ${modalStyles.fullWidth}`}
           onClick={() => {
-            if (column.wipLimit !== null && wipCount >= column.wipLimit) {
-              alert(`WIP limit of ${column.wipLimit} reached for ${column.title}.`);
+            if(column.wipLimit !== null && wipCount >= column.wipLimit){
+              alert(`WIP limit of ${column.wipLimit} reached for ${column.title}`);
               return;
             }
             setShowModal(!showModal);
           }}
         >
-          + Add another card
+          Add another card
         </button>
       </div>
 
-      {/* CREATE MODAL */}
+      {/* render create task modal */}
       {showModal && (
         <CreateTaskModal
           order={tasks.length}
           columnId={String(column.id)}
           wipLimit={column.wipLimit}
           wipCount={wipCount}
-          stories={allTasks.filter((t) => t.issueType === 'STORY')} // MERGED: Pass only Stories here
+          stories={allTasks.filter((t) => t.issueType === 'STORY')}
           onClose={() => setShowModal(false)}
           onSuccess={onTaskCreated}
         />
       )}
 
-      {/* EDIT COLUMN MODAL */}
+      {/* render edit column modal */}
       {showEditModal && (
         <EditColumnModal
           column={column}
@@ -335,7 +345,7 @@ export default function Column({
         />
       )}
 
-      {/* TASK DETAILS MODAL */}
+      {/* render task details modal */}
       {activeTask && (
         <div className={modalStyles.modalOverlay} onClick={handleCloseModal}>
           <div
@@ -359,24 +369,24 @@ export default function Column({
         </div>
       )}
 
-      {/* SUB-ISSUES READ-ONLY MODAL */}
+      {/* render sub issues read only modal */}
       {showSubIssuesTask && (
         <div className={modalStyles.modalOverlay} onClick={() => setShowSubIssuesTask(null)}>
           <div className={modalStyles.modalCard} onClick={(e) => e.stopPropagation()}>
             <div className={modalStyles.modalHeader}>
-              <h3>Sub-issues for {showSubIssuesTask.title}</h3>
-              <button className={modalStyles.closeButton} onClick={() => setShowSubIssuesTask(null)} type="button">×</button>
+              <h3>Sub issues for {showSubIssuesTask.title}</h3>
+              <button className={modalStyles.closeButton} onClick={() => setShowSubIssuesTask(null)} type="button">x</button>
             </div>
             <div className={modalStyles.timelineList} style={{ maxHeight: '60vh', overflowY: 'auto', marginTop: '1rem' }}>
               {allTasks.filter(t => t.parentId === showSubIssuesTask.id).length === 0 ? (
-                <p className={modalStyles.helperText}>No sub-issues found.</p>
+                <p className={modalStyles.helperText}>No sub issues found</p>
               ) : (
                 allTasks.filter(t => t.parentId === showSubIssuesTask.id).map(child => (
                   <article key={child.id} className={modalStyles.timelineItem}>
                     <div className={modalStyles.timelineHeader}>
                       <span className={modalStyles.timelineAuthor}>{child.title}</span>
                       <span className={modalStyles.timelineDate}>
-                        {child.issueType} • {child.priority}
+                        {child.issueType} {child.priority}
                       </span>
                     </div>
                     {child.description && (

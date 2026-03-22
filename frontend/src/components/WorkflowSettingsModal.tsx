@@ -13,6 +13,7 @@ interface Props {
   onUpdate: (transitions: WorkflowTransition[]) => void;
 }
 
+// modal component for workflow settings
 export const WorkflowSettingsModal = ({
   projectId,
   boardId,
@@ -21,6 +22,7 @@ export const WorkflowSettingsModal = ({
   onClose,
   onUpdate,
 }: Props) => {
+  // state for workflow transitions
   const [fromCol, setFromCol] = useState<string>(
     columns[0]?.id ? String(columns[0].id) : '',
   );
@@ -29,20 +31,22 @@ export const WorkflowSettingsModal = ({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // get column name by id
   const getColumnName = (id: number) =>
     columns.find((c) => c.id === id)?.title || 'Unknown Column';
 
+  // handle adding new transition
   const handleAdd = async () => {
     if (!fromCol || !toCol) return;
 
-    // Check if transition already exists locally
+    // check if transition already exists locally
     if (
       transitions.some(
         (t) =>
           String(t.fromColumnId) === fromCol && String(t.toColumnId) === toCol,
       )
     ) {
-      alert('This transition is already allowed.');
+      alert('This transition is already allowed');
       return;
     }
 
@@ -63,13 +67,14 @@ export const WorkflowSettingsModal = ({
     } catch (error) {
       console.error('Failed to add transition', error);
       alert(
-        'Permission Denied: Only Project Admins can modify workflow transitions.',
+        'Permission Denied Only Project Admins can modify workflow transitions',
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // handle deleting transition
   const handleDelete = async (transitionId: number) => {
     try {
       await apiFetch(
@@ -82,11 +87,12 @@ export const WorkflowSettingsModal = ({
     } catch (error) {
       console.error('Failed to delete transition', error);
       alert(
-        'Permission Denied: Only Project Admins can modify workflow transitions.',
+        'Permission Denied Only Project Admins can modify workflow transitions',
       );
     }
   };
 
+  // render workflow settings ui
   return (
     <div className={sharedStyles.modalOverlay} onClick={onClose}>
       <div
@@ -106,7 +112,7 @@ export const WorkflowSettingsModal = ({
 
         <div className={styles.workflowBody}>
           <p className={sharedStyles.formHint}>
-            Define allowed task movements between columns.
+            Define allowed task movements between columns
           </p>
 
           <ul className={styles.transitionList}>
@@ -127,7 +133,7 @@ export const WorkflowSettingsModal = ({
             ))}
             {transitions.length === 0 && (
               <li className={sharedStyles.helperText}>
-                No transitions defined yet.
+                No transitions defined yet
               </li>
             )}
           </ul>
