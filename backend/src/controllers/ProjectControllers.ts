@@ -126,6 +126,12 @@ export const projectArchive =
         return next(new AppError('project not found', 404));
       }
 
+      if (project.createdById !== req.user?.userId) {
+        return next(
+          new AppError('Only the project creator can archive this project', 403),
+        );
+      }
+
       if (project?.archived === true) {
         return next(new AppError('Project already archived', 409));
       }
@@ -157,6 +163,12 @@ export const unarchiveProject = async (
       return next(new AppError('project not found', 404));
     }
 
+    if (project.createdById !== req.user?.userId) {
+      return next(
+        new AppError('Only the project creator can unarchive this project', 403),
+      );
+    }
+
     if (!project.archived) {
       return next(new AppError('Project is not archived', 400));
     }
@@ -186,6 +198,12 @@ export const deleteProject = async (
 
     if (!project) {
       return next(new AppError('Project not found', 404));
+    }
+
+    if (project.createdById !== req.user?.userId) {
+      return next(
+        new AppError('Only the project creator can delete this project', 403),
+      );
     }
 
     await prisma.project.delete({

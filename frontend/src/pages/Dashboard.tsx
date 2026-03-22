@@ -195,29 +195,35 @@ export const Dashboard = () => {
                   <p>Created {new Date(project.createdAt).toLocaleString()}</p>
                   <p>Updated {new Date(project.updatedAt).toLocaleString()}</p>
                 </div>
-                {isAdmin(project) && !showArchived && (
+                {!showArchived && (isAdmin(project) || project.createdById === user?.id) && (
                   <div className={styles.cardActions}>
-                    <button
-                      onClick={() => setEditingProject(project)}
-                      className={styles.editBtn}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleArchiveProject(project.id)}
-                      className={styles.editBtn}
-                    >
-                      Archive
-                    </button>
-                    <button
-                      onClick={() => handleDeleteProject(project.id)}
-                      className={styles.archieveBtn}
-                    >
-                      Delete
-                    </button>
+                    {isAdmin(project) && (
+                      <button
+                        onClick={() => setEditingProject(project)}
+                        className={styles.editBtn}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    {project.createdById === user?.id && (
+                      <>
+                        <button
+                          onClick={() => handleArchiveProject(project.id)}
+                          className={styles.editBtn}
+                        >
+                          Archive
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProject(project.id)}
+                          className={styles.archieveBtn}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
-                {isAdmin(project) && showArchived && (
+                {showArchived && project.createdById === user?.id && (
                   <div className={styles.cardActions}>
                     <button
                       onClick={() => handleUnarchiveProject(project.id)}

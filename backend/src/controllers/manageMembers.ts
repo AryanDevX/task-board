@@ -130,6 +130,14 @@ export const addMember = async (
       },
     });
 
+    await prisma.notification.create({
+      data: {
+        userId: user.id,
+        type: 'USER_MENTIONED',
+        message: `You have been added to the project "${project.name}" with the role of ${finalRole}.`,
+      },
+    });
+
     res.status(201).json({ message: 'Member added successfully', membership });
   } catch (err) {
     next(err);
