@@ -84,7 +84,7 @@ export const createTransition = async (
       return;
     }
 
-    // Optional: Check if the transition already exists to prevent duplicates
+    // Check if the transition already exists to prevent duplicates
     const existing = await prisma.workflowTransition.findFirst({
       where: {
         boardId: Number(boardId),

@@ -11,6 +11,7 @@ The application enables teams to organize work into hierarchical structures (Sto
 ## Tech Stack
 
 ### Frontend
+
 - **React 19** - UI library for building interactive user interfaces
 - **Vite** - Modern frontend build tool with HMR (Hot Module Replacement)
 - **TypeScript** - Type-safe JavaScript for robust development
@@ -19,6 +20,7 @@ The application enables teams to organize work into hierarchical structures (Sto
 - **Native HTML Drag-and-Drop API** - No external dependencies for drag-and-drop functionality
 
 ### Backend
+
 - **Node.js** - JavaScript runtime for server-side execution
 - **Express.js** - Web framework for building REST APIs
 - **TypeScript** - Type safety for backend development
@@ -26,16 +28,19 @@ The application enables teams to organize work into hierarchical structures (Sto
 - **bcrypt** - Password hashing and verification
 
 ### Database & ORM
+
 - **PostgreSQL** - Relational database for persistent data storage
 - **Prisma** - Modern ORM with type-safe database access
 
 ### Authentication & Security
+
 - **HTTP-only Cookies** - Secure token storage to prevent XSS attacks
 - **JWT with Refresh Tokens** - Secure authentication with token rotation
 - **bcrypt** - Password hashing with salt rounds for maximum security
 - **CORS** - Cross-Origin Resource Sharing for secure API access
 
 ### Development & DevOps
+
 - **ESLint** - Code quality and style enforcement
 - **Prettier** - Code formatting for consistency
 - **Nodemon** - Auto-restart server during development
@@ -55,6 +60,7 @@ Before you begin, ensure you have the following installed on your system:
 - **Git** - Version control system
 
 Verify installations:
+
 ```bash
 node --version   # Should show v18.0.0 or higher
 npm --version    # Should show 9.0.0 or higher
@@ -76,11 +82,13 @@ cd task-board
 #### Backend Environment Variables
 
 1. Navigate to the backend directory:
+
 ```bash
 cd backend
 ```
 
 2. Create a `.env` file in the `backend/` directory by copying the example or creating a new file:
+
 ```bash
 touch .env
 ```
@@ -116,6 +124,7 @@ UPLOAD_DIR=uploads/avatars
 #### Frontend Environment Variables
 
 1. Navigate to the frontend directory:
+
 ```bash
 cd ../frontend
 ```
@@ -150,6 +159,7 @@ ALTER USER postgres PASSWORD 'password';
 ```
 
 2. Update your DATABASE_URL in `backend/.env` with your PostgreSQL credentials:
+
 ```env
 DATABASE_URL=postgresql://postgres:password@localhost:5432/task_board_db
 ```
@@ -183,6 +193,7 @@ npm list
 ```
 
 ### Root Dependencies
+
 ```bash
 # From Root Directory (To get cookie parser)
 
@@ -224,6 +235,7 @@ npm run build
 #### Option A: Running Backend and Frontend Separately
 
 **Terminal 1 - Backend Server:**
+
 ```bash
 # From the project root
 cd backend
@@ -235,6 +247,7 @@ npm run dev
 The backend server will start using nodemon with TypeScript support and watch for file changes.
 
 **Terminal 2 - Frontend Development Server:**
+
 ```bash
 # From the project root
 cd frontend
@@ -256,6 +269,7 @@ npm run dev:frontend   # Runs in foreground
 ### Step 8: Verify Setup
 
 Open your browser and navigate to:
+
 - **Frontend:** http://localhost:5173
 - **Backend API:** http://localhost:5050/api
 - **Swagger/API Docs (if configured):** http://localhost:5050/api-docs
@@ -287,6 +301,7 @@ npm run preview
 Update production environment variables:
 
 **Backend (.env for production)**
+
 ```env
 NODE_ENV=production
 PORT=5050
@@ -297,6 +312,7 @@ FRONTEND_URL=https://yourdomain.com
 ```
 
 To generate secure random secrets:
+
 ```bash
 openssl rand -base64 32  # For JWT_SECRET
 openssl rand -base64 32  # For REFRESH_TOKEN_SECRET
@@ -307,28 +323,31 @@ openssl rand -base64 32  # For REFRESH_TOKEN_SECRET
 ## API Documentation
 
 ### Base URL
+
 ```
 http://localhost:5050/api
 ```
 
 ### Authentication
+
 All endpoints (except `/auth/register` and `/auth/login`) require JWT authentication via HTTP-only cookies.
 
 ---
 
 ### Authentication Endpoints
 
-| Method | Endpoint | Description | Request Body |
-|--------|----------|-------------|--------------|
-| `POST` | `/auth/register` | Register a new user | `{ "username": "string", "email": "string", "password": "string" }` |
-| `POST` | `/auth/login` | Authenticate user and receive JWT | `{ "email": "string", "password": "string" }` |
-| `POST` | `/auth/logout` | Revoke authentication token | none |
-| `POST` | `/auth/refresh` | Refresh expired JWT token | none |
-| `GET` | `/auth/myprofile` | Get current user's profile | none |
+| Method | Endpoint          | Description                       | Request Body                                                        |
+| ------ | ----------------- | --------------------------------- | ------------------------------------------------------------------- |
+| `POST` | `/auth/register`  | Register a new user               | `{ "username": "string", "email": "string", "password": "string" }` |
+| `POST` | `/auth/login`     | Authenticate user and receive JWT | `{ "email": "string", "password": "string" }`                       |
+| `POST` | `/auth/logout`    | Revoke authentication token       | none                                                                |
+| `POST` | `/auth/refresh`   | Refresh expired JWT token         | none                                                                |
+| `GET`  | `/auth/myprofile` | Get current user's profile        | none                                                                |
 
 **Example Requests:**
 
 Register:
+
 ```bash
 curl -X POST http://localhost:5050/api/auth/register \
   -H "Content-Type: application/json" \
@@ -340,6 +359,7 @@ curl -X POST http://localhost:5050/api/auth/register \
 ```
 
 Login:
+
 ```bash
 curl -X POST http://localhost:5050/api/auth/login \
   -H "Content-Type: application/json" \
@@ -353,19 +373,20 @@ curl -X POST http://localhost:5050/api/auth/login \
 
 ### Projects Endpoints
 
-| Method | Endpoint | Description | Required Role |
-|--------|----------|-------------|---|
-| `POST` | `/projects` | Create a new project | GLOBAL_ADMIN |
-| `GET` | `/projects` | List all projects user has access to | Any authenticated user |
-| `GET` | `/projects/:projectId` | Get project details | GLOBAL_ADMIN, PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
-| `PATCH` | `/projects/:projectId` | Update project details | GLOBAL_ADMIN, PROJECT_ADMIN |
-| `DELETE` | `/projects/:projectId` | Delete project | GLOBAL_ADMIN |
-| `POST` | `/projects/:projectId/archive` | Archive project | GLOBAL_ADMIN |
-| `POST` | `/projects/:projectId/unarchive` | Unarchive project | GLOBAL_ADMIN |
+| Method   | Endpoint                         | Description                          | Required Role                                               |
+| -------- | -------------------------------- | ------------------------------------ | ----------------------------------------------------------- |
+| `POST`   | `/projects`                      | Create a new project                 | GLOBAL_ADMIN                                                |
+| `GET`    | `/projects`                      | List all projects user has access to | Any authenticated user                                      |
+| `GET`    | `/projects/:projectId`           | Get project details                  | GLOBAL_ADMIN, PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
+| `PATCH`  | `/projects/:projectId`           | Update project details               | GLOBAL_ADMIN, PROJECT_ADMIN                                 |
+| `DELETE` | `/projects/:projectId`           | Delete project                       | GLOBAL_ADMIN                                                |
+| `POST`   | `/projects/:projectId/archive`   | Archive project                      | GLOBAL_ADMIN                                                |
+| `POST`   | `/projects/:projectId/unarchive` | Unarchive project                    | GLOBAL_ADMIN                                                |
 
 **Example Request Bodies:**
 
 Create Project:
+
 ```json
 {
   "name": "E-Commerce Platform",
@@ -374,6 +395,7 @@ Create Project:
 ```
 
 Update Project:
+
 ```json
 {
   "name": "E-Commerce Platform v2.0",
@@ -387,26 +409,27 @@ Update Project:
 
 #### Boards
 
-| Method | Endpoint | Description | Required Role |
-|--------|----------|-------------|---|
-| `POST` | `/projects/:projectId/boards` | Create a new board | PROJECT_ADMIN |
-| `GET` | `/projects/:projectId/boards` | List all boards in project | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
-| `GET` | `/projects/:projectId/boards/:boardId` | Get board details with columns | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
-| `PUT` | `/projects/:projectId/boards/:boardId` | Update board (rename, update description) | PROJECT_ADMIN |
-| `DELETE` | `/projects/:projectId/boards/:boardId` | Delete board and all columns/tasks | PROJECT_ADMIN |
+| Method   | Endpoint                               | Description                               | Required Role                                 |
+| -------- | -------------------------------------- | ----------------------------------------- | --------------------------------------------- |
+| `POST`   | `/projects/:projectId/boards`          | Create a new board                        | PROJECT_ADMIN                                 |
+| `GET`    | `/projects/:projectId/boards`          | List all boards in project                | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
+| `GET`    | `/projects/:projectId/boards/:boardId` | Get board details with columns            | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
+| `PUT`    | `/projects/:projectId/boards/:boardId` | Update board (rename, update description) | PROJECT_ADMIN                                 |
+| `DELETE` | `/projects/:projectId/boards/:boardId` | Delete board and all columns/tasks        | PROJECT_ADMIN                                 |
 
 #### Columns
 
-| Method | Endpoint | Description | Required Role |
-|--------|----------|-------------|---|
-| `POST` | `/projects/:projectId/boards/:boardId/columns` | Create a new column | PROJECT_ADMIN |
-| `GET` | `/projects/:projectId/boards/:boardId/columns` | List all columns in board | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
-| `PUT` | `/projects/:projectId/boards/:boardId/columns/:columnId` | Update column (name, WIP limit, order) | PROJECT_ADMIN |
-| `DELETE` | `/projects/:projectId/boards/:boardId/columns/:columnId` | Delete column and all tasks | PROJECT_ADMIN |
+| Method   | Endpoint                                                 | Description                            | Required Role                                 |
+| -------- | -------------------------------------------------------- | -------------------------------------- | --------------------------------------------- |
+| `POST`   | `/projects/:projectId/boards/:boardId/columns`           | Create a new column                    | PROJECT_ADMIN                                 |
+| `GET`    | `/projects/:projectId/boards/:boardId/columns`           | List all columns in board              | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
+| `PUT`    | `/projects/:projectId/boards/:boardId/columns/:columnId` | Update column (name, WIP limit, order) | PROJECT_ADMIN                                 |
+| `DELETE` | `/projects/:projectId/boards/:boardId/columns/:columnId` | Delete column and all tasks            | PROJECT_ADMIN                                 |
 
 **Example Request Bodies:**
 
 Create Board:
+
 ```json
 {
   "title": "Development Board",
@@ -415,6 +438,7 @@ Create Board:
 ```
 
 Create Column:
+
 ```json
 {
   "title": "To Do",
@@ -425,6 +449,7 @@ Create Column:
 ```
 
 Update Column:
+
 ```json
 {
   "title": "In Progress",
@@ -437,18 +462,19 @@ Update Column:
 
 ### Tasks Endpoints
 
-| Method | Endpoint | Description | Required Role |
-|--------|----------|-------------|---|
-| `POST` | `/projects/:projectId/boards/:boardId/columns/:columnId/tasks` | Create a new task | PROJECT_ADMIN, PROJECT_MEMBER |
-| `GET` | `/projects/:projectId/boards/:boardId/columns/:columnId/tasks` | List all tasks in column | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
-| `GET` | `/projects/:projectId/boards/:boardId/columns/:columnId/tasks/:taskId` | Get detailed task information | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
-| `PUT` | `/projects/:projectId/boards/:boardId/columns/:columnId/tasks/:taskId` | Update task (title, description, priority, etc.) | PROJECT_ADMIN, PROJECT_MEMBER |
-| `PATCH` | `/projects/:projectId/boards/:boardId/columns/:columnId/tasks/:taskId/move` | Move task to different column (drag & drop) | PROJECT_ADMIN, PROJECT_MEMBER |
-| `DELETE` | `/projects/:projectId/boards/:boardId/columns/:columnId/tasks/:taskId` | Delete task | PROJECT_ADMIN, PROJECT_MEMBER |
+| Method   | Endpoint                                                                    | Description                                      | Required Role                                 |
+| -------- | --------------------------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------- |
+| `POST`   | `/projects/:projectId/boards/:boardId/columns/:columnId/tasks`              | Create a new task                                | PROJECT_ADMIN, PROJECT_MEMBER                 |
+| `GET`    | `/projects/:projectId/boards/:boardId/columns/:columnId/tasks`              | List all tasks in column                         | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
+| `GET`    | `/projects/:projectId/boards/:boardId/columns/:columnId/tasks/:taskId`      | Get detailed task information                    | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
+| `PUT`    | `/projects/:projectId/boards/:boardId/columns/:columnId/tasks/:taskId`      | Update task (title, description, priority, etc.) | PROJECT_ADMIN, PROJECT_MEMBER                 |
+| `PATCH`  | `/projects/:projectId/boards/:boardId/columns/:columnId/tasks/:taskId/move` | Move task to different column (drag & drop)      | PROJECT_ADMIN, PROJECT_MEMBER                 |
+| `DELETE` | `/projects/:projectId/boards/:boardId/columns/:columnId/tasks/:taskId`      | Delete task                                      | PROJECT_ADMIN, PROJECT_MEMBER                 |
 
 **Example Request Bodies:**
 
 Create Task:
+
 ```json
 {
   "title": "Implement user authentication",
@@ -461,6 +487,7 @@ Create Task:
 ```
 
 Update Task:
+
 ```json
 {
   "title": "Implement user authentication - Updated",
@@ -471,6 +498,7 @@ Update Task:
 ```
 
 Move Task:
+
 ```json
 {
   "targetColumnId": 3
@@ -481,16 +509,17 @@ Move Task:
 
 ### Team Members (Project Members) Endpoints
 
-| Method | Endpoint | Description | Required Role |
-|--------|----------|-------------|---|
-| `GET` | `/projects/:projectId/members` | List all project members | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
-| `POST` | `/projects/:projectId/members/:email` | Add member to project | PROJECT_ADMIN |
-| `DELETE` | `/projects/:projectId/members/:email` | Remove member from project | PROJECT_ADMIN |
-| `PATCH` | `/projects/:projectId/members/:email` | Update member's project role | PROJECT_ADMIN |
+| Method   | Endpoint                              | Description                  | Required Role                                 |
+| -------- | ------------------------------------- | ---------------------------- | --------------------------------------------- |
+| `GET`    | `/projects/:projectId/members`        | List all project members     | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
+| `POST`   | `/projects/:projectId/members/:email` | Add member to project        | PROJECT_ADMIN                                 |
+| `DELETE` | `/projects/:projectId/members/:email` | Remove member from project   | PROJECT_ADMIN                                 |
+| `PATCH`  | `/projects/:projectId/members/:email` | Update member's project role | PROJECT_ADMIN                                 |
 
 **Example Request Bodies:**
 
 Add Member:
+
 ```json
 {
   "role": "PROJECT_MEMBER"
@@ -498,6 +527,7 @@ Add Member:
 ```
 
 Update Member Role:
+
 ```json
 {
   "role": "PROJECT_ADMIN"
@@ -505,6 +535,7 @@ Update Member Role:
 ```
 
 **Available Roles:**
+
 - `PROJECT_ADMIN` - Full project permissions
 - `PROJECT_MEMBER` - Can create and manage tasks
 - `PROJECT_VIEWER` - Read-only access
@@ -513,16 +544,17 @@ Update Member Role:
 
 ### Comments Endpoints
 
-| Method | Endpoint | Description | Required Role |
-|--------|----------|-------------|---|
-| `GET` | `/projects/:projectId/tasks/:taskId/comments` | List all comments on a task | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
-| `POST` | `/projects/:projectId/tasks/:taskId/comments` | Add comment to task | PROJECT_ADMIN, PROJECT_MEMBER |
-| `PUT` | `/projects/:projectId/tasks/:taskId/comments/:commentId` | Edit existing comment | Commenter or PROJECT_ADMIN |
-| `DELETE` | `/projects/:projectId/tasks/:taskId/comments/:commentId` | Delete comment | Commenter or PROJECT_ADMIN |
+| Method   | Endpoint                                                 | Description                 | Required Role                                 |
+| -------- | -------------------------------------------------------- | --------------------------- | --------------------------------------------- |
+| `GET`    | `/projects/:projectId/tasks/:taskId/comments`            | List all comments on a task | PROJECT_ADMIN, PROJECT_MEMBER, PROJECT_VIEWER |
+| `POST`   | `/projects/:projectId/tasks/:taskId/comments`            | Add comment to task         | PROJECT_ADMIN, PROJECT_MEMBER                 |
+| `PUT`    | `/projects/:projectId/tasks/:taskId/comments/:commentId` | Edit existing comment       | Commenter or PROJECT_ADMIN                    |
+| `DELETE` | `/projects/:projectId/tasks/:taskId/comments/:commentId` | Delete comment              | Commenter or PROJECT_ADMIN                    |
 
 **Example Request Bodies:**
 
 Create Comment:
+
 ```json
 {
   "content": "This task is critical and needs immediate attention"
@@ -530,6 +562,7 @@ Create Comment:
 ```
 
 Update Comment:
+
 ```json
 {
   "content": "Updated comment: This task needs careful implementation with proper testing"
@@ -540,13 +573,14 @@ Update Comment:
 
 ### Users Endpoints
 
-| Method | Endpoint | Description | Required Role |
-|--------|----------|-------------|---|
-| `GET` | `/users` | List all users (paginated, searchable) | Any authenticated user |
-| `PATCH` | `/users/:id/role` | Update user's global role | GLOBAL_ADMIN |
-| `PATCH` | `/users/avatars` | Upload and update user avatar | Any authenticated user |
+| Method  | Endpoint          | Description                            | Required Role          |
+| ------- | ----------------- | -------------------------------------- | ---------------------- |
+| `GET`   | `/users`          | List all users (paginated, searchable) | Any authenticated user |
+| `PATCH` | `/users/:id/role` | Update user's global role              | GLOBAL_ADMIN           |
+| `PATCH` | `/users/avatars`  | Upload and update user avatar          | Any authenticated user |
 
 **Query Parameters for GET /users:**
+
 - `page` - Page number (default: 1)
 - `limit` - Items per page (default: 10, max: 50)
 - `search` - Search by username or email
@@ -554,6 +588,7 @@ Update Comment:
 **Example Request Bodies:**
 
 Update User Role:
+
 ```json
 {
   "globalRole": "GLOBAL_ADMIN"
@@ -561,6 +596,7 @@ Update User Role:
 ```
 
 Upload Avatar (multipart/form-data):
+
 ```bash
 curl -X PATCH http://localhost:5050/api/users/avatars \
   -H "Cookie: token=your_jwt_token" \
@@ -582,6 +618,7 @@ All error responses follow a consistent format:
 ```
 
 **Common Status Codes:**
+
 - `200` - OK (success)
 - `201` - Created (resource created successfully)
 - `400` - Bad Request (validation error)
@@ -595,10 +632,12 @@ All error responses follow a consistent format:
 ## Role-Based Access Control (RBAC)
 
 ### Global Roles
+
 - **GLOBAL_ADMIN** - System administrator with access to all projects and user management
 - **USER** - Regular user, can create projects and join as member
 
 ### Project Roles
+
 - **PROJECT_ADMIN** - Full control over project, boards, tasks, and members
 - **PROJECT_MEMBER** - Can create and manage tasks, view boards
 - **PROJECT_VIEWER** - Read-only access to project boards and tasks
@@ -608,26 +647,31 @@ All error responses follow a consistent format:
 ## Key Features
 
 ### 1. Hierarchical Task Management
+
 - **Stories** - High-level features or epics
 - **Tasks** - Individual work items (child of stories)
 - **Bugs** - Issues and defects (child of stories)
 
 ### 2. Kanban Board Management
+
 - Drag-and-drop task movement between columns
 - Enforced WIP (Work In Progress) limits per column
 - Automated workflow transitions
 
 ### 3. Activity Tracking
+
 - Comprehensive audit log of all changes
 - Track status changes, assignments, and comments
 - Activity timeline for each task
 
 ### 4. Rich Collaboration
+
 - Comments with mention support
 - Real-time notifications
 - User profiles with avatars
 
 ### 5. Security Features
+
 - JWT-based authentication with refresh tokens
 - HTTP-only cookies for token storage
 - bcrypt password hashing
@@ -639,6 +683,7 @@ All error responses follow a consistent format:
 ## Database Schema Highlights
 
 ### Key Tables
+
 - **Users** - User accounts with global roles and authentication
 - **Projects** - Project definitions with creators and members
 - **Boards** - Kanban boards within projects
@@ -655,11 +700,13 @@ All error responses follow a consistent format:
 ## Development Guidelines
 
 ### Code Standards
+
 - **TypeScript** - Strict mode enabled for type safety
 - **ESLint** - Enforced linting rules for code quality
 - **Prettier** - Automated code formatting
 
 ### Project Structure
+
 ```
 task-board/
 ├── backend/
@@ -695,22 +742,26 @@ The project includes comprehensive test suites for the backend. Tests are writte
 #### Backend Tests
 
 **Prerequisites for testing:**
+
 - Ensure the development environment is set up (dependencies installed)
 - Create a separate test database (optional but recommended)
 
 **Run all backend tests:**
+
 ```bash
 cd backend
 npx tsx --test tests/**/*.test.ts
 ```
 
 **Run specific test file:**
+
 ```bash
 cd backend
 npx tsx --test tests/columnService.test.ts
 ```
 
 **Available test files (in `backend/tests/`):**
+
 - `authController.test.ts` - Authentication controller tests
 - `authenticateJWT.test.ts` - JWT middleware tests
 - `avatarUpload.test.ts` - Avatar upload middleware tests
@@ -751,7 +802,9 @@ npm run check-format
 ## Common Issues and Troubleshooting
 
 ### Issue: Database Connection Failed
+
 **Solution:** Verify PostgreSQL is running and credentials in `.env` are correct
+
 ```bash
 # Check PostgreSQL status (Linux)
 sudo systemctl status postgresql
@@ -761,7 +814,9 @@ psql -U postgres -d task_board_db
 ```
 
 ### Issue: Port Already in Use
+
 **Solution:** Change port in `.env` or kill the process
+
 ```bash
 # Find process using port 5050
 lsof -i :5050
@@ -771,13 +826,17 @@ kill -9 <PID>
 ```
 
 ### Issue: JWT Token Expired
+
 **Solution:** The frontend will automatically refresh the token using the refresh token endpoint
 
 ### Issue: CORS Error
+
 **Solution:** Ensure `FRONTEND_URL` in backend `.env` matches your frontend URL
 
 ### Issue: Prisma Migration Failed
+
 **Solution:** Reset database and re-run migrations
+
 ```bash
 cd backend
 npx prisma migrate reset

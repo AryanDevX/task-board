@@ -37,7 +37,7 @@ export const createTask = async (data: TaskDTO, reporterId: number) => {
     issueType || 'TASK',
   );
   await enforceWipLimit(Number(columnId), issueType || 'TASK');
-  if(assigneeId)
+  if (assigneeId)
     await validateAssigneeMembership(Number(assigneeId), Number(columnId));
 
   //safely determine the next order dynamically to prevent unique constraint violations
@@ -88,7 +88,10 @@ export const createTask = async (data: TaskDTO, reporterId: number) => {
     select: { board: { select: { projectId: true } } },
   });
   if (col) {
-    await prisma.project.update({ where: { id: col.board.projectId }, data: { updatedAt: new Date() } });
+    await prisma.project.update({
+      where: { id: col.board.projectId },
+      data: { updatedAt: new Date() },
+    });
   }
 
   return newTask;
@@ -156,7 +159,9 @@ export const updateTask = async (
       assigneeId: true,
       reporterId: true,
       resolvedAt: true,
-      column: { select: { boardId: true, board: { select: { projectId: true } } } },
+      column: {
+        select: { boardId: true, board: { select: { projectId: true } } },
+      },
     },
   });
   if (!oldTask) throw new AppError('Task not found.', 404);
@@ -300,7 +305,7 @@ export const updateTask = async (
   if (oldTask.parentId && columnId && oldTask.columnId !== Number(columnId)) {
     await syncStoryStatus(oldTask.parentId, userId);
   }
-  if(updatedTask.parentId && updatedTask.parentId !== oldTask.parentId) {
+  if (updatedTask.parentId && updatedTask.parentId !== oldTask.parentId) {
     await syncStoryStatus(updatedTask.parentId, userId);
   }
 
@@ -447,7 +452,7 @@ export const deleteTask = async (taskId: number, userId: number) => {
   try {
     const deletedTask = await prisma.task.delete({
       where: { id: taskId },
-      include: { column: { include: { board: true } } }
+      include: { column: { include: { board: true } } },
     });
 
     //recalculating parent story status if deleted a child of it:

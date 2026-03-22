@@ -60,7 +60,12 @@ const prismaMock = prisma as unknown as {
 
 // initialize mocks globally to prevent undefined errors in deeply nested service calls
 prismaMock.column = {
-  findUnique: async () => ({ id: 6, boardId: 2, projectId: 1, board: { projectId: 1 } }),
+  findUnique: async () => ({
+    id: 6,
+    boardId: 2,
+    projectId: 1,
+    board: { projectId: 1 },
+  }),
 };
 prismaMock.project = {
   update: async () => ({}),
@@ -84,7 +89,7 @@ prismaMock.task = {
   update: async () => ({}),
   updateMany: async () => ({}),
   delete: async () => ({}),
-  count: async () => 0, 
+  count: async () => 0,
 };
 
 // helper payload to pass all service validation checks including nested arrays
@@ -125,11 +130,11 @@ const createRes = (): mockResponse => {
   const res: mockResponse = {
     statusCode: null,
     jsonPayload: null,
-    status(code: number){
+    status(code: number) {
       this.statusCode = code;
       return this;
     },
-    json(payload: unknown){
+    json(payload: unknown) {
       this.jsonPayload = payload;
       return this;
     },
@@ -157,13 +162,13 @@ test('createTask successfully creates a task', async () => {
   });
   prismaMock.task.findFirst = async () => ({ order: 0 });
   prismaMock.column.findUnique = async () => ({ board: { projectId: 1 } });
-  
+
   const req = createReq({ body: { title: 'New Task', columnId: 5 } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await createTask(req as never, res as never, next as never);
-  
+
   const payload = res.jsonPayload as TaskPayload;
   assert.equal(res.statusCode, 201);
   assert.equal(payload.title, 'New Task');
@@ -177,9 +182,9 @@ test('createTask fails if unauthorized', async () => {
   });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await createTask(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 401);
 });
@@ -192,9 +197,9 @@ test('createTask passes unexpected errors to next middleware', async () => {
   const req = createReq({ body: { title: 'New Task', columnId: 5 } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await createTask(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });
@@ -202,13 +207,13 @@ test('createTask passes unexpected errors to next middleware', async () => {
 // get task tests
 test('getTask successfully fetches a single task', async () => {
   prismaMock.task.findUnique = async () => validTask;
-  
+
   const req = createReq();
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getTask(req as never, res as never, next as never);
-  
+
   const payload = res.jsonPayload as TaskPayload;
   assert.equal(res.statusCode, 200);
   assert.equal(payload.id, 10);
@@ -216,12 +221,14 @@ test('getTask successfully fetches a single task', async () => {
 });
 
 test('getTask fails if taskId is missing', async () => {
-  const req = createReq({ params: { projectId: '1', boardId: '2', columnId: '5', taskId: '' } });
+  const req = createReq({
+    params: { projectId: '1', boardId: '2', columnId: '5', taskId: '' },
+  });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getTask(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 400);
 });
@@ -234,9 +241,9 @@ test('getTask passes unexpected errors to next middleware', async () => {
   const req = createReq();
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getTask(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });
@@ -249,9 +256,9 @@ test('getTasks successfully fetches tasks using Prisma', async () => {
   const req = createReq();
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getTasks(req as never, res as never, next as never);
-  
+
   const payload = res.jsonPayload as TaskPayload[];
   assert.equal(res.statusCode, 200);
   assert.equal(payload.length, 1);
@@ -260,12 +267,14 @@ test('getTasks successfully fetches tasks using Prisma', async () => {
 });
 
 test('getTasks fails if columnId is missing', async () => {
-  const req = createReq({ params: { projectId: '1', boardId: '2', columnId: '', taskId: '10' } });
+  const req = createReq({
+    params: { projectId: '1', boardId: '2', columnId: '', taskId: '10' },
+  });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getTasks(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 400);
 });
@@ -278,9 +287,9 @@ test('getTasks passes unexpected errors to next middleware', async () => {
   const req = createReq();
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getTasks(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });
@@ -292,15 +301,15 @@ test('updateTask successfully updates a task', async () => {
     ...validTask,
     title: 'Updated Task',
   });
-  
+
   const req = createReq({
     body: { title: 'Updated Task' },
   });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await updateTask(req as never, res as never, next as never);
-  
+
   const payload = res.jsonPayload as TaskPayload;
   assert.equal(res.statusCode, 200);
   assert.equal(payload.title, 'Updated Task');
@@ -311,9 +320,9 @@ test('updateTask fails if unauthorized', async () => {
   const req = createReq({ user: undefined });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await updateTask(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 401);
 });
@@ -327,9 +336,9 @@ test('updateTask passes unexpected errors to next middleware', async () => {
   const req = createReq({ body: { title: 'Updated Task' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await updateTask(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });
@@ -337,22 +346,27 @@ test('updateTask passes unexpected errors to next middleware', async () => {
 // move task tests
 test('moveTask successfully moves a task', async () => {
   prismaMock.task.findUnique = async () => validTask;
-  prismaMock.column.findUnique = async () => ({ id: 6, boardId: 2, projectId: 1, board: { projectId: 1 } });
-  
+  prismaMock.column.findUnique = async () => ({
+    id: 6,
+    boardId: 2,
+    projectId: 1,
+    board: { projectId: 1 },
+  });
+
   prismaMock.$transaction = async () => ({
     ...validTask,
     columnId: 6,
     order: 2,
   });
-  
+
   const req = createReq({
     body: { targetColumnId: 6, newOrder: 2 },
   });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await moveTask(req as never, res as never, next as never);
-  
+
   const payload = res.jsonPayload as TaskPayload;
   assert.equal(res.statusCode, 200);
   assert.equal(payload.columnId, 6);
@@ -363,9 +377,9 @@ test('moveTask fails if unauthorized', async () => {
   const req = createReq({ user: undefined });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await moveTask(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 401);
 });
@@ -373,20 +387,25 @@ test('moveTask fails if unauthorized', async () => {
 test('moveTask passes unexpected errors to next middleware', async () => {
   const mockError = new Error('Service crashed');
   prismaMock.task.findUnique = async () => validTask;
-  prismaMock.column.findUnique = async () => ({ id: 6, boardId: 2, projectId: 1, board: { projectId: 1 } });
-  
+  prismaMock.column.findUnique = async () => ({
+    id: 6,
+    boardId: 2,
+    projectId: 1,
+    board: { projectId: 1 },
+  });
+
   prismaMock.$transaction = async () => {
     throw mockError;
   };
-  
+
   const req = createReq({
     body: { targetColumnId: 6, newOrder: 2 },
   });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await moveTask(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });
@@ -395,13 +414,13 @@ test('moveTask passes unexpected errors to next middleware', async () => {
 test('deleteTask successfully deletes a task', async () => {
   prismaMock.task.findUnique = async () => validTask;
   prismaMock.task.delete = async () => validTask;
-  
+
   const req = createReq();
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await deleteTask(req as never, res as never, next as never);
-  
+
   type DeletePayload = { message: string; deletedTask: TaskPayload };
   const payload = res.jsonPayload as DeletePayload;
   assert.equal(res.statusCode, 200);
@@ -414,9 +433,9 @@ test('deleteTask fails if unauthorized', async () => {
   const req = createReq({ user: undefined });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await deleteTask(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 401);
 });
@@ -427,13 +446,13 @@ test('deleteTask passes unexpected errors to next middleware', async () => {
   prismaMock.task.delete = async () => {
     throw mockError;
   };
-  
+
   const req = createReq();
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await deleteTask(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });

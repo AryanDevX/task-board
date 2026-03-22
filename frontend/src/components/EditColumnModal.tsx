@@ -14,9 +14,17 @@ interface EditColumnModalProps {
 type ColumnWithStatus = Column & { status?: string };
 
 // modal component to edit an existing column
-export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditColumnModalProps) => {
-  const { projectId, boardId } = useParams<{ projectId: string; boardId: string }>();
-  
+export const EditColumnModal = ({
+  column,
+  isDefault,
+  onClose,
+  onSuccess,
+}: EditColumnModalProps) => {
+  const { projectId, boardId } = useParams<{
+    projectId: string;
+    boardId: string;
+  }>();
+
   // state for edit column form
   const [title, setTitle] = useState(column.title);
   const [status, setStatus] = useState<string>(
@@ -31,14 +39,17 @@ export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditC
   // handle column update submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if(!title.trim() || !boardId || !projectId)return;
+    if (!title.trim() || !boardId || !projectId) return;
 
-    if(isDefault && status !== ((column as ColumnWithStatus).status || 'TODO')){
+    if (
+      isDefault &&
+      status !== ((column as ColumnWithStatus).status || 'TODO')
+    ) {
       alert('Cannot change the status of a default column');
       return;
     }
 
-    try{
+    try {
       setIsSubmitting(true);
       setError(null);
 
@@ -57,12 +68,10 @@ export const EditColumnModal = ({ column, isDefault, onClose, onSuccess }: EditC
 
       onSuccess(updatedColumn);
       onClose();
-    }
-    catch(err){
+    } catch (err) {
       setError('Failed to update column');
       console.error(err);
-    }
-    finally{
+    } finally {
       setIsSubmitting(false);
     }
   };

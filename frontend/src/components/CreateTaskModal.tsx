@@ -26,8 +26,20 @@ interface Props {
   task?: Task;
 }
 
-export const CreateTaskModal = ({ order, columnId, stories, wipLimit, wipCount, onClose, onSuccess, task }: Props) => {
-  const { projectId, boardId } = useParams<{ projectId: string; boardId: string }>();
+export const CreateTaskModal = ({
+  order,
+  columnId,
+  stories,
+  wipLimit,
+  wipCount,
+  onClose,
+  onSuccess,
+  task,
+}: Props) => {
+  const { projectId, boardId } = useParams<{
+    projectId: string;
+    boardId: string;
+  }>();
   const isEditing = Boolean(task);
   const { user } = useAuth();
 
@@ -225,7 +237,11 @@ export const CreateTaskModal = ({ order, columnId, stories, wipLimit, wipCount, 
   };
 
   //making prety for user:
-  const formatTimelineEvent = (entry: TimelineEntry, projectMembers: ProjectMember[], boardColumns: Column[]) => {
+  const formatTimelineEvent = (
+    entry: TimelineEntry,
+    projectMembers: ProjectMember[],
+    boardColumns: Column[],
+  ) => {
     // Helper to get username by userId
     const getUserName = (userId: string | null | undefined) => {
       if (!userId || userId === 'Unassigned') return 'Unassigned';
@@ -333,9 +349,16 @@ export const CreateTaskModal = ({ order, columnId, stories, wipLimit, wipCount, 
     }
 
     // Frontend WIP check before sending to backend
-    if (!isEditing && form.issueType !== IssueType.STORY && wipLimit !== undefined && wipLimit !== null) {
+    if (
+      !isEditing &&
+      form.issueType !== IssueType.STORY &&
+      wipLimit !== undefined &&
+      wipLimit !== null
+    ) {
       if (wipCount !== undefined && wipCount >= wipLimit) {
-        alert(`WIP Limit Reached: This column cannot accept more than ${wipLimit} tasks.`);
+        alert(
+          `WIP Limit Reached: This column cannot accept more than ${wipLimit} tasks.`,
+        );
         return;
       }
     }
@@ -380,7 +403,7 @@ export const CreateTaskModal = ({ order, columnId, stories, wipLimit, wipCount, 
       onClose();
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : "Failed to save task.");
+      alert(err instanceof Error ? err.message : 'Failed to save task.');
     } finally {
       setIsFormSubmitting(false);
     }
@@ -466,17 +489,16 @@ export const CreateTaskModal = ({ order, columnId, stories, wipLimit, wipCount, 
           </select>
         </div>
 
-      {isEditing && reporterName && (
-        <div className={styles.fieldGroup}>
-          <label>Reporter</label>
-          <input
-            className={styles.input}
-            value={reporterName}
-            disabled
-            style={{ opacity: 0.7, cursor: "not-allowed", backgroundColor: "#f9fafb" }}
-          />
-        </div>
-      )}
+        {isEditing && reporterName && (
+          <div className={styles.fieldGroup}>
+            <label>Reporter</label>
+            <input
+              className={`${styles.input} ${styles.disabledInput}`}
+              value={reporterName}
+              disabled
+            />
+          </div>
+        )}
 
         {!isStory && (
           <>
@@ -564,8 +586,13 @@ export const CreateTaskModal = ({ order, columnId, stories, wipLimit, wipCount, 
         </div>
 
         <div className={styles.buttonRow}>
-          <button className={styles.primaryButton} onClick={handleSubmit} type="button" disabled={isFormSubmitting}>
-            {isFormSubmitting ? "Saving..." : (isEditing ? "Update" : "Create")}
+          <button
+            className={styles.primaryButton}
+            onClick={handleSubmit}
+            type="button"
+            disabled={isFormSubmitting}
+          >
+            {isFormSubmitting ? 'Saving...' : isEditing ? 'Update' : 'Create'}
           </button>
           <button
             className={styles.secondaryButton}

@@ -258,8 +258,7 @@ export const EditProjectModal = ({
 
                 {totalMembersPages > 1 && (
                   <div
-                    className={sharedStyles.inlineControls}
-                    style={{ marginTop: '1rem', padding: '0 05rem' }}
+                    className={`${sharedStyles.inlineControls} ${styles.paginationControls}`}
                   >
                     <p className={sharedStyles.helperText}>
                       Page {currentMembersPage} of {totalMembersPages}

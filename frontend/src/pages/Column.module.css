@@ -217,3 +217,20 @@
   color: #64748b;
   font-weight: 500;
 }
+
+.clickableChip {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.subIssuesList {
+  max-height: 60vh;
+  overflow-y: auto;
+  margin-top: 1rem;
+}
+
+.subIssueComment {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  color: #4b5563;
+}

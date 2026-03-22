@@ -111,7 +111,7 @@ export const CommentModal = ({ task, projectId, onClose }: Props) => {
   const { user } = useAuth();
   const composerRef = useRef<HTMLDivElement | null>(null);
   const editingRef = useRef<HTMLDivElement | null>(null);
-  
+
   // component state variables
   const [comments, setComments] = useState<CommentWithAuthor[]>([]);
   const [members, setMembers] = useState<ProjectMember[]>([]);

@@ -27,11 +27,10 @@ const prismaMock = prisma as unknown as {
 
 // helper to catch errors cleanly in tests
 const catchError = async (promise: Promise<unknown>) => {
-  try{
+  try {
     await promise;
     return null;
-  }
-  catch(err){
+  } catch (err) {
     return err as AppError | Error | Prisma.PrismaClientKnownRequestError;
   }
 };
@@ -112,7 +111,7 @@ test('updateColumn - successfully shifts columns and updates order', async () =>
   let findUniqueCallCount = 0;
   prismaMock.column.findUnique = async () => {
     findUniqueCallCount++;
-    if(findUniqueCallCount === 1){
+    if (findUniqueCallCount === 1) {
       return {
         id: 10,
         title: 'Old Title',

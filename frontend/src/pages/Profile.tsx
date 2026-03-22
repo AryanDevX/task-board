@@ -27,21 +27,19 @@ export const Profile = () => {
   // handle avatar image selection and upload
   const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if(!file)return;
+    if (!file) return;
 
-    try{
+    try {
       setIsUploading(true);
       setUploadError(null);
       await usersApi.uploadAvatar(file);
       const refreshedUser = await authApi.myProfile();
       dispatch({ type: 'LOGIN', payload: refreshedUser });
-    }
-    catch(error){
+    } catch (error) {
       setUploadError(
         error instanceof Error ? error.message : 'Unable to upload avatar',
       );
-    }
-    finally{
+    } finally {
       setIsUploading(false);
       event.target.value = '';
     }

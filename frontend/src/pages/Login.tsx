@@ -20,20 +20,17 @@ export const Login = () => {
     setError(null);
     setIsLoading(true);
 
-    try{
+    try {
       const user = await authApi.login({ email, password });
       login(user);
       navigate('/dashboard');
-    }
-    catch(err){
-      if(err instanceof Error){
+    } catch (err) {
+      if (err instanceof Error) {
         setError(err.message);
-      }
-      else{
+      } else {
         setError('Something went wrong connecting to the server');
       }
-    }
-    finally{
+    } finally {
       setIsLoading(false);
     }
   };

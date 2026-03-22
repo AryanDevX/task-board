@@ -55,7 +55,7 @@ export const NotificationCenter = () => {
       if (notification.columnId) {
         queryParams.append('columnId', String(notification.columnId));
       }
-      
+
       const url = `/project/${notification.projectId}/boards/${notification.boardId}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       navigate(url);
     } else if (notification.projectId) {
