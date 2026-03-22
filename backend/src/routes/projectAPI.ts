@@ -27,7 +27,6 @@ router.patch(
 router.delete(
   '/projects/:projectId',
   authenticateJWT,
-  requireProjectRole(['PROJECT_ADMIN']),
   deleteProject,
 );
 router.post('/projects/', authenticateJWT, requireGlobalAdmin, createProject);
@@ -37,25 +36,11 @@ router.get('/projects/:projectId/members', authenticateJWT, getMembers);
 router.post(
   '/projects/:projectId/archive',
   authenticateJWT,
-  requireGlobalAdmin,
   projectArchive,
 );
 router.post(
   '/projects/:projectId/unarchive',
   authenticateJWT,
-  requireGlobalAdmin,
-  unarchiveProject,
-);
-router.post(
-  '/projects/:projectId/archive',
-  authenticateJWT,
-  requireProjectRole(['PROJECT_ADMIN']),
-  projectArchive,
-);
-router.post(
-  '/projects/:projectId/unarchive',
-  authenticateJWT,
-  requireProjectRole(['PROJECT_ADMIN']),
   unarchiveProject,
 );
 router.post(
