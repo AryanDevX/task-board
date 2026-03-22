@@ -21,7 +21,6 @@ export const createTask = async (data: TaskDTO, reporterId: number) => {
     title,
     columnId,
     description,
-    order,
     issueType,
     priority,
     assigneeId,
@@ -32,7 +31,7 @@ export const createTask = async (data: TaskDTO, reporterId: number) => {
   if (!title || !columnId)
     throw new AppError('Task title and columnId are required.', 400);
 
-  //Checking hierarchy and wip limit:
+  //checking hierarchy and wip limit:
   await validateTaskHierarchy(
     parentId ? Number(parentId) : null,
     issueType || 'TASK',
@@ -41,7 +40,7 @@ export const createTask = async (data: TaskDTO, reporterId: number) => {
   if(assigneeId)
     await validateAssigneeMembership(Number(assigneeId), Number(columnId));
 
-  // Safely determine the next order dynamically to prevent Unique Constraint Violations
+  //safely determine the next order dynamically to prevent unique constraint violations
   const lastTask = await prisma.task.findFirst({
     where: { columnId: Number(columnId) },
     orderBy: { order: 'desc' },
@@ -49,7 +48,7 @@ export const createTask = async (data: TaskDTO, reporterId: number) => {
   });
   const nextOrder = lastTask ? lastTask.order + 1 : 0;
 
-  //Creating database:
+  //creating database:
   const newTask = await prisma.task.create({
     data: {
       title,
@@ -65,12 +64,12 @@ export const createTask = async (data: TaskDTO, reporterId: number) => {
     },
   });
 
-  //Audit log:
+  //audit log:
   await prisma.auditLog.create({
     data: { taskId: newTask.id, userId: reporterId, type: 'TASK_CREATED' },
   });
 
-  //Notification if reporter assigneed to someone else:
+  //notification if reporter assigneed to someone else:
   if (newTask.assigneeId && newTask.assigneeId !== reporterId) {
     await notifyTaskAssigned(
       newTask.id,
@@ -80,10 +79,10 @@ export const createTask = async (data: TaskDTO, reporterId: number) => {
     );
   }
 
-  //Changing story status if added to a story:
+  //changing story status if added to a story:
   if (newTask.parentId) await syncStoryStatus(newTask.parentId, reporterId);
 
-  // Touch project timestamp
+  //touch project timestamp
   const col = await prisma.column.findUnique({
     where: { id: Number(columnId) },
     select: { board: { select: { projectId: true } } },
@@ -96,7 +95,7 @@ export const createTask = async (data: TaskDTO, reporterId: number) => {
 };
 
 export const getTaskWithTimeline = async (taskId: number) => {
-  // Getting the required data from database:
+  //getting the required data from database:
   const task = await prisma.task.findUnique({
     where: { id: taskId },
     include: {
@@ -118,8 +117,10 @@ export const getTaskWithTimeline = async (taskId: number) => {
 
   if (!task) throw new AppError('Task not found', 404);
 
-  //Format the unified activity feed
+  //format the unified activity feed
   const timeline = buildActivityTimeline(task.comments, task.auditLogs);
+  
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { comments, auditLogs, ...taskDetails } = task;
 
   return { ...taskDetails, activityTimeline: timeline };
@@ -141,7 +142,7 @@ export const updateTask = async (
     parentId,
   } = data;
 
-  //Pulling current data:
+  //pulling current data:
   const oldTask = await prisma.task.findUnique({
     where: {
       id: taskId,
@@ -172,7 +173,7 @@ export const updateTask = async (
     }
   }
 
-  // Checking hierarchy:
+  //checking hierarchy:
   const targetParentId =
     parentId !== undefined
       ? parentId
@@ -190,7 +191,8 @@ export const updateTask = async (
   }
 
   const auditLogsData: Prisma.AuditLogCreateManyInput[] = [];
-  //If column changed:
+  
+  //if column changed:
   if (columnId && oldTask.columnId !== Number(columnId)) {
     await validateTransition(
       oldTask.column.boardId,
@@ -215,7 +217,7 @@ export const updateTask = async (
     );
   }
 
-  //If assignee changed
+  //if assignee changed
   const parsedAssigneeId =
     assigneeId !== undefined
       ? assigneeId
@@ -239,7 +241,7 @@ export const updateTask = async (
     });
   }
 
-  //If Priority Change
+  //if priority change
   if (priority && oldTask.priority !== priority) {
     auditLogsData.push({
       taskId,
@@ -250,7 +252,7 @@ export const updateTask = async (
     });
   }
 
-  //Calculating resolved and created date:
+  //calculating resolved and created date:
   let dates: {
     resolvedAt: Date | null | undefined;
     closedAt: Date | null | undefined;
@@ -264,7 +266,8 @@ export const updateTask = async (
       oldTask.resolvedAt,
     );
   }
-  //Updating the database:
+  
+  //updating the database:
   const updatedTask = await prisma.task.update({
     where: { id: taskId },
     data: {
@@ -291,7 +294,7 @@ export const updateTask = async (
     },
   });
 
-  //Maintaining logs and syncing story:
+  //maintaining logs and syncing story:
   if (auditLogsData.length > 0)
     await prisma.auditLog.createMany({ data: auditLogsData });
   if (oldTask.parentId && columnId && oldTask.columnId !== Number(columnId)) {
@@ -301,7 +304,7 @@ export const updateTask = async (
     await syncStoryStatus(updatedTask.parentId, userId);
   }
 
-  // Touch project timestamp
+  //touch project timestamp
   await prisma.project.update({
     where: { id: oldTask.column.board.projectId },
     data: { updatedAt: new Date() },
@@ -317,7 +320,7 @@ export const moveTask = async (
 ) => {
   const { targetColumnId, newOrder } = data;
 
-  //Pulling issueType:
+  //pulling issuetype:
   const taskToMove = await prisma.task.findUnique({
     where: { id: taskId },
     include: { column: { include: { board: true } } },
@@ -335,7 +338,7 @@ export const moveTask = async (
 
   const isSameColumn = taskToMove.columnId === Number(targetColumnId);
 
-  //Processing drag and drop:
+  //processing drag and drop:
   if (!isSameColumn) {
     await validateTransition(
       taskToMove.column.boardId,
@@ -360,7 +363,7 @@ export const moveTask = async (
     );
   }
 
-  //WIP Limits and Timestamps
+  //wip limits and timestamps
   if (!isSameColumn) {
     await enforceWipLimit(Number(targetColumnId), taskToMove.issueType);
   }
@@ -371,20 +374,19 @@ export const moveTask = async (
         taskToMove.resolvedAt,
       );
 
-  //Updating db
+  //updating db
   const newOrderInt = Number(newOrder);
   const oldOrderInt = taskToMove.order;
 
   const updatedTask = await prisma.$transaction(async (tx) => {
     if (!isSameColumn) {
-      // Case 1: Moving to a different column
-      // Shifting tasks up in old column:
+      //case 1: moving to a different column
+      //shifting tasks up in old column:
       await tx.task.updateMany({
         where: { columnId: taskToMove.columnId, order: { gt: oldOrderInt } },
         data: { order: { decrement: 1 } },
       });
-      //Shifting tasks down in new column:
-      // B. Make room in the new column (shift items down)
+      //shifting tasks down in new column:
       await tx.task.updateMany({
         where: {
           columnId: Number(targetColumnId),
@@ -393,9 +395,9 @@ export const moveTask = async (
         data: { order: { increment: 1 } },
       });
     } else {
-      // Case 2: Moving within the SAME column
+      //case 2: moving within the same column
       if (oldOrderInt < newOrderInt) {
-        //Moving task down so shift intermediate tasks up:
+        //moving task down so shift intermediate tasks up:
         await tx.task.updateMany({
           where: {
             columnId: Number(targetColumnId),
@@ -404,7 +406,7 @@ export const moveTask = async (
           data: { order: { decrement: 1 } },
         });
       } else if (oldOrderInt > newOrderInt) {
-        //Moving tasks up so intermediate tasks down:
+        //moving tasks up so intermediate tasks down:
         await tx.task.updateMany({
           where: {
             columnId: Number(targetColumnId),
@@ -415,7 +417,7 @@ export const moveTask = async (
       }
     }
 
-    //Update the task:
+    //update the task:
     return await tx.task.update({
       where: { id: taskId },
       data: {
@@ -427,12 +429,12 @@ export const moveTask = async (
     });
   });
 
-  //Auto story status:
+  //auto story status:
   if (taskToMove.parentId && taskToMove.columnId !== Number(targetColumnId)) {
     await syncStoryStatus(taskToMove.parentId, userId);
   }
 
-  // Touch project timestamp
+  //touch project timestamp
   await prisma.project.update({
     where: { id: taskToMove.column.board.projectId },
     data: { updatedAt: new Date() },
@@ -448,11 +450,11 @@ export const deleteTask = async (taskId: number, userId: number) => {
       include: { column: { include: { board: true } } }
     });
 
-    //Recalculating parent story status if deleted a child of it:
+    //recalculating parent story status if deleted a child of it:
     if (deletedTask.parentId)
       await syncStoryStatus(deletedTask.parentId, userId);
 
-    // Touch project timestamp
+    //touch project timestamp
     await prisma.project.update({
       where: { id: deletedTask.column.board.projectId },
       data: { updatedAt: new Date() },

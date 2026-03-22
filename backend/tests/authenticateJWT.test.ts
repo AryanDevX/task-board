@@ -1,4 +1,4 @@
-import test, { mock } from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import jwt from 'jsonwebtoken';
 process.env.JWT_SECRET = 'test-secret';

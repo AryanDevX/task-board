@@ -66,7 +66,7 @@ test('getUserNotifications - successfully fetches and formats notifications', as
   ];
   const req = createReq();
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await getUserNotifications(req as never, res as never, next as never);
   assert.equal(res.statusCode, 200);
   const payload = res.jsonPayload as { notifications: { projectId: number }[] };
@@ -88,7 +88,7 @@ test('readNotfications - successfully marks as read', async () => {
   prismaMock.notification.update = async () => ({ id: 10, isRead: true });
   const req = createReq({ params: { notificationId: '10' } });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await readNotfications(req as never, res as never, next as never);
   assert.equal(res.statusCode, 200);
 });

@@ -22,11 +22,11 @@ export const uploadAvatar = {
       try {
         fs.mkdirSync(avatarUploadDir, { recursive: true });
         const contentType = req.headers['content-type'];
-        if (!contentType || !contentType.includes('multipart/form-data')) {
+        if(!contentType || !contentType.includes('multipart/form-data')){
           return next();
         }
         const boundaryMatch = contentType.match(/boundary=([^;]+)/);
-        if (!boundaryMatch) {
+        if(!boundaryMatch){
           res.status(400).json({ error: 'Invalid Content-Type header' });
           return;
         }
@@ -41,40 +41,38 @@ export const uploadAvatar = {
             const bodyStr = body.toString('binary');
             const parts = bodyStr.split('--' + boundary);
             let fileData: FileData | undefined;
-
-            for (const part of parts) {
-              if (part.includes(`name="${fieldName}"`)) {
+            for(const part of parts){
+              if(part.includes(`name="${fieldName}"`)){
                 const [headerSection, ...contentSection] =
                   part.split('\r\n\r\n');
-                if (contentSection.length === 0) continue;
+                if(contentSection.length === 0) continue;
                 const headers = headerSection
                   .split('\r\n')
                   .filter((line) => line.trim());
                 let filename = '';
                 let mimetype = 'application/octet-stream';
-                for (const header of headers) {
-                  if (header.includes('filename=')) {
+                for(const header of headers){
+                  if(header.includes('filename=')) {
                     const match = header.match(/filename="([^"]+)"/);
-                    if (match) filename = match[1];
+                    if(match) filename = match[1];
                   }
-                  if (header.includes('Content-Type:')) {
+                  if(header.includes('Content-Type:')){
                     const match = header.match(/Content-Type: (.+)/);
                     if (match) mimetype = match[1].trim();
                   }
                 }
-                if (!filename) continue;
+                if(!filename) continue;
                 let content = contentSection.join('\r\n\r\n');
                 content = content.replace(/\r\n--.*$/s, '');
                 const fileBuffer = Buffer.from(content, 'binary');
 
-                if (fileBuffer.length > MAX_FILE_SIZE) {
+                if(fileBuffer.length > MAX_FILE_SIZE){
                   res
                     .status(400)
                     .json({ error: 'File size exceeds 5MB limit' });
                   return;
                 }
 
-                const ext = path.extname(filename);
                 const storedFilename = `${Date.now()}-${filename}`;
                 const filePath = path.join(avatarUploadDir, storedFilename);
 
@@ -90,14 +88,13 @@ export const uploadAvatar = {
                   destination: avatarUploadDir,
                   path: filePath,
                 };
-
                 break;
               }
             }
-
             req.file = fileData;
             next();
-          } catch (error) {
+          } 
+          catch (error){
             next(error);
           }
         });
@@ -105,7 +102,8 @@ export const uploadAvatar = {
         req.on('error', (error) => {
           next(error);
         });
-      } catch (error) {
+      } 
+      catch (error){
         next(error);
       }
     };

@@ -67,7 +67,7 @@ test('getTransitions - fetches successfully', async () => {
   prismaMock.workflowTransition.findMany = async () => [{ id: 1 }];
   const req = createReq({ params: { boardId: '5' } });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await getTransitions(req as never, res as never, next as never);
   assert.equal(res.statusCode, 200);
 });
@@ -97,7 +97,7 @@ test('updateTransitions - successfully recreates transitions', async () => {
     body: { transitions: [{ fromColumnId: 1, toColumnId: 2 }] },
   });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await updateTransitions(req as never, res as never, next as never);
   assert.equal(res.statusCode, 200);
 });
@@ -123,7 +123,7 @@ test('createTransition - creates successfully', async () => {
     body: { fromColumnId: 1, toColumnId: 2 },
   });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await createTransition(req as never, res as never, next as never);
   assert.equal(res.statusCode, 201);
 });
@@ -145,7 +145,7 @@ test('deleteTransition - deletes successfully', async () => {
   prismaMock.workflowTransition.delete = async () => ({ id: 1 });
   const req = createReq({ params: { id: '1' } });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await deleteTransition(req as never, res as never, next as never);
   assert.equal(res.statusCode, 200);
 });

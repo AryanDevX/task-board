@@ -28,7 +28,7 @@ type mockResponse = {
   status: (code: number) => mockResponse;
   json: (payload: unknown) => mockResponse;
   cookie: (name: string, value: string, options: unknown) => mockResponse;
-  clearCookie: (name: string, options: unknown) => mockResponse;
+  clearCookie: (name: string) => mockResponse;
 };
 
 interface HttpError extends Error {
@@ -74,7 +74,7 @@ const createRes = (): mockResponse => {
       this.cookiesSet[name] = { value, options };
       return this;
     },
-    clearCookie(name: string, options: unknown) {
+    clearCookie(name: string) {
       this.cookiesCleared.push(name);
       return this;
     },

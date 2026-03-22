@@ -35,15 +35,27 @@ type TaskPayload = {
   order: number;
 };
 
+type PrismaModelMock = {
+  create?: (...args: unknown[]) => Promise<unknown>;
+  findUnique?: (...args: unknown[]) => Promise<unknown>;
+  findFirst?: (...args: unknown[]) => Promise<unknown>;
+  findMany?: (...args: unknown[]) => Promise<unknown>;
+  update?: (...args: unknown[]) => Promise<unknown>;
+  updateMany?: (...args: unknown[]) => Promise<unknown>;
+  delete?: (...args: unknown[]) => Promise<unknown>;
+  count?: (...args: unknown[]) => Promise<unknown>;
+  createMany?: (...args: unknown[]) => Promise<unknown>;
+};
+
 // prisma mock setup with all necessary relations
 const prismaMock = prisma as unknown as {
-  task: any;
-  column: any;
-  project: any;
-  auditLog: any;
-  notification: any;
-  workflowTransition: any;
-  $transaction: any;
+  task: PrismaModelMock;
+  column: PrismaModelMock;
+  project: PrismaModelMock;
+  auditLog: PrismaModelMock;
+  notification: PrismaModelMock;
+  workflowTransition: PrismaModelMock;
+  $transaction: (...args: unknown[]) => Promise<unknown>;
 };
 
 // initialize mocks globally to prevent undefined errors in deeply nested service calls

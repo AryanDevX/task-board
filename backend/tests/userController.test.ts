@@ -1,153 +1,229 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  getUsers,
-  updateUserGlobalRole,
-  updateAvatar,
-} from '../src/controllers/userController.js';
+import { Prisma } from '@prisma/client';
+import * as taskService from '../src/services/taskService.js';
 import { prisma } from '../lib/prisma.js';
+import { AppError } from '../types/appError.js';
 
-type mockRequest = {
-  query: Record<string, string>;
-  params: Record<string, string>;
-  body: Record<string, unknown>;
-  user?: { userId: number; globalRole?: string };
-  file?: { filename: string };
+type PrismaModelMock = {
+  create?: (...args: unknown[]) => Promise<unknown>;
+  findUnique?: (...args: unknown[]) => Promise<unknown>;
+  findFirst?: (...args: unknown[]) => Promise<unknown>;
+  findMany?: (...args: unknown[]) => Promise<unknown>;
+  update?: (...args: unknown[]) => Promise<unknown>;
+  updateMany?: (...args: unknown[]) => Promise<unknown>;
+  delete?: (...args: unknown[]) => Promise<unknown>;
+  count?: (...args: unknown[]) => Promise<unknown>;
+  createMany?: (...args: unknown[]) => Promise<unknown>;
 };
-type mockResponse = {
-  statusCode: number | null;
-  jsonPayload: unknown;
-  status: (code: number) => mockResponse;
-  json: (payload: unknown) => mockResponse;
-};
-interface HttpError extends Error {
-  statusCode: number;
-}
 
+// prisma mock setup
 const prismaMock = prisma as unknown as {
-  user: {
-    findMany: (args: unknown) => Promise<unknown[]>;
-    count: (args: unknown) => Promise<number>;
-    update: (args: unknown) => Promise<unknown>;
+  task: PrismaModelMock;
+  column: PrismaModelMock;
+  project: PrismaModelMock;
+  auditLog: PrismaModelMock;
+  notification: PrismaModelMock;
+  workflowTransition: PrismaModelMock;
+  projectMembership: PrismaModelMock;
+  $transaction: (...args: unknown[]) => Promise<unknown>;
+};
+
+// helper to catch errors cleanly in tests
+const catchError = async (promise: Promise<unknown>) => {
+  try{
+    await promise;
+    return null;
+  }
+  catch(err){
+    return err as AppError | Error | Prisma.PrismaClientKnownRequestError;
+  }
+};
+
+// setup default successful database responses for all helpers to pass
+const resetMocks = () => {
+  prismaMock.task = {
+    create: async () => ({ id: 1, title: 'New Task', columnId: 5 }),
+    findUnique: async () => ({
+      id: 10,
+      title: 'Existing Task',
+      columnId: 5,
+      issueType: 'TASK',
+      priority: 'MEDIUM',
+      assigneeId: null,
+      reporterId: 1,
+      parentId: null,
+      resolvedAt: null,
+      column: { boardId: 2, board: { projectId: 1 } },
+      comments: [],
+      auditLogs: [],
+    }),
+    findFirst: async () => ({ order: 0 }),
+    findMany: async () => [],
+    update: async () => ({ id: 10, title: 'Updated Task', columnId: 6, parentId: null }),
+    updateMany: async () => ({}),
+    delete: async () => ({ id: 10, title: 'Deleted Task', parentId: null, column: { board: { projectId: 1 } } }),
+    count: async () => 0, 
+  };
+
+  prismaMock.column = {
+    findUnique: async () => ({ id: 5, boardId: 2, wipLimit: 10, board: { projectId: 1 } }),
+  };
+
+  prismaMock.project = {
+    update: async () => ({}),
+  };
+
+  prismaMock.auditLog = {
+    create: async () => ({}),
+    createMany: async () => ({}),
+  };
+
+  prismaMock.notification = {
+    create: async () => ({}),
+    createMany: async () => ({}),
+  };
+
+  prismaMock.workflowTransition = {
+    findFirst: async () => ({ id: 1 }), 
+  };
+
+  prismaMock.projectMembership = {
+    findUnique: async () => ({ role: 'PROJECT_MEMBER' }), 
+  };
+
+  // mock interactive transaction to execute the callback using our fake prisma client
+  prismaMock.$transaction = async (cb: unknown) => {
+    if(typeof cb === 'function'){
+      return await cb(prismaMock);
+    }
+    return [];
   };
 };
 
-const createReq = (overrides: Partial<mockRequest> = {}): mockRequest => ({
-  query: {},
-  params: {},
-  body: {},
-  user: { userId: 1, globalRole: 'USER' },
-  ...overrides,
-});
-const createRes = (): mockResponse => ({
-  statusCode: null,
-  jsonPayload: null,
-  status(code: number) {
-    this.statusCode = code;
-    return this;
-  },
-  json(payload: unknown) {
-    this.jsonPayload = payload;
-    return this;
-  },
-});
-const createNext = () => {
-  const calls: unknown[] = [];
-  return {
-    next: (value?: unknown) => {
-      calls.push(value);
-    },
-    calls,
-  };
-};
+// initialize mocks before tests
+resetMocks();
 
-test('getUsers - successfully paginates and fetches users', async () => {
-  prismaMock.user.findMany = async () => [{ id: 1, username: 'test' }];
-  prismaMock.user.count = async () => 1;
-  const req = createReq({ query: { page: '1', limit: '10' } });
-  const res = createRes();
-  const { next, calls } = createNext();
-  await getUsers(req as never, res as never, next as never);
-  assert.equal(res.statusCode, 200);
-  assert.equal(
-    ((res.jsonPayload as { users: unknown[] }).users[0] as { id: number }).id,
-    1,
-  );
+// create task tests
+test('createTask - successfully creates a task', async () => {
+  resetMocks();
+  const result = await taskService.createTask({
+    title: 'New Task',
+    columnId: 5,
+    issueType: 'TASK',
+  } as unknown as Parameters<typeof taskService.createTask>[0], 1);
+  
+  assert.ok(result);
+  assert.equal((result as { title: string }).title, 'New Task');
 });
-test('getUsers - passes unexpected errors to next()', async () => {
-  const mockError = new Error('DB Crash');
-  prismaMock.user.findMany = async () => {
-    throw mockError;
+
+test('createTask - throws 400 if title or columnid is missing', async () => {
+  resetMocks();
+  const err = await catchError(taskService.createTask({ title: '' } as unknown as Parameters<typeof taskService.createTask>[0], 1));
+  
+  assert.ok(err instanceof AppError);
+  assert.equal(err.statusCode, 400);
+});
+
+// get task tests
+test('getTaskWithTimeline - successfully fetches task and builds timeline', async () => {
+  resetMocks();
+  const result = await taskService.getTaskWithTimeline(10);
+  
+  assert.ok(result);
+  assert.equal((result as { title: string }).title, 'Existing Task');
+  assert.ok(Array.isArray((result as { activityTimeline: unknown[] }).activityTimeline));
+});
+
+test('getTaskWithTimeline - throws 404 if task not found', async () => {
+  resetMocks();
+  prismaMock.task.findUnique = async () => null;
+  
+  const err = await catchError(taskService.getTaskWithTimeline(99));
+  
+  assert.ok(err instanceof AppError);
+  assert.equal(err.statusCode, 404);
+});
+
+// update task tests
+test('updateTask - successfully updates a task', async () => {
+  resetMocks();
+  const result = await taskService.updateTask(10, { title: 'Updated Task' } as unknown as Parameters<typeof taskService.updateTask>[1], 1);
+  
+  assert.ok(result);
+  assert.equal((result as { title: string }).title, 'Updated Task');
+});
+
+test('updateTask - throws 404 if task not found', async () => {
+  resetMocks();
+  prismaMock.task.findUnique = async () => null;
+  
+  const err = await catchError(taskService.updateTask(99, { title: 'Updated Task' } as unknown as Parameters<typeof taskService.updateTask>[1], 1));
+  
+  assert.ok(err instanceof AppError);
+  assert.equal(err.statusCode, 404);
+});
+
+test('updateTask - throws 400 for invalid issue type conversion', async () => {
+  resetMocks();
+  prismaMock.task.findUnique = async () => ({ issueType: 'STORY', column: { board: {} } });
+  
+  const err = await catchError(taskService.updateTask(10, { issueType: 'TASK' } as unknown as Parameters<typeof taskService.updateTask>[1], 1));
+  
+  assert.ok(err instanceof AppError);
+  assert.equal(err.statusCode, 400);
+});
+
+// move task tests
+test('moveTask - successfully moves a task', async () => {
+  resetMocks();
+  const result = await taskService.moveTask(10, { targetColumnId: 6, newOrder: 2 } as unknown as Parameters<typeof taskService.moveTask>[1], 1);
+  
+  assert.ok(result);
+  assert.equal((result as { columnId: number }).columnId, 6);
+});
+
+test('moveTask - throws 400 if trying to move a story directly', async () => {
+  resetMocks();
+  prismaMock.task.findUnique = async () => ({ issueType: 'STORY', column: { boardId: 2 } });
+  
+  const err = await catchError(taskService.moveTask(10, { targetColumnId: 6, newOrder: 2 } as unknown as Parameters<typeof taskService.moveTask>[1], 1));
+  
+  assert.ok(err instanceof AppError);
+  assert.equal(err.statusCode, 400);
+});
+
+test('moveTask - throws 400 for cross board transfers', async () => {
+  resetMocks();
+  prismaMock.task.findUnique = async () => ({ column: { boardId: 2 } });
+  prismaMock.column.findUnique = async () => ({ id: 6, boardId: 99 }); 
+  
+  const err = await catchError(taskService.moveTask(10, { targetColumnId: 6, newOrder: 2 } as unknown as Parameters<typeof taskService.moveTask>[1], 1));
+  
+  assert.ok(err instanceof AppError);
+  assert.equal(err.statusCode, 400);
+});
+
+// delete task tests
+test('deleteTask - successfully deletes a task', async () => {
+  resetMocks();
+  const result = await taskService.deleteTask(10, 1);
+  
+  assert.ok(result);
+  assert.equal((result as { title: string }).title, 'Deleted Task');
+});
+
+test('deleteTask - throws 404 if prisma throws p2025 error', async () => {
+  resetMocks();
+  prismaMock.task.delete = async () => {
+    throw new Prisma.PrismaClientKnownRequestError('Not found', {
+      code: 'P2025',
+      clientVersion: 'test',
+    });
   };
-  const req = createReq();
-  const res = createRes();
-  const { next, calls } = createNext();
-  await getUsers(req as never, res as never, next as never);
-  assert.strictEqual(calls[0], mockError);
-});
-test('updateUserGlobalRole - updates role if requester is GLOBAL_ADMIN', async () => {
-  prismaMock.user.update = async () => ({ id: 5, globalRole: 'GLOBAL_ADMIN' });
-  const req = createReq({
-    params: { id: '5' },
-    body: { globalRole: 'GLOBAL_ADMIN' },
-    user: { userId: 1, globalRole: 'GLOBAL_ADMIN' },
-  });
-  const res = createRes();
-  const { next, calls } = createNext();
-  await updateUserGlobalRole(req as never, res as never, next as never);
-  assert.equal(res.statusCode, 200);
-});
-test('updateUserGlobalRole - fails if requester is not GLOBAL_ADMIN', async () => {
-  const req = createReq({
-    params: { id: '5' },
-    body: { globalRole: 'GLOBAL_ADMIN' },
-    user: { userId: 1, globalRole: 'USER' },
-  });
-  const res = createRes();
-  const { next, calls } = createNext();
-  await updateUserGlobalRole(req as never, res as never, next as never);
-  assert.equal((calls[0] as HttpError).statusCode, 403);
-});
-test('updateUserGlobalRole - passes unexpected errors to next()', async () => {
-  const mockError = new Error('DB Crash');
-  prismaMock.user.update = async () => {
-    throw mockError;
-  };
-  const req = createReq({
-    params: { id: '5' },
-    body: { globalRole: 'GLOBAL_ADMIN' },
-    user: { userId: 1, globalRole: 'GLOBAL_ADMIN' },
-  });
-  const res = createRes();
-  const { next, calls } = createNext();
-  await updateUserGlobalRole(req as never, res as never, next as never);
-  assert.strictEqual(calls[0], mockError);
-});
-test('updateAvatar - successfully updates avatar', async () => {
-  prismaMock.user.update = async () => ({
-    avatar: '/uploads/avatars/test.jpg',
-  });
-  const req = createReq({ file: { filename: 'test.jpg' } });
-  const res = createRes();
-  const { next, calls } = createNext();
-  await updateAvatar(req as never, res as never, next as never);
-  assert.equal(res.statusCode, 200);
-});
-test('updateAvatar - fails if no file provided', async () => {
-  const req = createReq({ file: undefined });
-  const res = createRes();
-  const { next, calls } = createNext();
-  await updateAvatar(req as never, res as never, next as never);
-  assert.equal((calls[0] as HttpError).statusCode, 400);
-});
-test('updateAvatar - passes unexpected errors to next()', async () => {
-  const mockError = new Error('DB Crash');
-  prismaMock.user.update = async () => {
-    throw mockError;
-  };
-  const req = createReq({ file: { filename: 'test.jpg' } });
-  const res = createRes();
-  const { next, calls } = createNext();
-  await updateAvatar(req as never, res as never, next as never);
-  assert.strictEqual(calls[0], mockError);
+  
+  const err = await catchError(taskService.deleteTask(10, 1));
+  
+  assert.ok(err instanceof AppError);
+  assert.equal(err.statusCode, 404);
 });

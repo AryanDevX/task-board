@@ -30,11 +30,11 @@ type BoardPayload = { id: number; title: string; projectId: number };
 
 // prisma mock setup
 const prismaMock = prisma as unknown as {
-  board: any;
-  column: any;
-  project: any;
-  workflowTransition: any;
-  $transaction: any;
+  board: Record<string, (args: unknown) => Promise<unknown>>;
+  column: Record<string, (args: unknown) => Promise<unknown>>;
+  project: Record<string, (args: unknown) => Promise<unknown>>;
+  workflowTransition: Record<string, (args: unknown) => Promise<unknown>>;
+  $transaction: (args: unknown) => Promise<unknown>;
 };
 
 // initialize mocks globally to prevent undefined errors in deeply nested service calls

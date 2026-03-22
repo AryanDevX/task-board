@@ -21,9 +21,6 @@ type mockResponse = {
   status: (code: number) => mockResponse;
   json: (payload: unknown) => mockResponse;
 };
-interface HttpError extends Error {
-  statusCode: number;
-}
 
 const prismaMock = prisma as unknown as {
   project: {
@@ -71,7 +68,7 @@ test('createProject - successfully creates project and membership', async () => 
   prismaMock.projectMembership.create = async () => ({});
   const req = createReq({ body: { projectname: 'P1', description: 'D' } });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await createProject(req as never, res as never, next as never);
   assert.equal(res.statusCode, 201);
 });
@@ -94,7 +91,7 @@ test('updateProject - successfully updates unarchived project', async () => {
     body: { projectname: 'New' },
   });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await updateProject(req as never, res as never, next as never);
   assert.equal(res.statusCode, 200);
 });
@@ -118,7 +115,7 @@ test('getProjects - fetches memberships', async () => {
   ];
   const req = createReq();
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await getProjects(req as never, res as never, next as never);
   assert.equal(res.statusCode, 200);
   assert.equal(
@@ -146,7 +143,7 @@ test('projectArchive - successfully archives', async () => {
   prismaMock.project.update = async () => ({ id: 5 });
   const req = createReq({ params: { projectId: '5' } });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await projectArchive(req as never, res as never, next as never);
   assert.equal(res.statusCode, 201);
 });
@@ -166,7 +163,7 @@ test('unarchiveProject - successfully unarchives', async () => {
   prismaMock.project.update = async () => ({ id: 5 });
   const req = createReq({ params: { projectId: '5' } });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await unarchiveProject(req as never, res as never, next as never);
   assert.equal(res.statusCode, 200);
 });
@@ -186,7 +183,7 @@ test('deleteProject - successfully deletes', async () => {
   prismaMock.project.delete = async () => ({ id: 5 });
   const req = createReq({ params: { projectId: '5' } });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await deleteProject(req as never, res as never, next as never);
   assert.equal(res.statusCode, 200);
 });

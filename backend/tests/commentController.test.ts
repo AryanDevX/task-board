@@ -75,7 +75,7 @@ test('getComments - fetches comments successfully', async () => {
   ];
   const req = createReq({ params: { taskId: '5' } });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await getComments(req as never, res as never, next as never);
   assert.equal(res.statusCode, 200);
   assert.equal((res.jsonPayload as { id: number }[])[0].id, 1);
@@ -107,7 +107,7 @@ test('createComment - successfully creates comment and mentions', async () => {
     body: { content: 'Hello @john' },
   });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await createComment(req as never, res as never, next as never);
   assert.equal(res.statusCode, 201);
   assert.equal((res.jsonPayload as { id: number }).id, 10);
@@ -141,7 +141,7 @@ test('updateComment - successfully updates owned comment', async () => {
     body: { content: 'New' },
   });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await updateComment(req as never, res as never, next as never);
   assert.equal(res.statusCode, 200);
   assert.equal((res.jsonPayload as { content: string }).content, 'New');
@@ -181,7 +181,7 @@ test('deleteComment - successfully deletes owned comment', async () => {
   prismaMock.auditLog.create = async () => ({});
   const req = createReq({ params: { commentId: '10' } });
   const res = createRes();
-  const { next, calls } = createNext();
+  const { next } = createNext();
   await deleteComment(req as never, res as never, next as never);
   assert.equal(res.statusCode, 200);
 });

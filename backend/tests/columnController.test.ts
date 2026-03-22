@@ -35,10 +35,10 @@ type ColumnPayload = {
 
 // prisma mock setup
 const prismaMock = prisma as unknown as {
-  column: any;
-  board: any;
-  project: any;
-  $transaction: any;
+  column: Record<string, (args: unknown) => Promise<unknown>>;
+  board: Record<string, (args: unknown) => Promise<unknown>>;
+  project: Record<string, (args: unknown) => Promise<unknown>>;
+  $transaction: (args: unknown) => Promise<unknown>;
 };
 
 // initialize mocks globally to prevent undefined errors in deeply nested service calls
