@@ -114,7 +114,7 @@ export const createComment = async (
             userId: task.assigneeId,
             taskId: parseInt(taskId),
             type: 'COMMENT_ADDED',
-            message: `Someone added a new comment to your task.`,
+            message: `${newComment.author.username} added a new comment to your task.`,
           },
         });
       }

@@ -10,6 +10,7 @@ import type { Task, WorkflowTransition, Project } from '../types/models';
 import { taskApi } from '../api/tasks.api';
 import { apiFetch } from '../api/client';
 import { WorkflowSettingsModal } from '../components/WorkflowSettingsModal';
+import { NotificationCenter } from '../components/Notification';
 
 type ColumnWithStatus = Columntype & { status?: string };
 
@@ -478,6 +479,7 @@ export const BoardPage = () => {
         </div>
 
         <div className={styles.headerActions}>
+          <NotificationCenter />
           <button
             className={sharedStyles.secondaryButton}
             onClick={() => setWorkflowModalOpen(true)}
