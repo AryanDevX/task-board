@@ -16,6 +16,7 @@ interface FileData {
   path: string;
 }
 
+// Custom middleware to parse multipart form-data for avatar uploads 
 export const uploadAvatar = {
   single: (fieldName: string) => {
     return async (req: Request, res: Response, next: NextFunction) => {
@@ -25,12 +26,16 @@ export const uploadAvatar = {
         if (!contentType || !contentType.includes('multipart/form-data')) {
           return next();
         }
+
+        // Extract the boundary string from the Content Type header
         const boundaryMatch = contentType.match(/boundary=([^;]+)/);
         if (!boundaryMatch) {
           res.status(400).json({ error: 'Invalid Content-Type header' });
           return;
         }
         const boundary = boundaryMatch[1].trim();
+
+        // Collect the raw request stream into a buffer array
         const chunks: Buffer[] = [];
         req.on('data', (chunk: Buffer) => {
           chunks.push(chunk);
@@ -42,6 +47,7 @@ export const uploadAvatar = {
             const parts = bodyStr.split('--' + boundary);
             let fileData: FileData | undefined;
 
+            // Parse the multipart body to isolate the target file and its metadata
             for (const part of parts) {
               if (part.includes(`name="${fieldName}"`)) {
                 const [headerSection, ...contentSection] =
@@ -78,6 +84,7 @@ export const uploadAvatar = {
                 const storedFilename = `${Date.now()}-${filename}`;
                 const filePath = path.join(avatarUploadDir, storedFilename);
 
+                // Save the validated file to the filesystem
                 fs.writeFileSync(filePath, fileBuffer);
 
                 fileData = {

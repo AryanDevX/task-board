@@ -84,7 +84,7 @@ export const createBoard = async (projectId: number, data: CreateBoardDTO) => {
   return newBoard;
 };
 
-//Getting all the boards for a project:
+//Getting all the boards for a project
 export const getBoardsByProjectId = async (projectId: number) => {
   return await prisma.board.findMany({
     where: { projectId },
