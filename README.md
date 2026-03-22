@@ -92,8 +92,9 @@ touch .env
 # Replace with your PostgreSQL connection string
 DATABASE_URL=postgresql://postgres:password@localhost:5432/task_board_db
 
+
 # Server Configuration
-PORT=5000
+PORT=5050
 NODE_ENV=development
 
 # JWT Configuration
@@ -123,8 +124,8 @@ cd ../frontend
 
 ```env
 # Backend API Configuration
-VITE_API_URL=http://localhost:5000/api
-VITE_API_BASE_URL=http://localhost:5000
+VITE_API_URL=http://localhost:5050/api
+VITE_API_BASE_URL=http://localhost:5050
 ```
 
 ### Step 3: Setup PostgreSQL Database
@@ -133,10 +134,13 @@ VITE_API_BASE_URL=http://localhost:5000
 
 ```bash
 # Connect to PostgreSQL with default postgres user
-psql -U postgres
+sudo -u postgres psql;
 
 # In the psql console, create the database:
 CREATE DATABASE task_board_db;
+
+# Change the password to match the url (if password not set)
+ALTER USER postgres PASSWORD 'password';
 
 # List databases to verify
 \l
@@ -147,7 +151,7 @@ CREATE DATABASE task_board_db;
 
 2. Update your DATABASE_URL in `backend/.env` with your PostgreSQL credentials:
 ```env
-DATABASE_URL=postgresql://postgres:your_password@localhost:5432/task_board_db
+DATABASE_URL=postgresql://postgres:password@localhost:5432/task_board_db
 ```
 
 ### Step 4: Install Dependencies
@@ -176,6 +180,14 @@ npm install
 
 # Verify installation
 npm list
+```
+
+### Root Dependencies
+```bash
+# From Root Directory (To get cookie parser)
+
+npm install
+
 ```
 
 ### Step 5: Setup Prisma and Database
@@ -245,8 +257,8 @@ npm run dev:frontend   # Runs in foreground
 
 Open your browser and navigate to:
 - **Frontend:** http://localhost:5173
-- **Backend API:** http://localhost:5000/api
-- **Swagger/API Docs (if configured):** http://localhost:5000/api-docs
+- **Backend API:** http://localhost:5050/api
+- **Swagger/API Docs (if configured):** http://localhost:5050/api-docs
 
 ### Production Build and Deployment
 
@@ -277,7 +289,7 @@ Update production environment variables:
 **Backend (.env for production)**
 ```env
 NODE_ENV=production
-PORT=5000
+PORT=5050
 DATABASE_URL=postgresql://prod_user:prod_password@prod_host:5432/prod_db
 JWT_SECRET=<generate-with-openssl-rand-base64-32>
 REFRESH_TOKEN_SECRET=<generate-with-openssl-rand-base64-32>
@@ -296,7 +308,7 @@ openssl rand -base64 32  # For REFRESH_TOKEN_SECRET
 
 ### Base URL
 ```
-http://localhost:5000/api
+http://localhost:5050/api
 ```
 
 ### Authentication
@@ -318,7 +330,7 @@ All endpoints (except `/auth/register` and `/auth/login`) require JWT authentica
 
 Register:
 ```bash
-curl -X POST http://localhost:5000/api/auth/register \
+curl -X POST http://localhost:5050/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "username": "johndoe",
@@ -329,7 +341,7 @@ curl -X POST http://localhost:5000/api/auth/register \
 
 Login:
 ```bash
-curl -X POST http://localhost:5000/api/auth/login \
+curl -X POST http://localhost:5050/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "john@example.com",
@@ -550,7 +562,7 @@ Update User Role:
 
 Upload Avatar (multipart/form-data):
 ```bash
-curl -X PATCH http://localhost:5000/api/users/avatars \
+curl -X PATCH http://localhost:5050/api/users/avatars \
   -H "Cookie: token=your_jwt_token" \
   -F "avatar=@/path/to/avatar.jpg"
 ```
@@ -718,8 +730,8 @@ psql -U postgres -d task_board_db
 ### Issue: Port Already in Use
 **Solution:** Change port in `.env` or kill the process
 ```bash
-# Find process using port 5000
-lsof -i :5000
+# Find process using port 5050
+lsof -i :5050
 
 # Kill process
 kill -9 <PID>
