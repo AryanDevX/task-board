@@ -678,15 +678,48 @@ task-board/
 
 ### Running Tests
 
-```bash
-# Run backend tests
-cd backend
-npm test
+The project includes comprehensive test suites for the backend. Tests are written using Node.js built-in test framework.
 
-# Run frontend tests (if configured)
-cd ../frontend
-npm test
+#### Backend Tests
+
+**Prerequisites for testing:**
+- Ensure the development environment is set up (dependencies installed)
+- Create a separate test database (optional but recommended)
+
+**Run all backend tests:**
+```bash
+cd backend
+npx tsx --test tests/**/*.test.ts
 ```
+
+**Run specific test file:**
+```bash
+cd backend
+npx tsx --test tests/columnService.test.ts
+```
+
+**Available test files (in `backend/tests/`):**
+- `authController.test.ts` - Authentication controller tests
+- `authenticateJWT.test.ts` - JWT middleware tests
+- `avatarUpload.test.ts` - Avatar upload middleware tests
+- `boardController.test.ts` - Board management tests
+- `boardService.test.ts` - Board service logic tests
+- `columnController.test.ts` - Column controller tests
+- `columnService.test.ts` - Column service tests
+- `commentController.test.ts` - Comment controller tests
+- `errorMiddleware.test.ts` - Error handling middleware tests
+- `helper.test.ts` - Helper utility tests
+- `manageMembers.test.ts` - Member management tests
+- `notificationController.test.ts` - Notification controller tests
+- `projectController.test.ts` - Project controller tests
+- `requireGlobalAdmin.test.ts` - Global admin authorization tests
+- `requireProjectRole.test.ts` - Project role authorization tests
+- `taskController.test.ts` - Task controller tests
+- `taskHelper.test.ts` - Task helper utility tests
+- `tasksService.test.ts` - Task service tests
+- `tastActivityService.test.ts` - Task activity service tests
+- `userController.test.ts` - User controller tests
+- `workflowController.test.ts` - Workflow controller tests
 
 ### Linting and Formatting
 
