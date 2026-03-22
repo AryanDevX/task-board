@@ -753,7 +753,7 @@ The project includes comprehensive test suites for the backend. Tests are writte
 
 ```bash
 cd backend
-npx tsx --test tests/**/*.test.ts
+npx tsx --test "tests/**/*.test.ts"
 ```
 
 **Run specific test file:**

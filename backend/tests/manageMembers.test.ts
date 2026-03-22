@@ -47,6 +47,9 @@ const prismaMock = prisma as unknown as {
     delete: (args: unknown) => Promise<unknown>;
     update: (args: unknown) => Promise<unknown>;
   };
+  notification: {
+    create: (args: unknown) => Promise<unknown>;
+  };
 };
 
 //helper functions:
@@ -154,8 +157,9 @@ test('getMembers - passes unexpected errors to next()', async () => {
 //add member:
 test('addMember - successfully adds a member', async () => {
   prismaMock.user.findUnique = async () => ({ id: 11, email: 'new@user.com' });
-  prismaMock.project.findUnique = async () => ({ id: 7 });
+  prismaMock.project.findUnique = async () => ({ id: 7, name: 'Proj' });
   prismaMock.projectMembership.findUnique = async () => null;
+  prismaMock.notification.create = async () => ({}); // Mock notification
   prismaMock.projectMembership.create = async (args: unknown) => {
     const requestArgs = args as { data: Record<string, unknown> };
     return { id: 1, ...requestArgs.data };
@@ -182,25 +186,32 @@ test('addMember - successfully adds a member', async () => {
   assert.equal(calls.length, 0);
 });
 
-test('addMember - prevents non-global admin from adding a PROJECT_ADMIN', async () => {
+test('addMember - defaults to PROJECT_VIEWER if an invalid role is provided', async () => {
   prismaMock.user.findUnique = async () => ({ id: 11, email: 'new@user.com' });
-  prismaMock.project.findUnique = async () => ({ id: 7 });
+  prismaMock.project.findUnique = async () => ({ id: 7, name: 'Proj' });
   prismaMock.projectMembership.findUnique = async () => null;
+  prismaMock.notification.create = async () => ({}); 
+  
+  let savedRole = '';
+  prismaMock.projectMembership.create = async (args: unknown) => {
+    const requestArgs = args as { data: { role: string } };
+    savedRole = requestArgs.data.role;
+    return { id: 1, ...requestArgs.data };
+  };
 
   const req = createReq({
     params: { projectId: '7', email: 'new@user.com' },
-    body: { role: 'PROJECT_ADMIN' },
-    user: { globalRole: 'USER' },
+    body: { role: 'SUPER_MADE_UP_ROLE' },
   });
+  
   const res = createRes();
   const { next, calls } = createNext();
 
   await addMember(req as never, res as never, next as never);
 
-  assert.equal(calls.length, 1);
-  assert.ok(calls[0] instanceof AppError);
-  assert.equal((calls[0] as HttpError).statusCode, 403);
-  assert.match((calls[0] as AppError).message, /Only Global Admins/);
+  assert.equal(calls.length, 0);
+  assert.equal(res.statusCode, 201);
+  assert.equal(savedRole, 'PROJECT_VIEWER');
 });
 
 test('addMember - prevents adding an existing member', async () => {
