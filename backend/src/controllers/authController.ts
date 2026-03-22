@@ -197,6 +197,7 @@ export const myProfile = async (
       return next(new AppError('No such user in database', 404));
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...safeUser } = user;
 
     res.status(200).json(safeUser);

@@ -1,10 +1,11 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../../types/appError.js';
-
 export const errorMiddleware = async (
   err: unknown,
   req: Request,
   res: Response,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  next: NextFunction,
 ) => {
   console.error(err);
 

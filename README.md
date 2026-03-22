@@ -784,6 +784,21 @@ npx tsx --test tests/columnService.test.ts
 - `userController.test.ts` - User controller tests
 - `workflowController.test.ts` - Workflow controller tests
 
+#### E2E Integration Tests
+
+The project includes robust End-to-End integration tests using `supertest` and the native `node:test` runner. These tests automatically wipe and seed a real database before verifying exact API behaviors (Happy and Sad paths) and checking the actual PostgreSQL database contents directly through Prisma.
+
+**Run E2E tests:**
+
+```bash
+cd backend
+npx tsx --test tests/integration/apiE2E.test.ts
+```
+
+**Available integration test files (in `backend/tests/integration/`):**
+- `apiE2E.test.ts` - Express endpoints E2E tests for Boards, Columns, and Tasks with database assertions.
+- `testSetup.ts` - Database teardown and JWT test cookie helper.
+
 ### Linting and Formatting
 
 ```bash
