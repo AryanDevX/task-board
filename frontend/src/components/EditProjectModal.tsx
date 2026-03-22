@@ -148,7 +148,22 @@ export const EditProjectModal = ({
         );
       }
 
-      onSuccess(data);
+      // Determine if the current user's role changed or if they were removed
+      const currentUserMember = activeMembers.find(
+        (m) => m.email === user?.email,
+      );
+      const isCurrentUserRemoved =
+        initialMembers.some((m) => m.email === user?.email) && !currentUserMember;
+
+      onSuccess({
+        ...project, // Keep the old fields (including original userRole if unmodified)
+        ...data,    // Apply the updated name and description
+        userRole: (isCurrentUserRemoved
+          ? undefined
+          : currentUserMember
+            ? currentUserMember.role
+            : project.userRole) as ProjectRole,
+      });
       onClose();
     } catch (error) {
       console.error('Failed to update project', error);
@@ -229,18 +244,10 @@ export const EditProjectModal = ({
                               e.target.value as ProjectRole,
                             )
                           }
+                          disabled={member.role === 'PROJECT_ADMIN' && !isGlobalAdmin}
                         >
                           <option value="PROJECT_MEMBER">Member</option>
-                          {(isGlobalAdmin ||
-                            member.role === 'PROJECT_ADMIN') && (
-                            <option
-                              value="PROJECT_ADMIN"
-                              disabled={!isGlobalAdmin}
-                            >
-                              Admin
-                            </option>
-                          )}
-
+                          <option value="PROJECT_ADMIN">Admin</option>
                           <option value="PROJECT_VIEWER">Viewer</option>
                         </select>
 

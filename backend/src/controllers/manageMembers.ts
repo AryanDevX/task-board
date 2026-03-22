@@ -110,17 +110,6 @@ export const addMember = async (
     const finalRole = validRoles.includes(role as ProjectRole)
       ? (role as ProjectRole)
       : 'PROJECT_VIEWER';
-    if (
-      finalRole === 'PROJECT_ADMIN' &&
-      req.user?.globalRole !== 'GLOBAL_ADMIN'
-    ) {
-      return next(
-        new AppError(
-          'Only Global Admins can assign the Project Admin role.',
-          403,
-        ),
-      );
-    }
 
     const membership = await prisma.projectMembership.create({
       data: {
@@ -186,9 +175,14 @@ export const deleteMember = async (
       return next(new AppError('User is not a member of this project', 400));
     }
 
-    if (membership.role == 'PROJECT_ADMIN') {
+    if (user.globalRole === 'GLOBAL_ADMIN' && req.user?.userId !== user.id) {
+      return next(new AppError("One global admin can't remove another global admin", 403));
+    }
+
+    if (membership.role === 'PROJECT_ADMIN' && req.user?.globalRole !== 'GLOBAL_ADMIN') {
       return next(new AppError('User is an ADMIN of this project.', 400));
     }
+
     await prisma.projectMembership.delete({
       where: {
         userId_projectId: {
@@ -217,18 +211,6 @@ export const updateMember = async (
     }
 
     const newRole: ProjectRole = incomingRole as ProjectRole;
-
-    if (
-      newRole === 'PROJECT_ADMIN' &&
-      req.user?.globalRole !== 'GLOBAL_ADMIN'
-    ) {
-      return next(
-        new AppError(
-          'Only Global Admins can assign the Project Admin role.',
-          403,
-        ),
-      );
-    }
 
     const projectId = parseInt(req.params.projectId);
     const email = req.params.email;
@@ -270,6 +252,10 @@ export const updateMember = async (
       return next(new AppError('User is not a member of this project', 400));
     }
 
+    if (membership.role === 'PROJECT_ADMIN' && req.user?.globalRole !== 'GLOBAL_ADMIN') {
+      return next(new AppError('Project Admins cannot demote other Project Admins.', 403));
+    }
+
     await prisma.projectMembership.update({
       where: {
         userId_projectId: {
@@ -281,6 +267,16 @@ export const updateMember = async (
         role: newRole,
       },
     });
+
+    if (membership.role !== newRole) {
+      await prisma.notification.create({
+        data: {
+          userId: user.id,
+          type: 'USER_MENTIONED',
+          message: `Your role in the project "${project.name}" has been updated to ${newRole}.`,
+        },
+      });
+    }
 
     res.status(200).json({ message: 'Member Role updated successfully' });
   } catch (err) {
