@@ -24,15 +24,15 @@ export const Dashboard = () => {
 
   // check if user is global admin
   const isGlobalAdmin = () => {
-    if(!user)return false;
-    else if(user.globalRole === 'GLOBAL_ADMIN')return true;
+    if (!user) return false;
+    else if (user.globalRole === 'GLOBAL_ADMIN') return true;
     else return false;
   };
 
   // check if user has admin rights for project
   const isAdmin = (project: Project) => {
-    if(isGlobalAdmin())return true;
-    if(project.userRole === 'PROJECT_ADMIN')return true;
+    if (isGlobalAdmin()) return true;
+    if (project.userRole === 'PROJECT_ADMIN') return true;
     else return false;
   };
 
@@ -58,15 +58,14 @@ export const Dashboard = () => {
 
   // handle archiving a project
   const handleArchiveProject = async (projectId: string | number) => {
-    try{
+    try {
       await projectApi.archiveProject(String(projectId));
       setAllProjects((prevProjects) =>
         prevProjects.map((project) =>
           project.id === projectId ? { ...project, archived: true } : project,
         ),
       );
-    }
-    catch(error){
+    } catch (error) {
       console.error('Failed to archieve project', error);
       alert('Failed to archieve project Please try again later');
     }
@@ -74,15 +73,14 @@ export const Dashboard = () => {
 
   // handle unarchiving a project
   const handleUnarchiveProject = async (projectId: string | number) => {
-    try{
+    try {
       await projectApi.unarchiveProject(String(projectId));
       setAllProjects((prevProjects) =>
         prevProjects.map((project) =>
           project.id === projectId ? { ...project, archived: false } : project,
         ),
       );
-    }
-    catch(error){
+    } catch (error) {
       console.error('Failed to unarchive project', error);
       alert('Failed to unarchive project Please try again later');
     }
@@ -90,12 +88,16 @@ export const Dashboard = () => {
 
   // handle permanent project deletion
   const handleDeleteProject = async (projectId: string | number) => {
-    if(!window.confirm('Are you sure you want to permanently delete this project'))return;
-    try{
+    if (
+      !window.confirm(
+        'Are you sure you want to permanently delete this project',
+      )
+    )
+      return;
+    try {
       await projectApi.deleteProject(String(projectId));
       setAllProjects((prev) => prev.filter((p) => p.id !== projectId));
-    }
-    catch(error){
+    } catch (error) {
       console.error('Failed to delete project', error);
       alert('Failed to delete project Please try again later');
     }
@@ -104,11 +106,10 @@ export const Dashboard = () => {
   // fetch all projects on component mount
   useEffect(() => {
     const loadProjects = async () => {
-      try{
+      try {
         const data = await projectApi.getProjects();
         setAllProjects(data.projects);
-      }
-      catch(error){
+      } catch (error) {
         console.error('Failed to load projects', error);
       }
     };

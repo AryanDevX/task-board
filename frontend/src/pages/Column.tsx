@@ -13,7 +13,7 @@ interface Props {
   column: ColumnType;
   isDefault?: boolean;
   tasks: Task[];
-  allTasks: Task[]; 
+  allTasks: Task[];
   onTaskCreated: (task: Task) => void;
   onTaskUpdated: (task: Task) => void;
   onTaskMove: (
@@ -29,10 +29,10 @@ interface Props {
 }
 
 // main column component for kanban board
-export default function Column({ 
-  column, 
+export default function Column({
+  column,
   isDefault,
-  tasks, 
+  tasks,
   allTasks,
   onTaskCreated,
   onTaskUpdated,
@@ -59,8 +59,8 @@ export default function Column({
 
   // handle closing task modal
   const handleCloseModal = () => {
-    setSelectedTask(null); 
-    if(taskIdFromUrl){
+    setSelectedTask(null);
+    if (taskIdFromUrl) {
       searchParams.delete('taskId');
       setSearchParams(searchParams, { replace: true });
     }
@@ -68,7 +68,7 @@ export default function Column({
 
   // prevent body scroll when modal is open
   useEffect(() => {
-    if(!activeTask)return;
+    if (!activeTask) return;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -87,35 +87,33 @@ export default function Column({
     e.preventDefault();
     e.stopPropagation();
     const dataStr = e.dataTransfer.getData('text/plain');
-    if(!dataStr)return;
+    if (!dataStr) return;
 
     const data = JSON.parse(dataStr);
 
-    if(data.type === 'column' && onColumnMove){
+    if (data.type === 'column' && onColumnMove) {
       onColumnMove(data.columnId, column.order);
       return;
     }
 
     const { taskId, sourceColumnId, sourceOrder } = data;
-    if(!taskId)return;
+    if (!taskId) return;
     const targetColumnId = String(column.id);
 
-    if(targetTask && String(targetTask.id) === String(taskId)){
+    if (targetTask && String(targetTask.id) === String(taskId)) {
       return;
     }
 
     let newOrder = tasks.length;
-    if(targetTask !== undefined){
+    if (targetTask !== undefined) {
       const isSameColumn = String(sourceColumnId) === targetColumnId;
-      if(isSameColumn && sourceOrder !== undefined){
-        if(sourceOrder < targetTask.order){
+      if (isSameColumn && sourceOrder !== undefined) {
+        if (sourceOrder < targetTask.order) {
           newOrder = isBelow ? targetTask.order : targetTask.order - 1;
-        }
-        else{
+        } else {
           newOrder = isBelow ? targetTask.order + 1 : targetTask.order;
         }
-      }
-      else{
+      } else {
         newOrder = isBelow ? targetTask.order + 1 : targetTask.order;
       }
     }
@@ -135,7 +133,7 @@ export default function Column({
   };
 
   // calculate current wip count excluding stories
-  const wipCount = tasks.filter(t => t.issueType !== 'STORY').length;
+  const wipCount = tasks.filter((t) => t.issueType !== 'STORY').length;
 
   // render column ui
   return (
@@ -156,7 +154,7 @@ export default function Column({
           <h3 className={styles.columnTitle}>{column.title}</h3>
           {column.wipLimit !== null && (
             <span
-              className={`${styles.wipBadge} ${wipCount > column.wipLimit ? styles.wipExceeded : ""}`}
+              className={`${styles.wipBadge} ${wipCount > column.wipLimit ? styles.wipExceeded : ''}`}
             >
               WIP: {wipCount} / {column.wipLimit}
             </span>
@@ -203,7 +201,7 @@ export default function Column({
               }}
               onDragStart={(e) => {
                 // prevent dragging stories directly
-                if(task.issueType === 'STORY'){
+                if (task.issueType === 'STORY') {
                   e.preventDefault();
                   alert(
                     'Stories cannot be dragged directly They automatically follow their sub issues',
@@ -228,14 +226,12 @@ export default function Column({
                 onClick={(e) => {
                   e.stopPropagation();
                   // prevent deleting story with active sub issues
-                  if(task.issueType === 'STORY'){
+                  if (task.issueType === 'STORY') {
                     const hasChildren = allTasks.some(
                       (t) => t.parentId === task.id,
                     );
-                    if(hasChildren){
-                      alert(
-                        'Cannot delete a story that has active sub issues',
-                      );
+                    if (hasChildren) {
+                      alert('Cannot delete a story that has active sub issues');
                       return;
                     }
                   }
@@ -280,7 +276,7 @@ export default function Column({
               {/* render sub issues tracker for stories */}
               {task.issueType === 'STORY' && (
                 <div className={styles.storyMeta}>
-                  <span 
+                  <span
                     className={styles.storyCountChip}
                     style={{ cursor: 'pointer', textDecoration: 'underline' }}
                     onClick={(e) => {
@@ -288,7 +284,8 @@ export default function Column({
                       setShowSubIssuesTask(task);
                     }}
                   >
-                    {allTasks.filter(t => t.parentId === task.id).length} Sub issues
+                    {allTasks.filter((t) => t.parentId === task.id).length} Sub
+                    issues
                   </span>
                   <span className={styles.storyStatusChip}>
                     {(column as ColumnWithStatus).status || 'TODO'}
@@ -311,8 +308,10 @@ export default function Column({
         <button
           className={`${modalStyles.secondaryButton} ${modalStyles.fullWidth}`}
           onClick={() => {
-            if(column.wipLimit !== null && wipCount >= column.wipLimit){
-              alert(`WIP limit of ${column.wipLimit} reached for ${column.title}`);
+            if (column.wipLimit !== null && wipCount >= column.wipLimit) {
+              alert(
+                `WIP limit of ${column.wipLimit} reached for ${column.title}`,
+              );
               return;
             }
             setShowModal(!showModal);
@@ -358,7 +357,7 @@ export default function Column({
               task={activeTask}
               wipLimit={column.wipLimit}
               wipCount={wipCount}
-              stories={allTasks.filter((t) => t.issueType === 'STORY')} 
+              stories={allTasks.filter((t) => t.issueType === 'STORY')}
               onClose={handleCloseModal}
               onSuccess={(updatedTask) => {
                 onTaskUpdated(updatedTask);
@@ -371,31 +370,65 @@ export default function Column({
 
       {/* render sub issues read only modal */}
       {showSubIssuesTask && (
-        <div className={modalStyles.modalOverlay} onClick={() => setShowSubIssuesTask(null)}>
-          <div className={modalStyles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div
+          className={modalStyles.modalOverlay}
+          onClick={() => setShowSubIssuesTask(null)}
+        >
+          <div
+            className={modalStyles.modalCard}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className={modalStyles.modalHeader}>
               <h3>Sub issues for {showSubIssuesTask.title}</h3>
-              <button className={modalStyles.closeButton} onClick={() => setShowSubIssuesTask(null)} type="button">x</button>
+              <button
+                className={modalStyles.closeButton}
+                onClick={() => setShowSubIssuesTask(null)}
+                type="button"
+              >
+                x
+              </button>
             </div>
-            <div className={modalStyles.timelineList} style={{ maxHeight: '60vh', overflowY: 'auto', marginTop: '1rem' }}>
-              {allTasks.filter(t => t.parentId === showSubIssuesTask.id).length === 0 ? (
+            <div
+              className={modalStyles.timelineList}
+              style={{
+                maxHeight: '60vh',
+                overflowY: 'auto',
+                marginTop: '1rem',
+              }}
+            >
+              {allTasks.filter((t) => t.parentId === showSubIssuesTask.id)
+                .length === 0 ? (
                 <p className={modalStyles.helperText}>No sub issues found</p>
               ) : (
-                allTasks.filter(t => t.parentId === showSubIssuesTask.id).map(child => (
-                  <article key={child.id} className={modalStyles.timelineItem}>
-                    <div className={modalStyles.timelineHeader}>
-                      <span className={modalStyles.timelineAuthor}>{child.title}</span>
-                      <span className={modalStyles.timelineDate}>
-                        {child.issueType} {child.priority}
-                      </span>
-                    </div>
-                    {child.description && (
-                      <p className={modalStyles.timelineComment} style={{ marginTop: '0.25rem', fontSize: '0.9rem', color: '#4b5563' }}>
-                        {stripHtml(child.description)}
-                      </p>
-                    )}
-                  </article>
-                ))
+                allTasks
+                  .filter((t) => t.parentId === showSubIssuesTask.id)
+                  .map((child) => (
+                    <article
+                      key={child.id}
+                      className={modalStyles.timelineItem}
+                    >
+                      <div className={modalStyles.timelineHeader}>
+                        <span className={modalStyles.timelineAuthor}>
+                          {child.title}
+                        </span>
+                        <span className={modalStyles.timelineDate}>
+                          {child.issueType} {child.priority}
+                        </span>
+                      </div>
+                      {child.description && (
+                        <p
+                          className={modalStyles.timelineComment}
+                          style={{
+                            marginTop: '0.25rem',
+                            fontSize: '0.9rem',
+                            color: '#4b5563',
+                          }}
+                        >
+                          {stripHtml(child.description)}
+                        </p>
+                      )}
+                    </article>
+                  ))
               )}
             </div>
           </div>

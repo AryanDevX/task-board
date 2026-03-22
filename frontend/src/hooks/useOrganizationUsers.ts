@@ -24,19 +24,17 @@ export const useOrganizationUsers = ({
   // fetch users when dependencies change
   useEffect(() => {
     const fetchUsers = async () => {
-      try{
+      try {
         setIsLoading(true);
         setError(null);
         const response = await usersApi.getUsers({ page, limit, search });
         setUsers(response.items);
         setTotalPages(response.totalPages);
         setTotal(response.total);
-      }
-      catch(err){
+      } catch (err) {
         console.error('Failed to load organization users:', err);
         setError('Failed to load organization users.');
-      }
-      finally{
+      } finally {
         setIsLoading(false);
       }
     };

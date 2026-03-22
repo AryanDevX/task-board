@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { type Board } from "../types/models";
-import { apiFetch } from "../api/client";
-import styles from "../styles/index.module.css";
+import React, { useState } from 'react';
+import { type Board } from '../types/models';
+import { apiFetch } from '../api/client';
+import styles from '../styles/index.module.css';
 
 interface Props {
   projectId: string;
@@ -11,10 +11,15 @@ interface Props {
 }
 
 // modal component to edit an existing board
-export const EditBoardModal = ({ projectId, board, onClose, onSuccess }: Props) => {
+export const EditBoardModal = ({
+  projectId,
+  board,
+  onClose,
+  onSuccess,
+}: Props) => {
   // state for edit board form
   const [title, setTitle] = useState(board.title);
-  const [description, setDescription] = useState(board.description || "");
+  const [description, setDescription] = useState(board.description || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,16 +32,19 @@ export const EditBoardModal = ({ projectId, board, onClose, onSuccess }: Props) 
     setError(null);
 
     try {
-      const updatedBoard = await apiFetch<Board>(`/projects/${projectId}/boards/${board.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title.trim(), description }),
-      });
+      const updatedBoard = await apiFetch<Board>(
+        `/projects/${projectId}/boards/${board.id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: title.trim(), description }),
+        },
+      );
       onSuccess(updatedBoard);
       onClose();
     } catch (err) {
       console.error(err);
-      setError("Failed to update board Please try again");
+      setError('Failed to update board Please try again');
     } finally {
       setIsSubmitting(false);
     }
@@ -71,8 +79,20 @@ export const EditBoardModal = ({ projectId, board, onClose, onSuccess }: Props) 
             />
           </div>
           <div className={styles.buttonRow}>
-            <button type="button" className={styles.secondaryButton} onClick={onClose}>Cancel</button>
-            <button type="submit" className={styles.primaryButton} disabled={isSubmitting || !title.trim()}>{isSubmitting ? "Saving" : "Save Changes"}</button>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className={styles.primaryButton}
+              disabled={isSubmitting || !title.trim()}
+            >
+              {isSubmitting ? 'Saving' : 'Save Changes'}
+            </button>
           </div>
         </form>
       </div>

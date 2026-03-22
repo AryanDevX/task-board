@@ -67,11 +67,11 @@ const createRes = (): mockResponse => {
   const res: mockResponse = {
     statusCode: null,
     jsonPayload: null,
-    status(code: number){
+    status(code: number) {
       this.statusCode = code;
       return this;
     },
-    json(payload: unknown){
+    json(payload: unknown) {
       this.jsonPayload = payload;
       return this;
     },
@@ -95,17 +95,22 @@ test('createBoard successfully creates a board', async () => {
     projectId: 5,
   });
   // mock transaction to return 4 columns so workflow generation succeeds
-  prismaMock.$transaction = async () => [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
-  
+  prismaMock.$transaction = async () => [
+    { id: 1 },
+    { id: 2 },
+    { id: 3 },
+    { id: 4 },
+  ];
+
   const req = createReq({
     params: { projectId: '5' },
     body: { title: 'New Board' },
   });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await createBoard(req as never, res as never, next as never);
-  
+
   const payload = res.jsonPayload as BoardPayload;
   assert.equal(res.statusCode, 201);
   assert.equal(payload.title, 'New Board');
@@ -116,9 +121,9 @@ test('createBoard fails if projectId is missing', async () => {
   const req = createReq({ params: {}, body: { title: 'New Board' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await createBoard(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 400);
 });
@@ -128,13 +133,16 @@ test('createBoard passes unexpected errors to next middleware', async () => {
   prismaMock.board.create = async () => {
     throw mockError;
   };
-  
-  const req = createReq({ params: { projectId: '5' }, body: { title: 'New Board' } });
+
+  const req = createReq({
+    params: { projectId: '5' },
+    body: { title: 'New Board' },
+  });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await createBoard(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });
@@ -144,13 +152,13 @@ test('getBoards successfully fetches boards', async () => {
   prismaMock.board.findMany = async () => [
     { id: 1, title: 'Board 1', projectId: 5 },
   ];
-  
+
   const req = createReq({ params: { projectId: '5' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getBoards(req as never, res as never, next as never);
-  
+
   const payload = res.jsonPayload as BoardPayload[];
   assert.equal(res.statusCode, 200);
   assert.equal(payload.length, 1);
@@ -162,9 +170,9 @@ test('getBoards fails if projectId is missing', async () => {
   const req = createReq({ params: {} });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getBoards(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 400);
 });
@@ -174,13 +182,13 @@ test('getBoards passes unexpected errors to next middleware', async () => {
   prismaMock.board.findMany = async () => {
     throw mockError;
   };
-  
+
   const req = createReq({ params: { projectId: '5' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getBoards(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });
@@ -192,13 +200,13 @@ test('getBoardDetails successfully fetches a single board', async () => {
     title: 'Details',
     projectId: 5,
   });
-  
+
   const req = createReq({ params: { boardId: '10' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getBoardDetails(req as never, res as never, next as never);
-  
+
   const payload = res.jsonPayload as BoardPayload;
   assert.equal(res.statusCode, 200);
   assert.equal(payload.id, 10);
@@ -209,9 +217,9 @@ test('getBoardDetails fails if boardId is missing', async () => {
   const req = createReq({ params: {} });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getBoardDetails(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 400);
 });
@@ -221,13 +229,13 @@ test('getBoardDetails passes unexpected errors to next middleware', async () => 
   prismaMock.board.findUnique = async () => {
     throw mockError;
   };
-  
+
   const req = createReq({ params: { boardId: '10' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getBoardDetails(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });
@@ -244,16 +252,16 @@ test('updateBoard successfully updates a board', async () => {
     title: 'Updated Title',
     projectId: 5,
   });
-  
+
   const req = createReq({
     params: { boardId: '10' },
     body: { title: 'Updated Title' },
   });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await updateBoard(req as never, res as never, next as never);
-  
+
   const payload = res.jsonPayload as BoardPayload;
   assert.equal(res.statusCode, 200);
   assert.equal(payload.title, 'Updated Title');
@@ -264,9 +272,9 @@ test('updateBoard fails if boardId is missing', async () => {
   const req = createReq({ params: {} });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await updateBoard(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 400);
 });
@@ -276,13 +284,13 @@ test('updateBoard passes unexpected errors to next middleware', async () => {
   prismaMock.board.findUnique = async () => {
     throw mockError;
   };
-  
+
   const req = createReq({ params: { boardId: '10' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await updateBoard(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });
@@ -294,13 +302,13 @@ test('deleteBoard successfully deletes a board', async () => {
     title: 'To Delete',
     projectId: 5,
   });
-  
+
   const req = createReq({ params: { boardId: '10' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await deleteBoard(req as never, res as never, next as never);
-  
+
   type DeletePayload = { message: string; deletedBoard: BoardPayload };
   const payload = res.jsonPayload as DeletePayload;
   assert.equal(res.statusCode, 200);
@@ -313,9 +321,9 @@ test('deleteBoard fails if boardId is missing', async () => {
   const req = createReq({ params: {} });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await deleteBoard(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 400);
 });
@@ -325,13 +333,13 @@ test('deleteBoard passes unexpected errors to next middleware', async () => {
   prismaMock.board.delete = async () => {
     throw mockError;
   };
-  
+
   const req = createReq({ params: { boardId: '10' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await deleteBoard(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });

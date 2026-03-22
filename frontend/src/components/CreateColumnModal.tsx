@@ -20,7 +20,7 @@ export const CreateColumnModal = ({
   onSuccess,
 }: CreateColumnModalProps) => {
   const { boardId } = useParams<{ boardId: string }>();
-  
+
   // state for column form
   const [title, setTitle] = useState('');
   const [status, setStatus] = useState('TODO');
@@ -46,7 +46,7 @@ export const CreateColumnModal = ({
       const newColumn = await columnApi.createColumn(projectId, boardId, data);
 
       // update list and close modal
-      onSuccess(newColumn); 
+      onSuccess(newColumn);
     } catch (err) {
       setError(
         'Failed to create column Please try again Maybe Order is already occupied',

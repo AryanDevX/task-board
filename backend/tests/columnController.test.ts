@@ -50,8 +50,14 @@ prismaMock.project = {
 };
 prismaMock.column = {
   create: async () => ({}),
-  findUnique: async () => ({ id: 10, boardId: 5, order: 1, status: 'TODO', board: { projectId: 1 } }),
-  findMany: async () => [], 
+  findUnique: async () => ({
+    id: 10,
+    boardId: 5,
+    order: 1,
+    status: 'TODO',
+    board: { projectId: 1 },
+  }),
+  findMany: async () => [],
   update: async () => ({}),
   updateMany: async () => ({}),
   delete: async () => ({}),
@@ -69,11 +75,11 @@ const createRes = (): mockResponse => {
   const res: mockResponse = {
     statusCode: null,
     jsonPayload: null,
-    status(code: number){
+    status(code: number) {
       this.statusCode = code;
       return this;
     },
-    json(payload: unknown){
+    json(payload: unknown) {
       this.jsonPayload = payload;
       return this;
     },
@@ -98,16 +104,16 @@ test('createColumn successfully creates a column', async () => {
     order: 0,
     status: 'TODO',
   });
-  
+
   const req = createReq({
     params: { boardId: '5' },
     body: { title: 'New Col' },
   });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await createColumn(req as never, res as never, next as never);
-  
+
   const payload = res.jsonPayload as ColumnPayload;
   assert.equal(res.statusCode, 201);
   assert.equal(payload.title, 'New Col');
@@ -118,9 +124,9 @@ test('createColumn fails if boardId is missing', async () => {
   const req = createReq({ params: {}, body: { title: 'New Col' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await createColumn(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 400);
 });
@@ -130,14 +136,17 @@ test('createColumn passes unexpected errors to next middleware', async () => {
   prismaMock.column.create = async () => {
     throw mockError;
   };
-  
+
   // passing valid body prevents the 400 validation error from intercepting our 500 mock crash
-  const req = createReq({ params: { boardId: '5' }, body: { title: 'New Col' } });
+  const req = createReq({
+    params: { boardId: '5' },
+    body: { title: 'New Col' },
+  });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await createColumn(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });
@@ -147,13 +156,13 @@ test('getColumns successfully fetches columns', async () => {
   prismaMock.column.findMany = async () => [
     { id: 1, title: 'Col 1', boardId: 5, order: 0, status: 'TODO' },
   ];
-  
+
   const req = createReq({ params: { boardId: '5' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getColumns(req as never, res as never, next as never);
-  
+
   const payload = res.jsonPayload as ColumnPayload[];
   assert.equal(res.statusCode, 200);
   assert.equal(payload.length, 1);
@@ -165,9 +174,9 @@ test('getColumns fails if boardId is missing', async () => {
   const req = createReq({ params: {} });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getColumns(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 400);
 });
@@ -177,20 +186,26 @@ test('getColumns passes unexpected errors to next middleware', async () => {
   prismaMock.column.findMany = async () => {
     throw mockError;
   };
-  
+
   const req = createReq({ params: { boardId: '5' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await getColumns(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });
 
 // update column tests
 test('updateColumn successfully updates a column', async () => {
-  prismaMock.column.findUnique = async () => ({ id: 10, boardId: 5, order: 1, status: 'TODO', board: { projectId: 1 } });
+  prismaMock.column.findUnique = async () => ({
+    id: 10,
+    boardId: 5,
+    order: 1,
+    status: 'TODO',
+    board: { projectId: 1 },
+  });
   prismaMock.column.findMany = async () => []; // fixing poisoned mock from previous test
   prismaMock.column.update = async () => ({
     id: 10,
@@ -199,16 +214,16 @@ test('updateColumn successfully updates a column', async () => {
     order: 1,
     status: 'DONE',
   });
-  
+
   const req = createReq({
     params: { columnId: '10' },
     body: { title: 'Updated Col' },
   });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await updateColumn(req as never, res as never, next as never);
-  
+
   const payload = res.jsonPayload as ColumnPayload;
   assert.equal(res.statusCode, 200);
   assert.equal(payload.title, 'Updated Col');
@@ -219,34 +234,49 @@ test('updateColumn fails if columnId is missing', async () => {
   const req = createReq({ params: {} });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await updateColumn(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 400);
 });
 
 test('updateColumn passes unexpected errors to next middleware', async () => {
   const mockError = new Error('Service crashed');
-  prismaMock.column.findUnique = async () => ({ id: 10, boardId: 5, order: 1, status: 'TODO', board: { projectId: 1 } });
+  prismaMock.column.findUnique = async () => ({
+    id: 10,
+    boardId: 5,
+    order: 1,
+    status: 'TODO',
+    board: { projectId: 1 },
+  });
   prismaMock.column.findMany = async () => [];
   prismaMock.column.update = async () => {
     throw mockError;
   };
-  
-  const req = createReq({ params: { columnId: '10' }, body: { title: 'Updated Col' } });
+
+  const req = createReq({
+    params: { columnId: '10' },
+    body: { title: 'Updated Col' },
+  });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await updateColumn(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });
 
 // delete column tests
 test('deleteColumn successfully deletes a column', async () => {
-  prismaMock.column.findUnique = async () => ({ id: 10, boardId: 5, order: 1, status: 'TODO', board: { projectId: 1 } });
+  prismaMock.column.findUnique = async () => ({
+    id: 10,
+    boardId: 5,
+    order: 1,
+    status: 'TODO',
+    board: { projectId: 1 },
+  });
   prismaMock.column.findMany = async () => []; // fixing poisoned mock from previous test
   prismaMock.column.delete = async () => ({
     id: 10,
@@ -255,13 +285,13 @@ test('deleteColumn successfully deletes a column', async () => {
     order: 2,
     status: 'TODO',
   });
-  
+
   const req = createReq({ params: { columnId: '10' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await deleteColumn(req as never, res as never, next as never);
-  
+
   type DeletePayload = { message: string; deletedColumn: ColumnPayload };
   const payload = res.jsonPayload as DeletePayload;
   assert.equal(res.statusCode, 200);
@@ -274,27 +304,33 @@ test('deleteColumn fails if columnId is missing', async () => {
   const req = createReq({ params: {} });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await deleteColumn(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as HttpError).statusCode, 400);
 });
 
 test('deleteColumn passes unexpected errors to next middleware', async () => {
   const mockError = new Error('Service crashed');
-  prismaMock.column.findUnique = async () => ({ id: 10, boardId: 5, order: 1, status: 'TODO', board: { projectId: 1 } });
+  prismaMock.column.findUnique = async () => ({
+    id: 10,
+    boardId: 5,
+    order: 1,
+    status: 'TODO',
+    board: { projectId: 1 },
+  });
   prismaMock.column.findMany = async () => [];
   prismaMock.column.delete = async () => {
     throw mockError;
   };
-  
+
   const req = createReq({ params: { columnId: '10' } });
   const res = createRes();
   const { next, calls } = createNext();
-  
+
   await deleteColumn(req as never, res as never, next as never);
-  
+
   assert.equal(calls.length, 1);
   assert.equal((calls[0] as Error).message, mockError.message);
 });

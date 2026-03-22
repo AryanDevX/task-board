@@ -19,11 +19,10 @@ const prismaMock = prisma as unknown as {
 
 // helper to catch errors cleanly in tests
 const catchError = async (promise: Promise<unknown>) => {
-  try{
+  try {
     await promise;
     return null;
-  }
-  catch(err){
+  } catch (err) {
     return err as AppError | Error | Prisma.PrismaClientKnownRequestError;
   }
 };
@@ -48,14 +47,29 @@ const resetMocks = () => {
     }),
     findFirst: async () => ({ order: 0 }),
     findMany: async () => [],
-    update: async () => ({ id: 10, title: 'Updated Task', columnId: 6, parentId: null }),
+    update: async () => ({
+      id: 10,
+      title: 'Updated Task',
+      columnId: 6,
+      parentId: null,
+    }),
     updateMany: async () => ({}),
-    delete: async () => ({ id: 10, title: 'Deleted Task', parentId: null, column: { board: { projectId: 1 } } }),
-    count: async () => 0, 
+    delete: async () => ({
+      id: 10,
+      title: 'Deleted Task',
+      parentId: null,
+      column: { board: { projectId: 1 } },
+    }),
+    count: async () => 0,
   };
 
   prismaMock.column = {
-    findUnique: async () => ({ id: 5, boardId: 2, wipLimit: 10, board: { projectId: 1 } }),
+    findUnique: async () => ({
+      id: 5,
+      boardId: 2,
+      wipLimit: 10,
+      board: { projectId: 1 },
+    }),
   };
 
   prismaMock.project = {
@@ -73,16 +87,16 @@ const resetMocks = () => {
   };
 
   prismaMock.workflowTransition = {
-    findFirst: async () => ({ id: 1 }), 
+    findFirst: async () => ({ id: 1 }),
   };
 
   prismaMock.projectMembership = {
-    findUnique: async () => ({ role: 'PROJECT_MEMBER' }), 
+    findUnique: async () => ({ role: 'PROJECT_MEMBER' }),
   };
 
   // mock interactive transaction to execute the callback using our fake prisma client
   prismaMock.$transaction = async (cb: any) => {
-    if(typeof cb === 'function'){
+    if (typeof cb === 'function') {
       return await cb(prismaMock);
     }
     return [];
@@ -95,12 +109,15 @@ resetMocks();
 // create task tests
 test('createTask - successfully creates a task', async () => {
   resetMocks();
-  const result = await taskService.createTask({
-    title: 'New Task',
-    columnId: 5,
-    issueType: 'TASK',
-  } as any, 1);
-  
+  const result = await taskService.createTask(
+    {
+      title: 'New Task',
+      columnId: 5,
+      issueType: 'TASK',
+    } as any,
+    1,
+  );
+
   assert.ok(result);
   assert.equal(result.title, 'New Task');
 });
@@ -108,7 +125,7 @@ test('createTask - successfully creates a task', async () => {
 test('createTask - throws 400 if title or columnid is missing', async () => {
   resetMocks();
   const err = await catchError(taskService.createTask({ title: '' } as any, 1));
-  
+
   assert.ok(err instanceof AppError);
   assert.equal(err.statusCode, 400);
 });
@@ -117,7 +134,7 @@ test('createTask - throws 400 if title or columnid is missing', async () => {
 test('getTaskWithTimeline - successfully fetches task and builds timeline', async () => {
   resetMocks();
   const result = await taskService.getTaskWithTimeline(10);
-  
+
   assert.ok(result);
   assert.equal(result.title, 'Existing Task');
   assert.ok(Array.isArray(result.activityTimeline));
@@ -126,9 +143,9 @@ test('getTaskWithTimeline - successfully fetches task and builds timeline', asyn
 test('getTaskWithTimeline - throws 404 if task not found', async () => {
   resetMocks();
   prismaMock.task.findUnique = async () => null;
-  
+
   const err = await catchError(taskService.getTaskWithTimeline(99));
-  
+
   assert.ok(err instanceof AppError);
   assert.equal(err.statusCode, 404);
 });
@@ -136,8 +153,12 @@ test('getTaskWithTimeline - throws 404 if task not found', async () => {
 // update task tests
 test('updateTask - successfully updates a task', async () => {
   resetMocks();
-  const result = await taskService.updateTask(10, { title: 'Updated Task' } as any, 1);
-  
+  const result = await taskService.updateTask(
+    10,
+    { title: 'Updated Task' } as any,
+    1,
+  );
+
   assert.ok(result);
   assert.equal(result.title, 'Updated Task');
 });
@@ -145,19 +166,26 @@ test('updateTask - successfully updates a task', async () => {
 test('updateTask - throws 404 if task not found', async () => {
   resetMocks();
   prismaMock.task.findUnique = async () => null;
-  
-  const err = await catchError(taskService.updateTask(99, { title: 'Updated Task' } as any, 1));
-  
+
+  const err = await catchError(
+    taskService.updateTask(99, { title: 'Updated Task' } as any, 1),
+  );
+
   assert.ok(err instanceof AppError);
   assert.equal(err.statusCode, 404);
 });
 
 test('updateTask - throws 400 for invalid issue type conversion', async () => {
   resetMocks();
-  prismaMock.task.findUnique = async () => ({ issueType: 'STORY', column: { board: {} } });
-  
-  const err = await catchError(taskService.updateTask(10, { issueType: 'TASK' } as any, 1));
-  
+  prismaMock.task.findUnique = async () => ({
+    issueType: 'STORY',
+    column: { board: {} },
+  });
+
+  const err = await catchError(
+    taskService.updateTask(10, { issueType: 'TASK' } as any, 1),
+  );
+
   assert.ok(err instanceof AppError);
   assert.equal(err.statusCode, 400);
 });
@@ -165,18 +193,27 @@ test('updateTask - throws 400 for invalid issue type conversion', async () => {
 // move task tests
 test('moveTask - successfully moves a task', async () => {
   resetMocks();
-  const result = await taskService.moveTask(10, { targetColumnId: 6, newOrder: 2 } as any, 1);
-  
+  const result = await taskService.moveTask(
+    10,
+    { targetColumnId: 6, newOrder: 2 } as any,
+    1,
+  );
+
   assert.ok(result);
   assert.equal(result.columnId, 6);
 });
 
 test('moveTask - throws 400 if trying to move a story directly', async () => {
   resetMocks();
-  prismaMock.task.findUnique = async () => ({ issueType: 'STORY', column: { boardId: 2 } });
-  
-  const err = await catchError(taskService.moveTask(10, { targetColumnId: 6, newOrder: 2 } as any, 1));
-  
+  prismaMock.task.findUnique = async () => ({
+    issueType: 'STORY',
+    column: { boardId: 2 },
+  });
+
+  const err = await catchError(
+    taskService.moveTask(10, { targetColumnId: 6, newOrder: 2 } as any, 1),
+  );
+
   assert.ok(err instanceof AppError);
   assert.equal(err.statusCode, 400);
 });
@@ -184,10 +221,12 @@ test('moveTask - throws 400 if trying to move a story directly', async () => {
 test('moveTask - throws 400 for cross board transfers', async () => {
   resetMocks();
   prismaMock.task.findUnique = async () => ({ column: { boardId: 2 } });
-  prismaMock.column.findUnique = async () => ({ id: 6, boardId: 99 }); 
-  
-  const err = await catchError(taskService.moveTask(10, { targetColumnId: 6, newOrder: 2 } as any, 1));
-  
+  prismaMock.column.findUnique = async () => ({ id: 6, boardId: 99 });
+
+  const err = await catchError(
+    taskService.moveTask(10, { targetColumnId: 6, newOrder: 2 } as any, 1),
+  );
+
   assert.ok(err instanceof AppError);
   assert.equal(err.statusCode, 400);
 });
@@ -196,7 +235,7 @@ test('moveTask - throws 400 for cross board transfers', async () => {
 test('deleteTask - successfully deletes a task', async () => {
   resetMocks();
   const result = await taskService.deleteTask(10, 1);
-  
+
   assert.ok(result);
   assert.equal(result.title, 'Deleted Task');
 });
@@ -209,9 +248,9 @@ test('deleteTask - throws 404 if prisma throws p2025 error', async () => {
       clientVersion: 'test',
     });
   };
-  
+
   const err = await catchError(taskService.deleteTask(10, 1));
-  
+
   assert.ok(err instanceof AppError);
   assert.equal(err.statusCode, 404);
 });
